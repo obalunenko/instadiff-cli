@@ -1,0 +1,62 @@
+language: go
+dist: trusty
+sudo: false
+install: true
+env:
+  global:
+    - MYAPP=insta-follow-diff
+    - MYEMAIL=oleg.balunenko@gmail.com
+jobs:
+  include:
+    - stage: Unit Tests
+      go:
+        - 1.12.x
+      os:
+        - linux
+      install:
+        - env GO111MODULE=off
+        - make dependencies
+      script:
+        - echo "Run unit tests..."
+        - env GO111MODULE=on
+        - make test
+        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
+    - stage: Metalinter analysis
+      go:
+        - 1.12.x
+      os:
+        - linux
+      install:
+        - env GO111MODULE=off
+        - make dependencies
+      script:
+        - env GO111MODULE=off
+        - make lint
+    - stage: Sonar Scanner
+      addons:
+        sonarcloud:
+          organization: oleg-balunenko-github
+          token: "$SONAR_TOKEN"
+      script:
+        - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
+    - stage: Build Application
+      go:
+        - 1.12.x
+      os:
+        - linux
+      go_import_path: github.com/oleg-balunenko/insta-follow-diff
+      script:
+        - echo "Build stage"
+        - make compile
+      after_success:
+      deploy:
+        skip_cleanup: true
+        provider: script
+        script: make release
+        on:
+          tags: true
+          condition: "$TRAVIS_OS_NAME = linux"
+      addons:
+      ssh_known_hosts: github.com

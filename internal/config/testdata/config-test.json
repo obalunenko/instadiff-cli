@@ -1,0 +1,18 @@
+{
+  "user":{
+    "instagram":{
+      "username":"user",
+      "password":"pass"
+    }
+  },
+  "whitelist":[
+    "user1",
+    "user2",
+    "user3"
+  ],
+  "limits":{
+    "unfollow":100,
+    "follow": 50
+  },
+  "debug": "false"
+}
