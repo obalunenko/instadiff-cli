@@ -33,12 +33,24 @@ func main() {
 			Aliases: []string{"followers"},
 			Usage:   "list your followers",
 			Action:  listFollowers,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "list",
+					Usage: "print the full list instead of only number",
+				},
+			},
 		},
 		{
 			Name:    "list-followings",
 			Aliases: []string{"followings"},
 			Usage:   "list your followings",
 			Action:  listFollowings,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "list",
+					Usage: "print the full list instead of only number",
+				},
+			},
 		},
 		{
 			Name:    "clean-followers",
@@ -88,6 +100,12 @@ func listFollowers(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Printf("Followers: %d \n", len(followers))
+	list := ctx.Bool("list")
+	if list {
+		for _, fu := range followers {
+			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
+		}
+	}
 	return nil
 }
 
@@ -102,6 +120,12 @@ func listFollowings(ctx *cli.Context) error {
 		return err
 	}
 	fmt.Printf("Followings: %d \n", len(followings))
+	list := ctx.Bool("list")
+	if list {
+		for _, fu := range followings {
+			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
+		}
+	}
 
 	return nil
 }
