@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/oleg-balunenko/insta-follow-diff.svg?branch=master)](https://travis-ci.org/oleg-balunenko/insta-follow-diff)
 # insta-follow-diff
 
 instadiff-cli - a command line tool for managing instagram account followers and followings
