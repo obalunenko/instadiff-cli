@@ -1,0 +1,83 @@
+linters:
+  enable-all: true
+  disable:
+    - gochecknoglobals
+
+linters-settings:
+  errcheck:
+
+  gofmt:
+    simplify: true
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 10
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 120
+  goimports:
+    local-prefixes: github.com/oleg-balunenko
+  unparam:
+    algo: cha
+    check-exported: false
+  prealloc:
+    simple: true
+    range-loops: true # Report preallocation suggestions on range loops, true by default
+    for-loops: false # Report preallocation suggestions on for loops, false by default
+  gocritic:
+    enabled-checks:
+      - docStub
+      - rangeValCopy
+      - yodaStyleExpr
+      - appendAssign
+      - appendCombine
+      - caseOrder
+      - badCond
+      - commentedOutCode
+      - commentFormatting
+      - commentedOutImport
+      - dupArg
+      - dupBranchBody
+      - elseif
+      - emptyStringTest
+      - indexAlloc
+      - initClause
+      - captlocal
+      - weakCond
+      - deprecatedComment
+      - flagDeref
+      - flagName
+      - hugeParam
+      - ifElseChain
+      - nilValReturn
+      - rangeExprCopy
+      - ptrToRefParam
+      - underef
+      - unnecessaryBlock
+      - valSwap
+    settings: # settings passed to gocritic
+      captLocal: # must be valid enabled check name
+        paramsOnly: true
+      rangeValCopy:
+        sizeThreshold: 320
+      hugeParam:
+        sizeThreshold: 500
+      rangeExprCopy:
+        skipTestFuncs: true
+      underef:
+        skipRecvDeref: true
+
+
+run:
+  skip-dirs:
+    - vendor/
