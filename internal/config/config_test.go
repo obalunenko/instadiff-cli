@@ -25,20 +25,29 @@ func TestLoad(t *testing.T) {
 			want: Config{
 				user: user{
 					instagram: instagram{
-						username: "oleg",
+						username: "user",
 						password: "pass",
 					},
 				},
 				whitelist: []string{
 					"user1",
 					"user2",
+					"user3",
 				},
 				limits: limits{
 					unfollow: 100,
 				},
-				debug: true,
+				debug: false,
 			},
 			wantErr: false,
+		},
+		{
+			name: "error for not exist file",
+			args: args{
+				path: filepath.Join("testdata", "config-test-not-exist.json"),
+			},
+			want:    Config{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
