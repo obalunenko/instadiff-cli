@@ -86,7 +86,7 @@ imports:
 dependencies:
 	${call colored, dependensies is running...}
 	./scripts/get-dependencies.sh
-.PHONY dependencies
+.PHONY: dependencies
 
 
 
