@@ -6,12 +6,11 @@ instadiff-cli - a command line tool for managing instagram account followers and
 
 ## Usage:
 
-`
-instadiff-cli help
-`
-
-
 ```shell script
+instadiff-cli help
+```
+
+```text
 
 NAME:
    instadiff-cli - a command line tool for managing instagram account followers and followings
@@ -31,6 +30,11 @@ GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
    --help, -h           show help
    --version, -v        print the version
+```
+
+To get help for any supported command:
+``` shell script
+instadiff-cli help [command]
 ```
 
 Example of config file:
