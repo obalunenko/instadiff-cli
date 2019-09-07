@@ -82,6 +82,12 @@ imports:
 	./scripts/fix-imports.sh
 .PHONY: imports
 
+## dependencies - fetch all dependencies for sripts
+dependencies:
+	${call colored, dependensies is running...}
+	./scripts/get-dependencies.sh
+.PHONY dependencies
+
 
 
 .DEFAULT_GOAL := test
