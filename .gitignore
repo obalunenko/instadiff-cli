@@ -13,7 +13,5 @@
 
 .idea
 .config.json
-insta-follow-diff
-instadiff-cli
 bin/
 release/
