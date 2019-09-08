@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
@@ -23,6 +23,20 @@ func main() {
 			Name:  "config_path",
 			Value: ".config.json",
 			Usage: "Path to the config file",
+		},
+		cli.StringFlag{
+			Name:     "log_level",
+			Usage:    "Level of output logs",
+			Required: false,
+			Hidden:   false,
+			Value:    log.InfoLevel.String(),
+		},
+		cli.BoolFlag{
+			Name:        "debug",
+			Usage:       "Debug mode, where actions has no real effect",
+			Required:    false,
+			Hidden:      false,
+			Destination: nil,
 		},
 	}
 
@@ -80,6 +94,10 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to load config")
 	}
+	setLogger(ctx)
+
+	cfg.SetDebug(ctx.GlobalBool("debug"))
+
 	svc, stop, err := service.New(cfg)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create service")
@@ -135,15 +153,16 @@ func cleanFollowings(ctx *cli.Context) error {
 		return err
 	}
 	defer stop()
+	log.Info("Cleaning from not mutual followings...")
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
 	if err != nil {
 		if errors.Cause(err) == service.ErrLimitExceed {
-			log.Printf("Total unfollowed before limit exceeded: %d \n", count)
+			log.Infof("Total unfollowed before limit exceeded: %d \n", count)
 		} else {
 			return err
 		}
 	} else {
-		log.Printf("total unfollowed: %d \n", count)
+		log.Infof("Total unfollowed: %d \n", count)
 	}
 	return nil
 }
@@ -159,9 +178,24 @@ func listNotMutual(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Not following back: %d \n", len(notMutualFollowers))
+	log.Infof("Not following back: %d \n", len(notMutualFollowers))
 	for _, nf := range notMutualFollowers {
 		fmt.Printf("%s - %s \n", nf.UserName, nf.FullName)
 	}
 	return nil
+}
+
+func setLogger(ctx *cli.Context) {
+	formatter := log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+		DisableSorting:  false,
+		ForceColors:     true,
+	}
+	log.SetFormatter(&formatter)
+	lvl, err := log.ParseLevel(ctx.GlobalString("log_level"))
+	if err != nil {
+		lvl = log.InfoLevel
+	}
+	log.SetLevel(lvl)
 }
