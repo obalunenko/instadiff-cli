@@ -70,10 +70,9 @@ func main() {
 			Action:  cleanFollowings,
 		},
 		{
-			Name:    "unmutual",
-			Aliases: []string{"unmutual"},
-			Usage:   "List all not mutual followings",
-			Action:  listNotMutual,
+			Name:   "unmutual",
+			Usage:  "List all not mutual followings",
+			Action: listNotMutual,
 		},
 	}
 
