@@ -22,18 +22,20 @@ NAME:
 USAGE:
    instadiff-cli [global options] command [command options] [arguments...]
 
-
 COMMANDS:
-   list-followers, followers        list your followers
-   list-followings, followings      list your followings
-   clean-followers, clean           Un follow not mutual followings, except of whitelisted
-   not-mutual-followings, unmutual  List all not mutual followings
-   help, h                          Shows a list of commands or help for one command
+   followers               List your followers
+   followings              List your followings
+   clean-followers, clean  Un follow not mutual followings, except of whitelisted
+   unmutual, unmutual      List all not mutual followings
+   help, h                 Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
+   --log_level value    Level of output logs (default: "info")
+   --debug              Debug mode, where actions has no real effect
    --help, -h           show help
    --version, -v        print the version
+
 ```
 
 To get help for any supported command:
