@@ -1,10 +1,14 @@
 package service
 
 import (
-	"log"
+	"fmt"
+	"sync"
+	"time"
 
-	goinsta "github.com/ahmdrz/goinsta/v2"
+	"github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
+	"github.com/schollz/progressbar/v2"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
@@ -52,7 +56,7 @@ func New(cfg config.Config) (*Service, func(), error) {
 		instagramClient: cl,
 		limits:          lmts,
 		whitelist:       cfg.Whitelist(),
-		debug:           cfg.IsDebug(),
+		debug:           cfg.Debug(),
 	}
 
 	return inst, inst.stop, nil
@@ -122,24 +126,25 @@ func (svc *Service) GetNotMutualFollowers() ([]models.UserInfo, error) {
 
 // UnFollow removes user from followings.
 func (svc *Service) UnFollow(user models.UserInfo) error {
+	log.Debugf("Un follow user %s", user.UserName)
 	if svc.debug {
-		log.Printf("unFollow user %+v\n", user)
 		return nil
 	}
+
 	us := goinsta.User{ID: user.ID, Username: user.UserName}
 	us.SetInstagram(svc.instagramClient)
 	err := us.Unfollow()
 	if err != nil {
-		return errors.Wrapf(err, "failed to unfollow user %v", user)
+		return errors.Wrapf(err, "failed to un follow user %v", user)
 	}
-	log.Printf("unFollow user %v \n", user)
 	return nil
 }
 
 // Follow adds user to followings.
 func (svc *Service) Follow(user models.UserInfo) error {
+	log.Debugf("Follow user %s", user.UserName)
 	if svc.debug {
-		log.Printf("follow user %+v\n", user)
+
 		return nil
 	}
 	us := goinsta.User{ID: user.ID, Username: user.UserName}
@@ -148,7 +153,6 @@ func (svc *Service) Follow(user models.UserInfo) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to follow user %v", user)
 	}
-	log.Printf("unFollow user %v \n", user)
 	return nil
 }
 
@@ -187,24 +191,31 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	if len(notMutual) == 0 {
 		return 0, nil
 	}
+	log.Debugf("Not mutual followers: %d", len(notMutual))
+
+	barChan, wgBar := handleBar(len(notMutual))
+	defer func() {
+		wgBar.Wait()
+		fmt.Println()
+	}()
 
 	var count int
 	for _, nu := range notMutual {
+		barChan <- 1
+
 		if _, ok := svc.whitelist[nu.UserName]; !ok {
 			err = svc.UnFollow(nu)
 			if err != nil {
-				log.Printf("failed to unFollow user %v:%v", nu, err)
 				continue
 			}
 			count++
-		} else {
-			log.Printf("skip whitelisted user %v", nu)
 		}
 		if count >= svc.limits.unFollow {
+			close(barChan)
 			return count, ErrLimitExceed
 		}
 	}
-
+	close(barChan)
 	return count, nil
 }
 
@@ -212,4 +223,38 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 // Should be called in defer after creating new instance from New().
 func (svc *Service) stop() {
 	_ = svc.instagramClient.Logout()
+}
+
+func handleBar(cap int) (chan int, *sync.WaitGroup) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	barChan := make(chan int)
+
+	go func(wg *sync.WaitGroup, bchan chan int, cap int) {
+		switch log.GetLevel() {
+		case log.InfoLevel:
+			bar := progressbar.New(cap)
+
+			for i := range bchan {
+				// not need to handle error for progress bar.
+				err := bar.Add(i)
+				if err != nil {
+					log.Errorf("error when add to bar: %v", err)
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+			err := bar.Finish()
+			if err != nil {
+				log.Errorf("error when finish bar: %v", err)
+			}
+
+		default:
+			for range bchan {
+			}
+		}
+		wg.Done()
+	}(&wg, barChan, cap)
+
+	return barChan, &wg
 }
