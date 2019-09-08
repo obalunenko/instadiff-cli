@@ -18,7 +18,7 @@ if [[ "$(pwd)" != "${REPO_ROOT}" ]]; then
 fi
 
 GO_BUILD_LDFLAGS="-s -w -X 'main.commit=${COMMIT_HASH}' -X 'main.date=${DATE}' -X 'main.version=${VERSION}'"
-GO_BUILD_PACKAGE="github.com/oleg-balunenko/insta-follow-diff/cmd/instadiff-cli/."
+GO_BUILD_PACKAGE="github.com/oleg-balunenko/instadiff-cli/cmd/instadiff-cli/."
 
 if [[ -z "${BUILD_PLATFORMS}" ]]; then
     BUILD_PLATFORMS="linux windows darwin"
