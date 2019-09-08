@@ -1,4 +1,4 @@
-module github.com/oleg-balunenko/insta-follow-diff
+module github.com/oleg-balunenko/instadiff-cli
 
 go 1.12
 

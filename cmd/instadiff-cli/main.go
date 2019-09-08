@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
-	"github.com/oleg-balunenko/insta-follow-diff/internal/config"
-	"github.com/oleg-balunenko/insta-follow-diff/internal/service"
+	"github.com/oleg-balunenko/instadiff-cli/internal/config"
+	"github.com/oleg-balunenko/instadiff-cli/internal/service"
 )
 
 func main() {

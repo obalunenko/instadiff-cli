@@ -4,7 +4,7 @@ sudo: false
 install: true
 env:
   global:
-    - MYAPP=insta-follow-diff
+    - MYAPP=instadiff-cli
     - MYEMAIL=oleg.balunenko@gmail.com
 jobs:
   include:
@@ -46,7 +46,7 @@ jobs:
         - 1.12.x
       os:
         - linux
-      go_import_path: github.com/oleg-balunenko/insta-follow-diff
+      go_import_path: github.com/oleg-balunenko/instadiff-cli
       script:
         - echo "Build stage"
         - make compile

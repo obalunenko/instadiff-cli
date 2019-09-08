@@ -6,8 +6,8 @@ import (
 	goinsta "github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
 
-	"github.com/oleg-balunenko/insta-follow-diff/internal/config"
-	"github.com/oleg-balunenko/insta-follow-diff/internal/models"
+	"github.com/oleg-balunenko/instadiff-cli/internal/config"
+	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 )
 
 // ErrLimitExceed returned when limit for action exceeded.
