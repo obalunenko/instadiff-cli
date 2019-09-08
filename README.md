@@ -3,6 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/instadiff-cli)](https://goreportcard.com/report/github.com/oleg-balunenko/instadiff-cli)
 [![Coverage Status](https://coveralls.io/repos/github/oleg-balunenko/instadiff-cli/badge.svg?branch=dev)](https://coveralls.io/github/oleg-balunenko/instadiff-cli?branch=dev)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/instadiff-cli)](https://goreportcard.com/report/github.com/oleg-balunenko/instadiff-cli)
+[![Latest release artifacts](https://img.shields.io/badge/artifacts-download-blue.svg)](https://github.com/oleg-balunenko/instadiff-cli/releases/latest)
 # instadiff-cli
 
 instadiff-cli - a command line tool for managing instagram account followers and followings
