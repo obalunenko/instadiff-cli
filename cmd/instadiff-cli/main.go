@@ -42,26 +42,24 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name:    "list-followers",
-			Aliases: []string{"followers"},
-			Usage:   "list your followers",
-			Action:  listFollowers,
+			Name:   "followers",
+			Usage:  "List your followers",
+			Action: listFollowers,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "list",
-					Usage: "print the full list instead of only number",
+					Usage: "Print the full list instead of only number",
 				},
 			},
 		},
 		{
-			Name:    "list-followings",
-			Aliases: []string{"followings"},
-			Usage:   "list your followings",
-			Action:  listFollowings,
+			Name:   "followings",
+			Usage:  "List your followings",
+			Action: listFollowings,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "list",
-					Usage: "print the full list instead of only number",
+					Usage: "Print the full list instead of only number",
 				},
 			},
 		},
@@ -72,7 +70,7 @@ func main() {
 			Action:  cleanFollowings,
 		},
 		{
-			Name:    "not-mutual-followings",
+			Name:    "unmutual",
 			Aliases: []string{"unmutual"},
 			Usage:   "List all not mutual followings",
 			Action:  listNotMutual,
