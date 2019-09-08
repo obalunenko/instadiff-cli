@@ -63,8 +63,9 @@ func (svc *Service) GetFollowers() ([]models.UserInfo, error) {
 	users := svc.instagramClient.Account.Followers()
 	followers := make([]models.UserInfo, 0)
 	for users.Next() {
-		for _, us := range users.Users {
-			followers = append(followers, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+		for i := range users.Users {
+			followers = append(followers,
+				models.MakeUserInfo(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
 		}
 	}
 	if len(followers) == 0 {
@@ -80,8 +81,9 @@ func (svc *Service) GetFollowings() ([]models.UserInfo, error) {
 
 	followings := make([]models.UserInfo, 0)
 	for users.Next() {
-		for _, us := range users.Users {
-			followings = append(followings, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+		for i := range users.Users {
+			followings = append(followings,
+				models.MakeUserInfo(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
 		}
 	}
 	if len(followings) == 0 {

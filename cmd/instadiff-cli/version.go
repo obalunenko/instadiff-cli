@@ -10,9 +10,7 @@ var ( // build info
 	commit  = unset
 )
 
-func printVersion() {
-	fmt.Printf("Version info: %s \n", version)
-	fmt.Printf("Build date: %s \n", date)
-	fmt.Printf("commit: %s \n", commit)
-	fmt.Println()
+func printVersion() string {
+	info := fmt.Sprintf("Version: %s-%s-%s \n", version, commit, date)
+	return info
 }
