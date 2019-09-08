@@ -1,10 +1,10 @@
 package config
 
 import (
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -62,9 +62,17 @@ func (c Config) Whitelist() map[string]struct{} {
 	return wl
 }
 
-// IsDebug returns debug mode status.
-func (c Config) IsDebug() bool {
+// Debug returns current dubug status.
+func (c *Config) Debug() bool {
 	return c.debug
+}
+
+// SetDebug updates debug status.
+func (c *Config) SetDebug(debug bool) {
+	if debug {
+		log.Println("debug mode set")
+	}
+	c.debug = debug
 }
 
 // Load loads config from passed filepath
@@ -89,7 +97,7 @@ func Load(path string) (Config, error) {
 	viper.AutomaticEnv()
 
 	// Confirms which config file is used.
-	log.Printf("Using config: %s\n\n", viper.ConfigFileUsed())
+	log.Infof("Using config: %s\n\n", viper.ConfigFileUsed())
 
 	cfg = Config{
 		user: user{
@@ -102,7 +110,6 @@ func Load(path string) (Config, error) {
 		limits: limits{
 			unfollow: viper.GetInt("limits.unfollow"),
 		},
-		debug: viper.GetBool("debug"),
 	}
 
 	return cfg, nil
