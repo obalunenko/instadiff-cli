@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/oleg-balunenko/insta-follow-diff.svg?branch=master)](https://travis-ci.org/oleg-balunenko/insta-follow-diff)
+[![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/insta-follow-diff)](https://goreportcard.com/report/github.com/oleg-balunenko/insta-follow-diff)
 [![Coverage Status](https://coveralls.io/repos/github/oleg-balunenko/insta-follow-diff/badge.svg?branch=dev)](https://coveralls.io/github/oleg-balunenko/insta-follow-diff?branch=dev)
 # insta-follow-diff
 

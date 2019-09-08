@@ -1,3 +1,5 @@
+# github.com/ahmdrz/goinsta/v2 v2.4.4
+github.com/ahmdrz/goinsta/v2
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/fsnotify/fsnotify v1.4.7
@@ -36,10 +38,6 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
-# github.com/tducasse/goinsta v0.0.0-20180527202657-73b18f2e4135
-github.com/tducasse/goinsta
-github.com/tducasse/goinsta/response
-github.com/tducasse/goinsta/uuid
 # github.com/urfave/cli v1.21.0
 github.com/urfave/cli
 # golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a

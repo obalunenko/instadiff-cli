@@ -13,12 +13,11 @@ import (
 )
 
 func main() {
-
 	app := cli.NewApp()
 	app.Name = "instadiff-cli"
 	app.Usage = `a command line tool for managing instagram account followers and followings`
 	app.Author = "Oleg Balunenko"
-	app.Version = version
+	app.Version = printVersion()
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "config_path",
