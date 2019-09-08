@@ -1,6 +1,7 @@
 package goinsta
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -12,23 +13,19 @@ func leftPad2Len(s string, padStr string, overallLen int) string {
 	return retStr[(len(retStr) - overallLen):]
 }
 
-func bin2int(binStr string) string {
-	result, _ := strconv.ParseInt(binStr, 2, 64)
-	return strconv.FormatInt(result, 10)
-}
+const base64UrlCharmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
-// Base64UrlCharmap - all posible characters
-const Base64UrlCharmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-
-func MediaFromCode(code string) string {
-
-	base2 := ""
+func MediaIDFromShortID(code string) (string, error) {
+	strID := ""
 	for i := 0; i < len(code); i++ {
-		base64 := strings.Index(Base64UrlCharmap, string(code[i]))
+		base64 := strings.Index(base64UrlCharmap, string(code[i]))
 		str2bin := strconv.FormatInt(int64(base64), 2)
 		sixbits := leftPad2Len(str2bin, "0", 6)
-		base2 = base2 + sixbits
+		strID = strID + sixbits
 	}
-
-	return bin2int(base2)
+	result, err := strconv.ParseInt(strID, 2, 64)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", result), nil
 }

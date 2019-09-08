@@ -3,8 +3,8 @@ package service
 import (
 	"log"
 
+	goinsta "github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
-	"github.com/tducasse/goinsta"
 
 	"github.com/oleg-balunenko/insta-follow-diff/internal/config"
 	"github.com/oleg-balunenko/insta-follow-diff/internal/models"
@@ -40,7 +40,8 @@ func New(cfg config.Config) (*Service, func(), error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to login")
 	}
-	log.Printf("logged in as %s \n", cl.Informations.Username)
+
+	log.Printf("logged in as %s \n", cl.Account.Username)
 
 	lmts := limits{
 		follow:   cfg.FollowLimits(),
@@ -59,13 +60,15 @@ func New(cfg config.Config) (*Service, func(), error) {
 
 // GetFollowers returns list of followers for logged in user.
 func (svc *Service) GetFollowers() ([]models.UserInfo, error) {
-	resp, err := svc.instagramClient.SelfTotalUserFollowers()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get followers")
+	users := svc.instagramClient.Account.Followers()
+	followers := make([]models.UserInfo, 0)
+	for users.Next() {
+		for _, us := range users.Users {
+			followers = append(followers, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+		}
 	}
-	followers := make([]models.UserInfo, 0, len(resp.Users))
-	for _, us := range resp.Users {
-		followers = append(followers, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+	if len(followers) == 0 {
+		return nil, errors.New("no followers")
 	}
 
 	return followers, nil
@@ -73,13 +76,16 @@ func (svc *Service) GetFollowers() ([]models.UserInfo, error) {
 
 // GetFollowings returns list of followings for logged in user.
 func (svc *Service) GetFollowings() ([]models.UserInfo, error) {
-	resp, err := svc.instagramClient.SelfTotalUserFollowing()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get followings")
+	users := svc.instagramClient.Account.Following()
+
+	followings := make([]models.UserInfo, 0)
+	for users.Next() {
+		for _, us := range users.Users {
+			followings = append(followings, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+		}
 	}
-	followings := make([]models.UserInfo, 0, len(resp.Users))
-	for _, us := range resp.Users {
-		followings = append(followings, models.MakeUserInfo(us.ID, us.Username, us.FullName))
+	if len(followings) == 0 {
+		return nil, errors.New("no followings")
 	}
 
 	return followings, nil
@@ -118,11 +124,13 @@ func (svc *Service) UnFollow(user models.UserInfo) error {
 		log.Printf("unFollow user %+v\n", user)
 		return nil
 	}
-	response, err := svc.instagramClient.UnFollow(user.ID)
+	us := goinsta.User{ID: user.ID, Username: user.UserName}
+	us.SetInstagram(svc.instagramClient)
+	err := us.Unfollow()
 	if err != nil {
-		return errors.Wrapf(err, "failed to unFollow user %+v", user)
+		return errors.Wrapf(err, "failed to unfollow user %v", user)
 	}
-	log.Printf("unFollow user %v: status %v \n", user, response)
+	log.Printf("unFollow user %v \n", user)
 	return nil
 }
 
@@ -132,11 +140,13 @@ func (svc *Service) Follow(user models.UserInfo) error {
 		log.Printf("follow user %+v\n", user)
 		return nil
 	}
-	response, err := svc.instagramClient.Follow(user.ID)
+	us := goinsta.User{ID: user.ID, Username: user.UserName}
+	us.SetInstagram(svc.instagramClient)
+	err := us.Follow()
 	if err != nil {
-		return errors.Wrapf(err, "failed to follow user %+v", user)
+		return errors.Wrapf(err, "failed to follow user %v", user)
 	}
-	log.Printf("follow user %v: status %v \n", user, response)
+	log.Printf("unFollow user %v \n", user)
 	return nil
 }
 
