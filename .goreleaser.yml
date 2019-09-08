@@ -43,7 +43,11 @@ changelog:
       - "^test:"
       - "^dev:"
       - "README"
+      - "^readme"
+      - "^scripts"
+      - "scripts:*"
       - Merge pull request
       - Merge branch
       - Rebase on master
       - "^Makefile"
+      - "*goreleaser*"
