@@ -13,8 +13,6 @@ import (
 )
 
 func main() {
-	printVersion()
-
 	app := cli.NewApp()
 	app.Name = "instadiff-cli"
 	app.Usage = `a command line tool for managing instagram account followers and followings`
