@@ -126,7 +126,7 @@ func (svc *Service) GetNotMutualFollowers() ([]models.UserInfo, error) {
 
 // UnFollow removes user from followings.
 func (svc *Service) UnFollow(user models.UserInfo) error {
-	log.Debugf("Un follow user %s", user.UserName)
+	log.Debugf("Unfollow user %s", user.UserName)
 	if svc.debug {
 		return nil
 	}
@@ -135,7 +135,7 @@ func (svc *Service) UnFollow(user models.UserInfo) error {
 	us.SetInstagram(svc.instagramClient)
 	err := us.Unfollow()
 	if err != nil {
-		return errors.Wrapf(err, "failed to un follow user %v", user)
+		return errors.Wrapf(err, "failed to unfollow user %v", user)
 	}
 	return nil
 }
@@ -196,7 +196,6 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	barChan, wgBar := handleBar(len(notMutual))
 	defer func() {
 		wgBar.Wait()
-		fmt.Println()
 	}()
 
 	var count int
@@ -225,6 +224,15 @@ func (svc *Service) stop() {
 	_ = svc.instagramClient.Logout()
 }
 
+// handleBar creates channel for bar progress rendering and waitgroup for waiting till bar finish rendering.
+// cap - is the expected amount of work.
+// Usage:
+// barChan, wgBar := handleBar(100)
+// for _, i := 100{
+// barChan <- 1
+// }
+// close(barChan)
+// wgBar.Wait()
 func handleBar(cap int) (chan int, *sync.WaitGroup) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -237,7 +245,6 @@ func handleBar(cap int) (chan int, *sync.WaitGroup) {
 			bar := progressbar.New(cap)
 
 			for i := range bchan {
-				// not need to handle error for progress bar.
 				err := bar.Add(i)
 				if err != nil {
 					log.Errorf("error when add to bar: %v", err)
@@ -248,6 +255,7 @@ func handleBar(cap int) (chan int, *sync.WaitGroup) {
 			if err != nil {
 				log.Errorf("error when finish bar: %v", err)
 			}
+			fmt.Println()
 
 		default:
 			for range bchan {
