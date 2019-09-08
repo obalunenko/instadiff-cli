@@ -50,3 +50,4 @@ changelog:
       - Merge branch
       - Rebase on master
       - "^Makefile"
+      - "*goreleaser*"
