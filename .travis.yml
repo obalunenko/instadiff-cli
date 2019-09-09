@@ -10,7 +10,9 @@ jobs:
   include:
     - stage: Unit Tests
       go:
+        - 1.11.x
         - 1.12.x
+        - 1.13.x
       os:
         - linux
       install:
@@ -43,7 +45,9 @@ jobs:
         - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
     - stage: Build Application
       go:
+        - 1.11.x
         - 1.12.x
+        - 1.13.x
       os:
         - linux
       go_import_path: github.com/oleg-balunenko/instadiff-cli
