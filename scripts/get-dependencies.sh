@@ -24,8 +24,4 @@ function get_dependencies() {
 
 echo Gonna to update go tools and packages...
 get_dependencies
-
-go mod download
-
 echo All is done!
-
