@@ -1,0 +1,68 @@
+name: Go
+on: [push]
+jobs:
+
+  vet:
+    name: Vet
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1 
+
+    - name: Get dependencies
+      run: |
+        go mod download
+
+    - name: Vet
+      run: go vet $(go list ./...)
+      
+      
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1 
+
+    - name: Get dependencies
+      run: |
+        go mod download
+
+    - name: Test
+      run: go test -v $(go list ./...)
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1 
+
+    - name: Get dependencies
+      run: |
+        go mod download
+
+    - name: Build
+      run: go build -v .
+      
