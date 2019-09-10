@@ -1,6 +1,12 @@
 language: go
 dist: trusty
 sudo: false
+matrix:
+  include:
+    - go: 1.11.x
+    - go: 1.12.x
+    - go: 1.13.x
+    - os: linux
 install: true
 env:
   global:
@@ -9,12 +15,6 @@ env:
 jobs:
   include:
     - stage: Unit Tests
-      go:
-        - 1.11.x
-        - 1.12.x
-        - 1.13.x
-      os:
-        - linux
       install:
         - env GO111MODULE=off
         - make dependencies
@@ -26,10 +26,6 @@ jobs:
       after_success:
         - bash <(curl -s https://codecov.io/bash)
     - stage: Metalinter analysis
-      go:
-        - 1.12.x
-      os:
-        - linux
       install:
         - env GO111MODULE=off
         - make dependencies
@@ -45,9 +41,7 @@ jobs:
         - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
     - stage: Build Application
       go:
-        - 1.11.x
         - 1.12.x
-        - 1.13.x
       os:
         - linux
       go_import_path: github.com/oleg-balunenko/instadiff-cli
