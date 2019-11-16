@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  mongo:
+    image: "mongo:latest"
+    container_name: "mongo"
+    restart: unless-stopped
+    networks:
+      - instadiff_dev
+    ports:
+      - "27017:27017"
+    expose:
+      - "27017"
+    volumes:
+      - 'mongo:/data/db'
+
+volumes:
+  mongo:
+
+networks:
+  instadiff_dev:
