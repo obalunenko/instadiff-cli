@@ -28,7 +28,8 @@ COMMANDS:
    followers               List your followers
    followings              List your followings
    clean-followers, clean  Un follow not mutual followings, except of whitelisted
-   unmutual, unmutual      List all not mutual followings
+   unmutual                List all not mutual followings
+   bots                    List all bots or business accounts
    help, h                 Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -55,6 +56,12 @@ Example of config file:
       "username":"user",
       "password":"pass"
     }
+  },
+  "db": {
+    "local": true,
+    "mongoURL": "mongodb://127.0.0.1:27017",
+    "mongoDBName": "testing",
+    "mongoCollectionName": "users"
   },
   "whitelist":[
     "user1",
