@@ -11,6 +11,7 @@ func TestLoad(t *testing.T) {
 	type args struct {
 		path string
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -28,6 +29,12 @@ func TestLoad(t *testing.T) {
 						username: "user",
 						password: "pass",
 					},
+				},
+				db: db{
+					local:               true,
+					mongoURL:            "mongoURL:test",
+					mongoDBName:         "testing",
+					mongoCollectionName: "users",
 				},
 				whitelist: []string{
 					"user1",
@@ -50,6 +57,7 @@ func TestLoad(t *testing.T) {
 			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {

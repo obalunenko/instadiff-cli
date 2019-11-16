@@ -10,6 +10,7 @@ import (
 
 // Config represents config for InstaDiff service.
 type Config struct {
+	db        db
 	user      user
 	whitelist []string
 	limits    limits
@@ -27,6 +28,13 @@ type user struct {
 
 type limits struct {
 	unfollow int
+}
+
+type db struct {
+	local               bool
+	mongoURL            string
+	mongoDBName         string
+	mongoCollectionName string
 }
 
 // Username returns username.
@@ -59,6 +67,7 @@ func (c Config) Whitelist() map[string]struct{} {
 	for _, l := range c.whitelist {
 		wl[l] = struct{}{}
 	}
+
 	return wl
 }
 
@@ -72,12 +81,30 @@ func (c *Config) SetDebug(debug bool) {
 	if debug {
 		log.Println("debug mode set")
 	}
+
 	c.debug = debug
+}
+
+func (c Config) IsLocalDBEnabled() bool {
+	return c.db.local
+}
+
+func (c Config) MongoConfigURL() string {
+	return c.db.mongoURL
+}
+
+func (c Config) MongoDBName() string {
+	return c.db.mongoDBName
+}
+
+func (c Config) MongoDBCollection() string {
+	return c.db.mongoCollectionName
 }
 
 // Load loads config from passed filepath
 func Load(path string) (Config, error) {
 	var cfg Config
+
 	if path == "" {
 		return Config{}, errors.New("config path is empty")
 	}
@@ -88,11 +115,16 @@ func Load(path string) (Config, error) {
 	if err := viper.ReadInConfig(); err != nil {
 		return cfg, errors.Wrapf(err, "failed to read config form path: %s", path)
 	}
+
 	// Reset viper to free memory.
-	defer viper.Reset()
+	defer func() {
+		viper.Reset()
+	}()
 
 	viper.SetEnvPrefix("instadiff")
+
 	replacer := strings.NewReplacer(".", "_")
+
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
 
@@ -100,6 +132,12 @@ func Load(path string) (Config, error) {
 	log.Infof("Using config: %s\n\n", viper.ConfigFileUsed())
 
 	cfg = Config{
+		db: db{
+			local:               viper.GetBool("db.local"),
+			mongoURL:            viper.GetString("db.mongoURL"),
+			mongoDBName:         viper.GetString("db.mongoDBName"),
+			mongoCollectionName: viper.GetString("db.mongoCollectionName"),
+		},
 		user: user{
 			instagram: instagram{
 				username: viper.GetString("user.instagram.username"),
