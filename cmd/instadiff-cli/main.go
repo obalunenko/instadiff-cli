@@ -74,6 +74,11 @@ func main() {
 			Usage:  "List all not mutual followings",
 			Action: listNotMutual,
 		},
+		{
+			Name:   "bots",
+			Usage:  "List all bots or business accounts",
+			Action: listBotsAndBusiness,
+		},
 	}
 
 	err := app.Run(os.Args)
@@ -86,11 +91,14 @@ type stopFunc func()
 
 func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
 	var err error
+
 	configPath := ctx.GlobalString("config_path")
+
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to load config")
 	}
+
 	setLogger(ctx)
 
 	cfg.SetDebug(ctx.GlobalBool("debug"))
@@ -99,6 +107,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create service")
 	}
+
 	return svc, stop, nil
 }
 
@@ -107,19 +116,22 @@ func listFollowers(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	defer stop()
 
 	followers, err := svc.GetFollowers()
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Followers: %d \n", len(followers))
-	list := ctx.Bool("list")
-	if list {
+
+	if ctx.Bool("list") {
 		for _, fu := range followers {
 			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
 		}
 	}
+
 	return nil
 }
 
@@ -128,14 +140,17 @@ func listFollowings(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	defer stop()
+
 	followings, err := svc.GetFollowings()
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Followings: %d \n", len(followings))
-	list := ctx.Bool("list")
-	if list {
+
+	if ctx.Bool("list") {
 		for _, fu := range followings {
 			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
 		}
@@ -149,9 +164,13 @@ func cleanFollowings(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	defer stop()
+
 	log.Info("Cleaning from not mutual followings...")
+
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
+
 	if err != nil {
 		if errors.Cause(err) == service.ErrLimitExceed {
 			log.Infof("Total unfollowed before limit exceeded: %d \n", count)
@@ -161,6 +180,7 @@ func cleanFollowings(ctx *cli.Context) error {
 	} else {
 		log.Infof("Total unfollowed: %d \n", count)
 	}
+
 	return nil
 }
 
@@ -169,16 +189,42 @@ func listNotMutual(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
 	defer stop()
 
 	notMutualFollowers, err := svc.GetNotMutualFollowers()
 	if err != nil {
 		return err
 	}
+
 	log.Infof("Not following back: %d \n", len(notMutualFollowers))
+
 	for _, nf := range notMutualFollowers {
 		fmt.Printf("%s - %s \n", nf.UserName, nf.FullName)
 	}
+
+	return nil
+}
+
+func listBotsAndBusiness(ctx *cli.Context) error {
+	svc, stop, err := serviceSetUp(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer stop()
+
+	bots, err := svc.GetBusinessAccountsOrBotsFromFollowers()
+	if err != nil {
+		return err
+	}
+
+	log.Infof("Could be blocked: %d \n", len(bots))
+
+	for _, nf := range bots {
+		fmt.Printf("%s - %s \n", nf.UserName, nf.FullName)
+	}
+
 	return nil
 }
 
@@ -189,10 +235,13 @@ func setLogger(ctx *cli.Context) {
 		DisableSorting:  false,
 		ForceColors:     true,
 	}
+
 	log.SetFormatter(&formatter)
+
 	lvl, err := log.ParseLevel(ctx.GlobalString("log_level"))
 	if err != nil {
 		lvl = log.InfoLevel
 	}
+
 	log.SetLevel(lvl)
 }
