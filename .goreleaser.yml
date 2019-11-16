@@ -4,7 +4,8 @@ release:
     name: instadiff-cli
 
 builds:
-  - binary: instadiff-cli
+  - id: cli
+    binary: instadiff-cli
     goos:
       - darwin
       - windows
@@ -18,16 +19,24 @@ builds:
     main: ./cmd/instadiff-cli
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
 
-archive:
-  format: tar.gz
-  wrap_in_directory: true
-  format_overrides:
-    - goos: windows
-      format: zip
-  name_template: "{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-  files:
-    - LICENSE
-    - README.md
+archives:
+  - id: cli
+    builds:
+      - cli
+    format: tar.gz
+    wrap_in_directory: true
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+      linux: Tux
+    name_template: "{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - LICENSE
+      - README.md
 
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
