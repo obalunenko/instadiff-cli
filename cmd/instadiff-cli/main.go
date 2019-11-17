@@ -25,7 +25,9 @@ func main() {
 	app.Flags = globalFlags()
 	app.Commands = commands()
 
-	log.Fatal(app.Run(os.Args))
+	if err := app.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func globalFlags() []cli.Flag {
