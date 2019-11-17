@@ -86,9 +86,9 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 	followers := make([]models.User, 0, len(users.Users))
 
 	for users.Next() {
-		for _, u := range users.Users {
+		for i := range users.Users {
 			followers = append(followers,
-				models.MakeUser(u.ID, u.Username, u.FullName))
+				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
 		}
 	}
 
@@ -114,9 +114,9 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 	followings := make([]models.User, 0, len(users.Users))
 
 	for users.Next() {
-		for _, u := range users.Users {
+		for i := range users.Users {
 			followings = append(followings,
-				models.MakeUser(u.ID, u.Username, u.FullName))
+				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
 		}
 	}
 

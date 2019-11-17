@@ -1,3 +1,4 @@
+// Package db implements database interactions.
 package db
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 )
 
+// MongoParams represents mongo db configuration parameters.
 type MongoParams struct {
 	URL        string
 	Database   string

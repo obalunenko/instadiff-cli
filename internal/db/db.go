@@ -1,3 +1,4 @@
+// Package db implements database interactions.
 package db
 
 import (
@@ -14,6 +15,7 @@ type DB interface {
 	GetLastUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) (models.UsersBatch, error)
 }
 
+// Params used for DB constructor.
 type Params struct {
 	LocalDB     bool
 	MongoParams MongoParams

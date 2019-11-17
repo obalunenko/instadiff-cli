@@ -1,3 +1,4 @@
+// Package config provide configuration.
 package config
 
 import (
@@ -85,18 +86,22 @@ func (c *Config) SetDebug(debug bool) {
 	c.debug = debug
 }
 
+// IsLocalDBEnabled returns local DB enabled status
 func (c Config) IsLocalDBEnabled() bool {
 	return c.db.local
 }
 
+// MongoConfigURL returns configured MongoDB URL
 func (c Config) MongoConfigURL() string {
 	return c.db.mongoURL
 }
 
+// MongoDBName returns configured MongoDB name
 func (c Config) MongoDBName() string {
 	return c.db.mongoDBName
 }
 
+// MongoDBCollection returns configured MongoDB collection
 func (c Config) MongoDBCollection() string {
 	return c.db.mongoCollectionName
 }

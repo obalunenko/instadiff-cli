@@ -1,3 +1,4 @@
+// Package db implements database interactions.
 package db
 
 import (

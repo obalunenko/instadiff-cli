@@ -1,3 +1,4 @@
+// Package models describes models for database communication.
 package models
 
 // User stores information about user.
