@@ -107,5 +107,11 @@ docker-down:
 
 .PHONY: docker-down
 
-.DEFAULT_GOAL := test
+## review code
+review:
+	${call colored, review is running...}
+	reviewdog -reporter=github-pr-check
 
+.PHONY: review
+
+.DEFAULT_GOAL := test
