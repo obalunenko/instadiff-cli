@@ -11,6 +11,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Type represents type of progress bar.
+//go:generate stringer -type=Type -trimprefix=Type
+type Type uint
+
+const (
+	typeUnknown Type = iota
+
+	// TypeRendered is a progress bar that will be rendered.
+	TypeRendered
+	// TypeVoid is a void progress bar will do nothing.
+	TypeVoid
+
+	typeSentinel
+)
+
+// Valid checks if type is in a valid value range.
+func (bt Type) Valid() bool {
+	return bt > typeUnknown && bt < typeSentinel
+}
+
 // Bar is a progress bar manipulation contract.
 type Bar interface {
 	// Progress returns write channel, that will increase done work.
@@ -21,9 +41,9 @@ type Bar interface {
 	Run(ctx context.Context)
 }
 
-// New creates Bar instance for bar progress rendering .
+// New creates Bar instance for bar progress rendering.
 // cap - is the expected amount of work.
-// logLevel - if info bar will be displayed.
+// barType - is a desired type of bar that constructor will return.
 // Usage:
 //
 // pBar := bar.New(len(notMutual), log.GetLevel())
@@ -36,20 +56,23 @@ type Bar interface {
 // for i := range 100{
 // 	pBar.Progress() <- struct{}{}
 // }
-func New(cap int, logLevel log.Level) Bar {
-	if logLevel != log.InfoLevel {
+func New(cap int, barType Type) Bar {
+	switch barType {
+	case TypeRendered:
+		return &realBar{
+			bar:   progressbar.New(cap),
+			stop:  sync.Once{},
+			wg:    sync.WaitGroup{},
+			bchan: make(chan struct{}),
+		}
+	case TypeVoid:
 		return &voidBar{
 			wg:    sync.WaitGroup{},
 			stop:  sync.Once{},
 			bchan: make(chan struct{}),
 		}
-	}
-
-	return &realBar{
-		bar:   progressbar.New(cap),
-		stop:  sync.Once{},
-		wg:    sync.WaitGroup{},
-		bchan: make(chan struct{}),
+	default:
+		return nil
 	}
 }
 

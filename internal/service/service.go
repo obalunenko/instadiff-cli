@@ -256,7 +256,12 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		cancel()
 	}()
 
-	pBar := bar.New(len(notMutual), log.GetLevel())
+	bType := bar.TypeRendered
+	if log.GetLevel() != log.InfoLevel {
+		bType = bar.TypeVoid
+	}
+
+	pBar := bar.New(len(notMutual), bType)
 
 	go pBar.Run(ctx)
 
@@ -309,7 +314,12 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pBar := bar.New(len(users), log.GetLevel())
+	bType := bar.TypeRendered
+	if log.GetLevel() != log.InfoLevel {
+		bType = bar.TypeVoid
+	}
+
+	pBar := bar.New(len(users), bType)
 
 	go pBar.Run(ctx)
 
