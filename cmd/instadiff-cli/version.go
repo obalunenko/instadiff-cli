@@ -1,3 +1,4 @@
+// instadiff-cli is a command line tool for managing instagram account followers and followings.
 package main
 
 import "fmt"

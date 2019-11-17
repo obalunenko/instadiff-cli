@@ -1,3 +1,4 @@
+// instadiff-cli is a command line tool for managing instagram account followers and followings.
 package main
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
+	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 	"github.com/oleg-balunenko/instadiff-cli/internal/service"
 )
 
@@ -20,7 +22,14 @@ func main() {
 	app.Usage = `a command line tool for managing instagram account followers and followings`
 	app.Author = "Oleg Balunenko"
 	app.Version = printVersion()
-	app.Flags = []cli.Flag{
+	app.Flags = globalFlags()
+	app.Commands = commands()
+
+	log.Fatal(app.Run(os.Args))
+}
+
+func globalFlags() []cli.Flag {
+	return []cli.Flag{
 		cli.StringFlag{
 			Name:  "config_path",
 			Value: ".config.json",
@@ -41,12 +50,14 @@ func main() {
 			Destination: nil,
 		},
 	}
+}
 
-	app.Commands = []cli.Command{
+func commands() []cli.Command {
+	return []cli.Command{
 		{
 			Name:   "followers",
 			Usage:  "List your followers",
-			Action: listFollowers,
+			Action: cmdListFollowers,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "list",
@@ -57,7 +68,7 @@ func main() {
 		{
 			Name:   "followings",
 			Usage:  "List your followings",
-			Action: listFollowings,
+			Action: cmdListFollowings,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  list,
@@ -69,23 +80,18 @@ func main() {
 			Name:    "clean-followers",
 			Aliases: []string{"clean"},
 			Usage:   "Un follow not mutual followings, except of whitelisted",
-			Action:  cleanFollowings,
+			Action:  cmdCleanFollowings,
 		},
 		{
 			Name:   "unmutual",
 			Usage:  "List all not mutual followings",
-			Action: listNotMutual,
+			Action: cmdListNotMutual,
 		},
 		{
 			Name:   "bots",
-			Usage:  "List all bots or business accounts",
-			Action: listBotsAndBusiness,
+			Usage:  "List all bots or business accounts (alpha)",
+			Action: cmdListBotsAndBusiness,
 		},
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 
@@ -113,7 +119,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
 	return svc, stop, nil
 }
 
-func listFollowers(ctx *cli.Context) error {
+func cmdListFollowers(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
 		return err
@@ -128,16 +134,20 @@ func listFollowers(ctx *cli.Context) error {
 
 	fmt.Printf("Followers: %d \n", len(followers))
 
-	if ctx.Bool(list) {
-		for _, fu := range followers {
-			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
-		}
-	}
+	printUsersList(ctx, followers)
 
 	return nil
 }
 
-func listFollowings(ctx *cli.Context) error {
+func printUsersList(ctx *cli.Context, users []models.User) {
+	if ctx.Bool(list) {
+		for _, us := range users {
+			fmt.Printf("%s - %d \n", us.UserName, us.ID)
+		}
+	}
+}
+
+func cmdListFollowings(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
 		return err
@@ -152,16 +162,12 @@ func listFollowings(ctx *cli.Context) error {
 
 	fmt.Printf("Followings: %d \n", len(followings))
 
-	if ctx.Bool(list) {
-		for _, fu := range followings {
-			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
-		}
-	}
+	printUsersList(ctx, followings)
 
 	return nil
 }
 
-func cleanFollowings(ctx *cli.Context) error {
+func cmdCleanFollowings(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
 		return err
@@ -186,7 +192,7 @@ func cleanFollowings(ctx *cli.Context) error {
 	return nil
 }
 
-func listNotMutual(ctx *cli.Context) error {
+func cmdListNotMutual(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
 		return err
@@ -201,14 +207,12 @@ func listNotMutual(ctx *cli.Context) error {
 
 	log.Infof("Not following back: %d \n", len(notMutualFollowers))
 
-	for _, nf := range notMutualFollowers {
-		fmt.Printf("%s - %s \n", nf.UserName, nf.FullName)
-	}
+	printUsersList(ctx, notMutualFollowers)
 
 	return nil
 }
 
-func listBotsAndBusiness(ctx *cli.Context) error {
+func cmdListBotsAndBusiness(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
 		return err
@@ -223,9 +227,7 @@ func listBotsAndBusiness(ctx *cli.Context) error {
 
 	log.Infof("Could be blocked: %d \n", len(bots))
 
-	for _, nf := range bots {
-		fmt.Printf("%s - %s \n", nf.UserName, nf.FullName)
-	}
+	printUsersList(ctx, bots)
 
 	return nil
 }
