@@ -1,3 +1,4 @@
+// Package service implements instagram account operations and business logic.
 package service
 
 import (
@@ -83,14 +84,7 @@ func New(cfg config.Config) (*Service, func(), error) {
 // GetFollowers returns list of followers for logged in user.
 func (svc *Service) GetFollowers() ([]models.User, error) {
 	users := svc.instagramClient.Account.Followers()
-	followers := make([]models.User, 0, len(users.Users))
-
-	for users.Next() {
-		for i := range users.Users {
-			followers = append(followers,
-				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
-		}
-	}
+	followers := makeUsersList(users)
 
 	if len(followers) == 0 {
 		return nil, errors.New("no followers")
@@ -111,14 +105,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 func (svc *Service) GetFollowings() ([]models.User, error) {
 	users := svc.instagramClient.Account.Following()
 
-	followings := make([]models.User, 0, len(users.Users))
-
-	for users.Next() {
-		for i := range users.Users {
-			followings = append(followings,
-				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
-		}
-	}
+	followings := makeUsersList(users)
 
 	if len(followings) == 0 {
 		return nil, errors.New("no followings")
@@ -133,6 +120,19 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 	}
 
 	return followings, nil
+}
+
+func makeUsersList(users *goinsta.Users) []models.User {
+	usersList := make([]models.User, 0, len(users.Users))
+
+	for users.Next() {
+		for i := range users.Users {
+			usersList = append(usersList,
+				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
+		}
+	}
+
+	return usersList
 }
 
 // GetNotMutualFollowers returns list of users that not following back.
@@ -290,7 +290,9 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 // stop logs out from instagram and clean sessions.
 // Should be called in defer after creating new instance from New().
 func (svc *Service) stop() {
-	_ = svc.instagramClient.Logout()
+	if err := svc.instagramClient.Logout(); err != nil {
+		log.Errorf("logout: %v", err)
+	}
 }
 
 // handleBar creates channel for bar progress rendering and waitgroup for waiting till bar finish rendering.

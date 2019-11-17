@@ -11,46 +11,6 @@ import (
 )
 
 func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
-	fixtures := map[models.UsersBatchType]models.UsersBatch{
-		models.UsersBatchTypeFollowers: {
-			Users: []models.User{
-				{
-					ID:       1,
-					UserName: "user1",
-					FullName: "test user 1",
-				},
-				{
-					ID:       2,
-					UserName: "user2",
-					FullName: "test user 2",
-				},
-			},
-			Type: models.UsersBatchTypeFollowers,
-		},
-		models.UsersBatchTypeFollowings: {
-			Users: []models.User{
-				{
-					ID:       3,
-					UserName: "user3",
-					FullName: "test user 3",
-				},
-				{
-					ID:       4,
-					UserName: "user4",
-					FullName: "test user 4",
-				},
-			},
-			Type: models.UsersBatchTypeFollowings,
-		},
-	}
-
-	connectDBForTesting := func() DB {
-		db := newLocalDB()
-		db.users = fixtures
-
-		return db
-	}
-
 	type args struct {
 		batchType models.UsersBatchType
 	}
@@ -67,19 +27,8 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 				batchType: models.UsersBatchTypeFollowers,
 			},
 			want: models.UsersBatch{
-				Users: []models.User{
-					{
-						ID:       1,
-						UserName: "user1",
-						FullName: "test user 1",
-					},
-					{
-						ID:       2,
-						UserName: "user2",
-						FullName: "test user 2",
-					},
-				},
-				Type: models.UsersBatchTypeFollowers,
+				Users: followersFixture,
+				Type:  models.UsersBatchTypeFollowers,
 			},
 			wantErr: false,
 		},
@@ -88,8 +37,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: models.UsersBatchTypeUnknown,
 			},
-			want: models.EmptyUsersBatch,
-
+			want:    models.EmptyUsersBatch,
 			wantErr: true,
 		},
 		{
@@ -97,8 +45,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: 5,
 			},
-			want: models.EmptyUsersBatch,
-
+			want:    models.EmptyUsersBatch,
 			wantErr: true,
 		},
 	}
@@ -106,16 +53,15 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			l := connectDBForTesting()
+			l := setUpDbWithFixtures(t)
 
 			got, err := l.GetLastUsersBatchByType(context.TODO(), tt.args.batchType)
-			switch tt.wantErr {
-			case true:
+			if tt.wantErr {
 				require.Error(t, err)
-			case false:
-				require.NoError(t, err)
-				assert.Equal(t, tt.want, got)
+				return
 			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -129,19 +75,8 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	assert.Equal(t, models.EmptyUsersBatch, gotBatch)
 
 	goldenBatch := models.UsersBatch{
-		Users: []models.User{
-			{
-				ID:       1,
-				UserName: "user1",
-				FullName: "test user 1",
-			},
-			{
-				ID:       2,
-				UserName: "user2",
-				FullName: "test user 2",
-			},
-		},
-		Type: models.UsersBatchTypeFollowers,
+		Users: followersFixture,
+		Type:  models.UsersBatchTypeFollowers,
 	}
 
 	err = ldb.InsertUsersBatch(context.TODO(), goldenBatch)
@@ -151,4 +86,51 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, goldenBatch, gotBatch)
+}
+
+var (
+	followersFixture = []models.User{
+		{
+			ID:       1,
+			UserName: "user1",
+			FullName: "test user 1",
+		},
+		{
+			ID:       2,
+			UserName: "user2",
+			FullName: "test user 2",
+		},
+	}
+	followingsFixture = []models.User{
+		{
+			ID:       3,
+			UserName: "user3",
+			FullName: "test user 3",
+		},
+		{
+			ID:       4,
+			UserName: "user4",
+			FullName: "test user 4",
+		},
+	}
+)
+
+func setUpDbWithFixtures(t testing.TB) DB {
+	t.Helper()
+
+	fixtures := map[models.UsersBatchType]models.UsersBatch{
+		models.UsersBatchTypeFollowers: {
+			Users: followersFixture,
+			Type:  models.UsersBatchTypeFollowers,
+		},
+		models.UsersBatchTypeFollowings: {
+			Users: followingsFixture,
+			Type:  models.UsersBatchTypeFollowings,
+		},
+	}
+
+	db := newLocalDB()
+	db.users = fixtures
+
+	return db
 }
