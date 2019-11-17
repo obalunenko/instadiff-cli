@@ -23,7 +23,6 @@ func (l *localDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch)
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-
 	default:
 		if users.Type.Valid() {
 			l.users[users.Type] = users
@@ -39,7 +38,6 @@ func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
 	select {
 	case <-ctx.Done():
 		return models.EmptyUsersBatch, ctx.Err()
-
 	default:
 		if batchType.Valid() {
 			batch, exist := l.users[batchType]
