@@ -12,6 +12,8 @@ import (
 	"github.com/oleg-balunenko/instadiff-cli/internal/service"
 )
 
+const list = "list"
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "instadiff-cli"
@@ -58,7 +60,7 @@ func main() {
 			Action: listFollowings,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "list",
+					Name:  list,
 					Usage: "Print the full list instead of only number",
 				},
 			},
@@ -126,7 +128,7 @@ func listFollowers(ctx *cli.Context) error {
 
 	fmt.Printf("Followers: %d \n", len(followers))
 
-	if ctx.Bool("list") {
+	if ctx.Bool(list) {
 		for _, fu := range followers {
 			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
 		}
@@ -150,7 +152,7 @@ func listFollowings(ctx *cli.Context) error {
 
 	fmt.Printf("Followings: %d \n", len(followings))
 
-	if ctx.Bool("list") {
+	if ctx.Bool(list) {
 		for _, fu := range followings {
 			fmt.Printf("%s - %d \n", fu.UserName, fu.ID)
 		}

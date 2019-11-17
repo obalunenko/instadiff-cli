@@ -4,35 +4,39 @@ runner:
   golint:
     cmd: golint $(go list ./... | grep -v /vendor/)
     format: golint
-    level: warning
+    level: error
   govet:
     cmd: go vet $(go list ./... | grep -v /vendor/)
     format: govet
+    level: error
   errcheck:
     cmd: errcheck -asserts -ignoretests -blank $(go list ./... | grep -v /vendor/)
     errorformat:
       - "%f:%l:%c:%m"
-    level: warning
+    level: error
   staticcheck:
     cmd: staticcheck $(go list ./... | grep -v /vendor/)
     errorformat:
       - "%f:%l:%c: %m"
+    level: error
   misspell:
     cmd: misspell $(git ls-files | grep -v /vendor/))
     errorformat:
       - "%f:%l:%c: %m"
+    level: error
   unparam:
     cmd: unparam $(go list ./... | grep -v /vendor/)
     errorformat:
       - "%f:%l:%c: %m"
+    level: error
   revive:
     cmd: revive -config=.revive.toml $(go list ./... | grep -v /vendor/)
     format: golint
-    level: warning
+    level: error
   golangci:
     cmd: golangci-lint run --out-format=line-number ./...
     errorformat:
       - '%E%f:%l:%c: %m'
       - '%E%f:%l: %m'
       - '%C%.%#'
-    level: warning
+    level: error
