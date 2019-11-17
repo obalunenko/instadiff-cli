@@ -11,24 +11,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Type represents type of progress bar.
-//go:generate stringer -type=Type -trimprefix=Type
-type Type uint
+// BType represents kind of progress bar.
+//go:generate stringer -type=BType -trimprefix=BType
+type BType uint
 
 const (
-	typeUnknown Type = iota
+	bTypeUnknown BType = iota
 
-	// TypeRendered is a progress bar that will be rendered.
-	TypeRendered
-	// TypeVoid is a void progress bar will do nothing.
-	TypeVoid
+	// BTypeRendered is a progress bar that will be rendered.
+	BTypeRendered
+	// BTypeVoid is a void progress bar will do nothing.
+	BTypeVoid
 
-	typeSentinel
+	bTypeSentinel
 )
 
 // Valid checks if type is in a valid value range.
-func (bt Type) Valid() bool {
-	return bt > typeUnknown && bt < typeSentinel
+func (bt BType) Valid() bool {
+	return bt > bTypeUnknown && bt < bTypeSentinel
 }
 
 // Bar is a progress bar manipulation contract.
@@ -56,16 +56,16 @@ type Bar interface {
 // for i := range 100{
 // 	pBar.Progress() <- struct{}{}
 // }
-func New(cap int, barType Type) Bar {
+func New(cap int, barType BType) Bar {
 	switch barType {
-	case TypeRendered:
+	case BTypeRendered:
 		return &realBar{
 			bar:   progressbar.New(cap),
 			stop:  sync.Once{},
 			wg:    sync.WaitGroup{},
 			bchan: make(chan struct{}),
 		}
-	case TypeVoid:
+	case BTypeVoid:
 		return &voidBar{
 			wg:    sync.WaitGroup{},
 			stop:  sync.Once{},
