@@ -30,19 +30,6 @@ jobs:
       after_success:
         - bash <(curl -s https://codecov.io/bash)
 
-    - stage: Review
-      go:
-        - 1.13.x
-      os:
-        - linux
-      install:
-        - make dependencies
-      script:
-        - echo "Run Review..."
-        - make review
-      after_success:
-        - bash <(curl -s https://codecov.io/bash)
-
     - stage: Build Application
       go:
         - 1.13.x
