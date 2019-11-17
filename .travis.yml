@@ -39,9 +39,7 @@ jobs:
         - make dependencies
       script:
         - echo "Run Review..."
-        - make lint-ci
-        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken ${COVERALLS_TOKEN}
-        - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
+        - make review
       after_success:
         - bash <(curl -s https://codecov.io/bash)
 
