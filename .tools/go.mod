@@ -15,7 +15,7 @@ require (
 	github.com/mgechev/revive v0.0.0-20191017201419-88015ccf8e97 // indirect
 	github.com/olekukonko/tablewriter v0.0.2 // indirect
 	golang.org/x/lint v0.0.0-20190930215403-16217165b5de // indirect
-	golang.org/x/sys v0.0.0-20191115151921-52ab43148777 // indirect
+	golang.org/x/sys v0.0.0-20191117211529-81af7394a238 // indirect
 	golang.org/x/tools v0.0.0-20191116214431-80313e1ba718 // indirect
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 	mvdan.cc/unparam v0.0.0-20191111180625-960b1ec0f2c2 // indirect
