@@ -354,6 +354,8 @@ type isBotResult struct {
 	isBot bool
 }
 
+// GetBusinessAccountsOrBotsFromFollowers ranges all followers and tried to detect bots or business accounts.
+// These accounts could be blocked as they are not useful for statistic.
 func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, error) {
 	users, err := svc.GetFollowers()
 	if err != nil {
