@@ -394,7 +394,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 
 	for followers.Next() {
 		for i := range followers.Users {
-			processUser(ctx, &processWG, &followers.Users[i], svc.instagramClient, processResultChan)
+			svc.processUser(ctx, &processWG, &followers.Users[i], processResultChan)
 		}
 	}
 
@@ -408,7 +408,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 	return businessAccs, nil
 }
 
-func processUser(ctx context.Context, group *sync.WaitGroup, u *goinsta.User, instagram *goinsta.Instagram,
+func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *goinsta.User,
 	resultChan chan isBotResult) {
 	group.Add(1)
 
@@ -421,15 +421,15 @@ func processUser(ctx context.Context, group *sync.WaitGroup, u *goinsta.User, in
 		return
 	}
 
-	isBot := isBotOrBusiness(u, instagram)
+	isBot := svc.isBotOrBusiness(u)
 	resultChan <- isBotResult{
 		user:  models.MakeUser(u.ID, u.Username, u.FullName),
 		isBot: isBot,
 	}
 }
 
-func isBotOrBusiness(user *goinsta.User, instagram *goinsta.Instagram) bool {
-	user.SetInstagram(instagram)
+func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
+	user.SetInstagram(svc.instagramClient)
 
 	const businessMarkNumFollowers = 500
 
