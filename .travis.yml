@@ -6,7 +6,7 @@ env:
   global:
     - MYAPP=instadiff-cli
     - MYEMAIL=oleg.balunenko@gmail.com
-    - GOPROXY=https://gocenter.io
+    - GOPROXY=https://goproxy.io
 addons:
   sonarcloud:
     organization: oleg-balunenko-github
