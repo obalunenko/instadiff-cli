@@ -5,13 +5,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
-	"github.com/schollz/progressbar/v2"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oleg-balunenko/instadiff-cli/internal/bar"
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
 	"github.com/oleg-balunenko/instadiff-cli/internal/db"
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
@@ -257,16 +256,18 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		cancel()
 	}()
 
-	barChan, wgBar := handleBar(ctx, len(notMutual))
+	pBar := bar.New(len(notMutual), log.GetLevel())
+
+	go pBar.Run(ctx)
 
 	defer func() {
-		wgBar.Wait()
+		pBar.Finish()
 	}()
 
 	var count int
 
 	for _, nu := range notMutual {
-		barChan <- 1
+		pBar.Progress() <- struct{}{}
 
 		if _, ok := svc.whitelist[nu.UserName]; !ok {
 			if err := svc.UnFollow(nu); err != nil {
@@ -277,12 +278,9 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		}
 
 		if count >= svc.limits.unFollow {
-			close(barChan)
 			return count, ErrLimitExceed
 		}
 	}
-
-	close(barChan)
 
 	return count, nil
 }
@@ -293,62 +291,6 @@ func (svc *Service) stop() {
 	if err := svc.instagramClient.Logout(); err != nil {
 		log.Errorf("logout: %v", err)
 	}
-}
-
-// handleBar creates channel for bar progress rendering and waitgroup for waiting till bar finish rendering.
-// cap - is the expected amount of work.
-// Usage:
-// barChan, wgBar := handleBar(100)
-// for _, i := 100{
-// barChan <- 1
-// }
-// close(barChan)
-// wgBar.Wait()
-func handleBar(ctx context.Context, cap int) (chan int, *sync.WaitGroup) {
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-
-	barChan := make(chan int)
-
-	go func(ctx context.Context, wg *sync.WaitGroup, bchan chan int, cap int) {
-		defer func() {
-			wg.Done()
-		}()
-
-		switch log.GetLevel() {
-		case log.InfoLevel:
-			bar := progressbar.New(cap)
-			defer func() {
-				if err := bar.Finish(); err != nil {
-					log.Errorf("error when finish bar: %v", err)
-				}
-				fmt.Println()
-			}()
-
-			for {
-				select {
-				case i, ok := <-bchan:
-					if !ok {
-						return
-					}
-					if err := bar.Add(i); err != nil {
-						log.Errorf("error when add to bar: %v", err)
-					}
-					time.Sleep(10 * time.Millisecond)
-
-				case <-ctx.Done():
-					log.Errorf("canceled context: %v", ctx.Err())
-					return
-				}
-			}
-		default:
-			for range bchan {
-			}
-		}
-	}(ctx, &wg, barChan, cap)
-
-	return barChan, &wg
 }
 
 type isBotResult struct {
@@ -367,7 +309,14 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	chanBar, wgBar := handleBar(ctx, len(users))
+	pBar := bar.New(len(users), log.GetLevel())
+
+	go pBar.Run(ctx)
+
+	defer func() {
+		pBar.Finish()
+	}()
+
 	followers := svc.instagramClient.Account.Followers()
 	businessAccs := make([]models.User, 0, len(followers.Users))
 
@@ -387,7 +336,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 					businessAccs = append(businessAccs, result.user)
 				}
 				m.Unlock()
-				chanBar <- 1
+				pBar.Progress() <- struct{}{}
 			case <-ctx.Done():
 				return
 			}
@@ -399,9 +348,6 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 			svc.processUser(ctx, &processWG, &followers.Users[i], processResultChan)
 		}
 	}
-
-	close(chanBar)
-	wgBar.Wait()
 
 	if len(businessAccs) == 0 {
 		return nil, errors.New("no business accounts")
