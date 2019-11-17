@@ -4,16 +4,16 @@ function get_dependencies() {
   cd .tools || exit
 
   declare -a packages=(
-    "golang.org/x/tools/cmd/cover"
-    "github.com/mattn/goveralls"
-    "github.com/Bubblyworld/gogroup"
-    "golang.org/x/lint/golint"
-    "github.com/kisielk/errcheck"
-    "honnef.co/go/tools/cmd/staticcheck"
-    "github.com/client9/misspell/cmd/misspell"
-    "mvdan.cc/unparam"
-    "github.com/mgechev/revive"
-    "golang.org/x/tools/cmd/stringer"
+    "golang.org/x/tools/cmd/cover/..."
+    "github.com/mattn/goveralls/..."
+    "github.com/Bubblyworld/gogroup/..."
+    "golang.org/x/lint/golint/..."
+    "github.com/kisielk/errcheck/..."
+    "honnef.co/go/tools/cmd/staticcheck/..."
+    "github.com/client9/misspell/cmd/misspell/..."
+    "mvdan.cc/unparam/..."
+    "github.com/mgechev/revive/..."
+    "golang.org/x/tools/cmd/stringer/..."
   )
 
   ## now loop through the above array
