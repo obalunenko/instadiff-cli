@@ -1,4 +1,4 @@
-name: reviewdog on Push
+name: Reviewdog on Pull Request
 on: [pull-request]
 jobs:
   reviewdog:
