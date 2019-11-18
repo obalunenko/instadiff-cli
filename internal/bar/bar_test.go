@@ -32,6 +32,7 @@ func TestBType_Valid(t *testing.T) {
 			want: false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 
@@ -47,6 +48,7 @@ func TestNew(t *testing.T) {
 		cap     int
 		barType BType
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -86,6 +88,7 @@ func TestNew(t *testing.T) {
 			want: nil,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 

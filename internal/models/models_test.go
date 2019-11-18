@@ -32,7 +32,6 @@ func TestUsersBatchType_Valid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.i.Valid()
 			assert.Equal(t, tt.want, got)
-
 		})
 	}
 }
@@ -43,6 +42,7 @@ func TestMakeUser(t *testing.T) {
 		username string
 		fullname string
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -62,6 +62,7 @@ func TestMakeUser(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 
