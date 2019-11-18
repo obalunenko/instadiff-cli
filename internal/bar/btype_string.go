@@ -8,15 +8,15 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[bTypeUnknown-0]
+	_ = x[BTypeUnknown-0]
 	_ = x[BTypeRendered-1]
 	_ = x[BTypeVoid-2]
 	_ = x[bTypeSentinel-3]
 }
 
-const _BType_name = "bTypeUnknownRenderedVoidbTypeSentinel"
+const _BType_name = "UnknownRenderedVoidbTypeSentinel"
 
-var _BType_index = [...]uint8{0, 12, 20, 24, 37}
+var _BType_index = [...]uint8{0, 7, 15, 19, 32}
 
 func (i BType) String() string {
 	if i >= BType(len(_BType_index)-1) {

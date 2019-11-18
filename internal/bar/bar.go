@@ -16,7 +16,8 @@ import (
 type BType uint
 
 const (
-	bTypeUnknown BType = iota
+	// BTypeUnknown is a default empty value for unknown progress bar type.
+	BTypeUnknown BType = iota
 
 	// BTypeRendered is a progress bar that will be rendered.
 	BTypeRendered
@@ -27,8 +28,8 @@ const (
 )
 
 // Valid checks if type is in a valid value range.
-func (bt BType) Valid() bool {
-	return bt > bTypeUnknown && bt < bTypeSentinel
+func (i BType) Valid() bool {
+	return i > BTypeUnknown && i < bTypeSentinel
 }
 
 // Bar is a progress bar manipulation contract.
