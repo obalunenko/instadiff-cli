@@ -1,6 +1,7 @@
 # instadiff-cli
 
-[![Logo](.assets/gopher.png)]
+![Logo](.assets/gopher.png)
+
 [![Build Status](https://travis-ci.org/oleg-balunenko/instadiff-cli.svg?branch=master)](https://travis-ci.org/oleg-balunenko/instadiff-cli)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=instadiff-cli&metric=alert_status)](https://sonarcloud.io/dashboard?id=instadiff-cli)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e1b08a94c9cb45f4ac86391ef936166e)](https://www.codacy.com/manual/oleg.balunenko/instadiff-cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=oleg-balunenko/instadiff-cli&amp;utm_campaign=Badge_Grade)
