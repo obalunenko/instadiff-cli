@@ -47,6 +47,11 @@ lint:
 	./scripts/run-linters.sh
 .PHONY: lint
 
+lint-ci:
+	${call colored, lint_ci is running...}
+	./scripts/run-linters-ci.sh
+.PHONY: lint-ci
+
 ## format markdown files in project
 pretty-markdown:
 	find . -name '*.md' -not -wholename './vendor/*' | xargs prettier --write
@@ -88,7 +93,25 @@ dependencies:
 	./scripts/get-dependencies.sh
 .PHONY: dependencies
 
+## Docker compose up
+docker-up:
+	${call colored, docker is running...}
+	docker-compose -f ./docker-compose.yml up
 
+.PHONY: docker-up
+
+## Docker compose down
+docker-down:
+	${call colored, docker is running...}
+	docker-compose -f ./docker-compose.yml down --volumes
+
+.PHONY: docker-down
+
+## review code
+review:
+	${call colored, review is running...}
+	reviewdog -reporter=github-pr-check
+
+.PHONY: review
 
 .DEFAULT_GOAL := test
-

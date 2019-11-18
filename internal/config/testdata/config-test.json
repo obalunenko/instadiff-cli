@@ -14,5 +14,11 @@
     "unfollow":100,
     "follow": 50
   },
+  "db": {
+    "local": true,
+    "mongoURL": "mongoURL:test",
+    "mongoDBName": "testing",
+    "mongoCollectionName": "users"
+  },
   "debug": "false"
 }

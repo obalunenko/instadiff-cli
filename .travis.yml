@@ -6,47 +6,32 @@ env:
   global:
     - MYAPP=instadiff-cli
     - MYEMAIL=oleg.balunenko@gmail.com
+    - GOPROXY=https://goproxy.io
+addons:
+  sonarcloud:
+    organization: oleg-balunenko-github
+    token: "$SONAR_TOKEN"
+
 jobs:
   include:
-    - stage: Unit Tests
+    - stage: Unit Tests, Metalinter, Sonar
       go:
-        - 1.11.x
-        - 1.12.x
         - 1.13.x
       os:
         - linux
       install:
-        - env GO111MODULE=off
         - make dependencies
       script:
         - echo "Run unit tests..."
-        - env GO111MODULE=on
-        - make test
-        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+        - go test -v -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.out -json ./... > tests.out
+        - make lint-ci
+        - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken ${COVERALLS_TOKEN}
+        - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
       after_success:
         - bash <(curl -s https://codecov.io/bash)
-    - stage: Metalinter analysis
-      go:
-        - 1.12.x
-      os:
-        - linux
-      install:
-        - env GO111MODULE=off
-        - make dependencies
-      script:
-        - env GO111MODULE=off
-        - make lint
-    - stage: Sonar Scanner
-      addons:
-        sonarcloud:
-          organization: oleg-balunenko-github
-          token: "$SONAR_TOKEN"
-      script:
-        - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
+
     - stage: Build Application
       go:
-        - 1.11.x
-        - 1.12.x
         - 1.13.x
       os:
         - linux

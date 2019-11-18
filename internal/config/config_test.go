@@ -7,20 +7,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type args struct {
+	path string
+}
+
+type test struct {
+	name    string
+	args    args
+	want    Config
+	wantErr bool
+}
+
 func TestLoad(t *testing.T) {
-	type args struct {
-		path string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    Config
-		wantErr bool
-	}{
+	tests := []test{
 		{
 			name: "load config from file",
 			args: args{
-				path: filepath.Join("testdata", "config-test.json"),
+				path: filepath.Clean(filepath.Join("testdata", "config-test.json")),
 			},
 			want: Config{
 				user: user{
@@ -28,6 +31,12 @@ func TestLoad(t *testing.T) {
 						username: "user",
 						password: "pass",
 					},
+				},
+				db: db{
+					local:               true,
+					mongoURL:            "mongoURL:test",
+					mongoDBName:         "testing",
+					mongoCollectionName: "users",
 				},
 				whitelist: []string{
 					"user1",
@@ -44,23 +53,23 @@ func TestLoad(t *testing.T) {
 		{
 			name: "error for not exist file",
 			args: args{
-				path: filepath.Join("testdata", "config-test-not-exist.json"),
+				path: filepath.Clean(filepath.Join("testdata", "config-test-not-exist.json")),
 			},
 			want:    Config{},
 			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := Load(tt.args.path)
-			switch tt.wantErr {
-			case true:
+			if tt.wantErr {
 				assert.Error(t, err)
-			case false:
-				assert.NoError(t, err)
-				assert.Equal(t, tt.want, got)
+				return
 			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
