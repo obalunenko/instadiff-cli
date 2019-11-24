@@ -4,6 +4,7 @@ set -e
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 APP="instadiff-cli"
+MODULE="github.com/oleg-balunenko/instadiff-cli"
 VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1)")"-local"
 COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null)
 DATE=$(date "+%Y-%m-%d")
@@ -17,7 +18,7 @@ if [[ "$(pwd)" != "${REPO_ROOT}" ]]; then
 fi
 
 GO_BUILD_LDFLAGS="-s -w -X 'main.commit=${COMMIT_HASH}' -X 'main.date=${DATE}' -X 'main.version=${VERSION}'"
-GO_BUILD_PACKAGE="github.com/oleg-balunenko/instadiff-cli/cmd/instadiff-cli/."
+GO_BUILD_PACKAGE="${MODULE}/cmd/instadiff-cli/."
 
 if [[ -z "${BUILD_PLATFORMS}" ]]; then
   BUILD_PLATFORMS="linux windows darwin"
