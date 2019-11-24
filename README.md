@@ -54,31 +54,49 @@ instadiff-cli help [command]
 Example of config file:
 
 ```json
-{
-  "user":{
-    "instagram":{
-      "username":"user",
-      "password":"pass"
-    }
-  },
-  "db": {
-    "local": true,
-    "mongoURL": "mongodb://127.0.0.1:27017",
-    "mongoDBName": "testing",
-    "mongoCollectionName": "users"
-  },
-  "whitelist":[
-    "user1",
-    "user2",
-    "user3"
-  ],
-  "limits":{
-    "unfollow":100,
-    "follow": 50
-  },
-  "debug": "false"
+{  
+  "instagram":{  
+  "user":{  
+  "username":"user",  
+  "password":"pass"  
+  },  
+  "whitelist":[  
+  "user1",  
+  "user2",  
+  "user3"  
+  ],  
+  "limits":{  
+  "unfollow":100  
+  }  
+ },  
+  "storage": {  
+  "local": true,  
+  "mongo": {  
+  "url": "mongoURL:test",  
+  "db": "testing",  
+  "collection": "users"  
+  }  
+ },  
+  "debug": "false"  
 }
 ```
+
+* instagram: it is an config for instagram
+	* user: user credentials to login into user's account
+		* username: login
+		* password: password
+	* whitelist: list of followings that will be not unfollowed even if they are unmutual.
+	* limits: limits per one run.
+		* unfollow: number of users that could be unfollowed in one run (be careful will big numbers - account could be bunned)
+* debug: if true, all opereattions will be influendce on account (e.g. unfollow will just list users and not really unfollow users)
+* storage: its a config for database storage. 
+	* local: if true, memory cache will be used and connection to mongo will be not set.
+	* mongo: is a config for mongo database
+	  - url: url of mongo DB to connect
+	  - db: name of Database
+	  - collection: collection name in database where models will be stored
+
+ 
 
 Create a json file with configuration and pass the path to it via flag `--config_path`
 
