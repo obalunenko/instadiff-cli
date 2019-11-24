@@ -21,7 +21,7 @@ func main() {
 	app.Name = "instadiff-cli"
 	app.Usage = `a command line tool for managing instagram account followers and followings`
 	app.Author = "Oleg Balunenko"
-	app.Version = printVersion()
+	app.Version = versionInfo()
 	app.Flags = globalFlags()
 	app.Commands = commands()
 
