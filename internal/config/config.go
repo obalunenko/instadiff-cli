@@ -11,61 +11,60 @@ import (
 
 // Config represents config for InstaDiff service.
 type Config struct {
-	db        db
-	user      user
-	whitelist []string
-	limits    limits
+	storage   storage
+	instagram instagram
 	debug     bool
 }
 
 type instagram struct {
-	username string
-	password string
+	user      user
+	whitelist []string
+	limits    limits
 }
 
 type user struct {
-	instagram instagram
+	username string
+	password string
 }
 
 type limits struct {
 	unfollow int
 }
 
-type db struct {
-	local               bool
-	mongoURL            string
-	mongoDBName         string
-	mongoCollectionName string
+type storage struct {
+	local bool
+	mongo mongo
+}
+
+type mongo struct {
+	url        string
+	db         string
+	collection string
 }
 
 // Username returns username.
 func (c Config) Username() string {
-	return c.user.instagram.username
+	return c.instagram.user.username
 }
 
 // Password returns password.
 func (c Config) Password() string {
-	return c.user.instagram.password
+	return c.instagram.user.password
 }
 
 // UnFollowLimits returns unFollow action daily limits.
 func (c Config) UnFollowLimits() int {
-	return c.limits.unfollow
-}
-
-// FollowLimits returns follow action daily limits.
-func (c Config) FollowLimits() int {
-	return c.limits.unfollow
+	return c.instagram.limits.unfollow
 }
 
 // Whitelist returns map of whitelisted users.
 func (c Config) Whitelist() map[string]struct{} {
-	if len(c.whitelist) == 0 {
+	if len(c.instagram.whitelist) == 0 {
 		return nil
 	}
 
-	wl := make(map[string]struct{}, len(c.whitelist))
-	for _, l := range c.whitelist {
+	wl := make(map[string]struct{}, len(c.instagram.whitelist))
+	for _, l := range c.instagram.whitelist {
 		wl[l] = struct{}{}
 	}
 
@@ -88,22 +87,22 @@ func (c *Config) SetDebug(debug bool) {
 
 // IsLocalDBEnabled returns local DB enabled status
 func (c Config) IsLocalDBEnabled() bool {
-	return c.db.local
+	return c.storage.local
 }
 
 // MongoConfigURL returns configured MongoDB URL
 func (c Config) MongoConfigURL() string {
-	return c.db.mongoURL
+	return c.storage.mongo.url
 }
 
 // MongoDBName returns configured MongoDB name
 func (c Config) MongoDBName() string {
-	return c.db.mongoDBName
+	return c.storage.mongo.db
 }
 
 // MongoDBCollection returns configured MongoDB collection
 func (c Config) MongoDBCollection() string {
-	return c.db.mongoCollectionName
+	return c.storage.mongo.collection
 }
 
 // Load loads config from passed filepath
@@ -137,22 +136,25 @@ func Load(path string) (Config, error) {
 	log.Infof("Using config: %s\n\n", viper.ConfigFileUsed())
 
 	cfg = Config{
-		db: db{
-			local:               viper.GetBool("db.local"),
-			mongoURL:            viper.GetString("db.mongoURL"),
-			mongoDBName:         viper.GetString("db.mongoDBName"),
-			mongoCollectionName: viper.GetString("db.mongoCollectionName"),
-		},
-		user: user{
-			instagram: instagram{
-				username: viper.GetString("user.instagram.username"),
-				password: viper.GetString("user.instagram.password"),
+		storage: storage{
+			local: viper.GetBool("storage.local"),
+			mongo: mongo{
+				url:        viper.GetString("storage.mongo.url"),
+				db:         viper.GetString("storage.mongo.db"),
+				collection: viper.GetString("storage.mongo.collection"),
 			},
 		},
-		whitelist: viper.GetStringSlice("whitelist"),
-		limits: limits{
-			unfollow: viper.GetInt("limits.unfollow"),
+		instagram: instagram{
+			user: user{
+				username: viper.GetString("instagram.user.username"),
+				password: viper.GetString("instagram.user.password"),
+			},
+			whitelist: viper.GetStringSlice("instagram.whitelist"),
+			limits: limits{
+				unfollow: viper.GetInt("instagram.limits.unfollow"),
+			},
 		},
+		debug: false,
 	}
 
 	return cfg, nil

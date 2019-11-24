@@ -26,26 +26,29 @@ func TestLoad(t *testing.T) {
 				path: filepath.Clean(filepath.Join("testdata", "config-test.json")),
 			},
 			want: Config{
-				user: user{
-					instagram: instagram{
+				instagram: instagram{
+					user: user{
 						username: "user",
 						password: "pass",
 					},
+					whitelist: []string{
+						"user1",
+						"user2",
+						"user3",
+					},
+					limits: limits{
+						unfollow: 100,
+					},
 				},
-				db: db{
-					local:               true,
-					mongoURL:            "mongoURL:test",
-					mongoDBName:         "testing",
-					mongoCollectionName: "users",
+				storage: storage{
+					local: true,
+					mongo: mongo{
+						url:        "mongoURL:test",
+						db:         "testing",
+						collection: "users",
+					},
 				},
-				whitelist: []string{
-					"user1",
-					"user2",
-					"user3",
-				},
-				limits: limits{
-					unfollow: 100,
-				},
+
 				debug: false,
 			},
 			wantErr: false,

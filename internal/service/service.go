@@ -21,15 +21,17 @@ var ErrLimitExceed = errors.New("limit exceeded")
 
 // Service represents service for operating instagram account.
 type Service struct {
-	instagramClient *goinsta.Instagram
-	database        db.DB
-	limits          limits
-	whitelist       map[string]struct{}
-	debug           bool
+	instagram instagram
+	storage   db.DB
+	debug     bool
 }
 
+type instagram struct {
+	client    *goinsta.Instagram
+	whitelist map[string]struct{}
+	limits    limits
+}
 type limits struct {
-	follow   int
 	unFollow int
 }
 
@@ -51,7 +53,6 @@ func New(cfg config.Config) (*Service, func(), error) {
 	log.Printf("logged in as %s \n", cl.Account.Username)
 
 	lmts := limits{
-		follow:   cfg.FollowLimits(),
 		unFollow: cfg.UnFollowLimits(),
 	}
 
@@ -70,11 +71,13 @@ func New(cfg config.Config) (*Service, func(), error) {
 	}
 
 	inst := &Service{
-		instagramClient: cl,
-		database:        dbc,
-		limits:          lmts,
-		whitelist:       cfg.Whitelist(),
-		debug:           cfg.Debug(),
+		instagram: instagram{
+			client:    cl,
+			whitelist: cfg.Whitelist(),
+			limits:    lmts,
+		},
+		storage: dbc,
+		debug:   cfg.Debug(),
 	}
 
 	return inst, inst.stop, nil
@@ -82,14 +85,14 @@ func New(cfg config.Config) (*Service, func(), error) {
 
 // GetFollowers returns list of followers for logged in user.
 func (svc *Service) GetFollowers() ([]models.User, error) {
-	users := svc.instagramClient.Account.Followers()
+	users := svc.instagram.client.Account.Followers()
 	followers := makeUsersList(users)
 
 	if len(followers) == 0 {
 		return nil, errors.New("no followers")
 	}
 
-	err := svc.database.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
 		Users: followers,
 		Type:  models.UsersBatchTypeFollowers,
 	})
@@ -102,7 +105,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 
 // GetFollowings returns list of followings for logged in user.
 func (svc *Service) GetFollowings() ([]models.User, error) {
-	users := svc.instagramClient.Account.Following()
+	users := svc.instagram.client.Account.Following()
 
 	followings := makeUsersList(users)
 
@@ -110,7 +113,7 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 		return nil, errors.New("no followings")
 	}
 
-	err := svc.database.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
 		Users: followings,
 		Type:  models.UsersBatchTypeFollowings,
 	})
@@ -160,12 +163,12 @@ func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 		}
 	}
 
-	err = svc.database.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err = svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
 		Users: notmutual,
 		Type:  models.UsersBatchTypeNotMutual,
 	})
 	if err != nil {
-		log.Errorf("Failed to insert %s in database: %v", models.UsersBatchTypeNotMutual, err)
+		log.Errorf("Failed to insert %s in storage: %v", models.UsersBatchTypeNotMutual, err)
 	}
 
 	return notmutual, nil
@@ -180,7 +183,7 @@ func (svc *Service) UnFollow(user models.User) error {
 	}
 
 	us := goinsta.User{ID: user.ID, Username: user.UserName}
-	us.SetInstagram(svc.instagramClient)
+	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Unfollow(); err != nil {
 		return errors.Wrapf(err, "failed to unfollow user %v", user)
@@ -198,7 +201,7 @@ func (svc *Service) Follow(user models.User) error {
 	}
 
 	us := goinsta.User{ID: user.ID, Username: user.UserName}
-	us.SetInstagram(svc.instagramClient)
+	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Follow(); err != nil {
 		return errors.Wrapf(err, "failed to follow user %v", user)
@@ -228,7 +231,7 @@ func (svc *Service) UnFollowAllNotMutual() (int, error) {
 
 		count++
 
-		if count >= svc.limits.unFollow {
+		if count >= svc.instagram.limits.unFollow {
 			return count, ErrLimitExceed
 		}
 	}
@@ -274,7 +277,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	for _, nu := range notMutual {
 		pBar.Progress() <- struct{}{}
 
-		if _, ok := svc.whitelist[nu.UserName]; !ok {
+		if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
 			if err := svc.UnFollow(nu); err != nil {
 				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
 				continue
@@ -282,7 +285,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 			count++
 		}
 
-		if count >= svc.limits.unFollow {
+		if count >= svc.instagram.limits.unFollow {
 			return count, ErrLimitExceed
 		}
 	}
@@ -293,7 +296,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 // stop logs out from instagram and clean sessions.
 // Should be called in defer after creating new instance from New().
 func (svc *Service) stop() {
-	if err := svc.instagramClient.Logout(); err != nil {
+	if err := svc.instagram.client.Logout(); err != nil {
 		log.Errorf("logout: %v", err)
 	}
 }
@@ -327,7 +330,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 		pBar.Finish()
 	}()
 
-	followers := svc.instagramClient.Account.Followers()
+	followers := svc.instagram.client.Account.Followers()
 	businessAccs := make([]models.User, 0, len(followers.Users))
 
 	processResultChan := make(chan isBotResult)
@@ -387,7 +390,7 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 }
 
 func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
-	user.SetInstagram(svc.instagramClient)
+	user.SetInstagram(svc.instagram.client)
 
 	const businessMarkNumFollowers = 500
 
