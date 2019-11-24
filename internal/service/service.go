@@ -31,6 +31,7 @@ type instagram struct {
 	whitelist map[string]struct{}
 	limits    limits
 }
+
 type limits struct {
 	unFollow int
 }
@@ -52,12 +53,6 @@ func New(cfg config.Config) (*Service, func(), error) {
 
 	log.Printf("logged in as %s \n", cl.Account.Username)
 
-	lmts := limits{
-		unFollow: cfg.UnFollowLimits(),
-	}
-
-	var dbc db.DB
-
 	dbc, err := db.Connect(db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
 		MongoParams: db.MongoParams{
@@ -74,7 +69,9 @@ func New(cfg config.Config) (*Service, func(), error) {
 		instagram: instagram{
 			client:    cl,
 			whitelist: cfg.Whitelist(),
-			limits:    lmts,
+			limits: limits{
+				unFollow: cfg.UnFollowLimits(),
+			},
 		},
 		storage: dbc,
 		debug:   cfg.Debug(),
@@ -85,8 +82,7 @@ func New(cfg config.Config) (*Service, func(), error) {
 
 // GetFollowers returns list of followers for logged in user.
 func (svc *Service) GetFollowers() ([]models.User, error) {
-	users := svc.instagram.client.Account.Followers()
-	followers := makeUsersList(users)
+	followers := makeUsersList(svc.instagram.client.Account.Followers())
 
 	if len(followers) == 0 {
 		return nil, errors.New("no followers")
@@ -105,9 +101,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 
 // GetFollowings returns list of followings for logged in user.
 func (svc *Service) GetFollowings() ([]models.User, error) {
-	users := svc.instagram.client.Account.Following()
-
-	followings := makeUsersList(users)
+	followings := makeUsersList(svc.instagram.client.Account.Following())
 
 	if len(followings) == 0 {
 		return nil, errors.New("no followings")
@@ -356,9 +350,9 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 		}
 	}(ctx, &mu)
 
-	for followers.Next() {
-		for i := range followers.Users {
-			svc.processUser(ctx, &processWG, &followers.Users[i], processResultChan)
+	for svc.instagram.client.Account.Followers().Next() {
+		for i := range svc.instagram.client.Account.Followers().Users {
+			svc.processUser(ctx, &processWG, &svc.instagram.client.Account.Followers().Users[i], processResultChan)
 		}
 	}
 
@@ -382,10 +376,9 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 		return
 	}
 
-	isBot := svc.isBotOrBusiness(u)
 	resultChan <- isBotResult{
 		user:  models.MakeUser(u.ID, u.Username, u.FullName),
-		isBot: isBot,
+		isBot: svc.isBotOrBusiness(u),
 	}
 }
 
