@@ -37,7 +37,7 @@ jobs:
         - linux
       go_import_path: github.com/oleg-balunenko/instadiff-cli
       script:
-        - export GOVERSION=$(go version | awk '{print $3;}')
+        - export GOVERSION=${TRAVIS_GO_VERSION}
         - echo "GOVERSION=${GOVERSION}"
         - echo "Build stage"
         - make compile
