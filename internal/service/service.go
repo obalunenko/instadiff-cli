@@ -10,10 +10,10 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/bar"
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
 	"github.com/oleg-balunenko/instadiff-cli/internal/db"
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/oleg-balunenko/instadiff-cli/pkg/bar"
 )
 
 // ErrLimitExceed returned when limit for action exceeded.
