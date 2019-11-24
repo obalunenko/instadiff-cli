@@ -46,6 +46,8 @@ archives:
     files:
       - LICENSE
       - README.md
+      - docker-compose.yml
+      - config-example.json
 
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"

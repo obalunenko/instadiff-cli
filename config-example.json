@@ -1,0 +1,24 @@
+{
+  "user":{
+    "instagram":{
+      "username":"user",
+      "password":"pass"
+    }
+  },
+  "db": {
+    "local": true,
+    "mongoURL": "mongodb://127.0.0.1:27017",
+    "mongoDBName": "testing",
+    "mongoCollectionName": "users"
+  },
+  "whitelist":[
+    "user1",
+    "user2",
+    "user3"
+  ],
+  "limits":{
+    "unfollow":100,
+    "follow": 50
+  },
+  "debug": "false"
+}
