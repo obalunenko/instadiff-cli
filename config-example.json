@@ -1,24 +1,25 @@
 {
-  "user":{
-    "instagram":{
+  "instagram":{
+    "user":{
       "username":"user",
       "password":"pass"
+    },
+    "whitelist":[
+      "user1",
+      "user2",
+      "user3"
+    ],
+    "limits":{
+      "unfollow":100
     }
   },
-  "db": {
+  "storage": {
     "local": true,
-    "mongoURL": "mongodb://127.0.0.1:27017",
-    "mongoDBName": "testing",
-    "mongoCollectionName": "users"
-  },
-  "whitelist":[
-    "user1",
-    "user2",
-    "user3"
-  ],
-  "limits":{
-    "unfollow":100,
-    "follow": 50
+    "mongo": {
+      "url": "mongodb://127.0.0.1:27017",
+      "db": "testing",
+      "collection": "users"
+    }
   },
   "debug": "false"
 }
