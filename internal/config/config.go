@@ -160,7 +160,7 @@ func Load(path string) (Config, error) {
 			limits: limits{
 				unfollow: viper.GetInt("instagram.limits.unfollow"),
 			},
-			sleep: viper.GetInt("instagram.sleep"),
+			sleep: viper.GetInt64("instagram.sleep"),
 		},
 		debug: false,
 	}
