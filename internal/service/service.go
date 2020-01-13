@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
@@ -30,6 +31,7 @@ type instagram struct {
 	client    *goinsta.Instagram
 	whitelist map[string]struct{}
 	limits    limits
+	sleep     time.Duration
 }
 
 type limits struct {
@@ -72,6 +74,7 @@ func New(cfg config.Config) (*Service, func(), error) {
 			limits: limits{
 				unFollow: cfg.UnFollowLimits(),
 			},
+			sleep: cfg.Sleep(),
 		},
 		storage: dbc,
 		debug:   cfg.Debug(),
@@ -218,6 +221,8 @@ func (svc *Service) UnFollowAllNotMutual() (int, error) {
 	var count int
 
 	for _, nu := range notMutual {
+		time.Sleep(svc.instagram.sleep)
+
 		if err := svc.UnFollow(nu); err != nil {
 			log.Printf("failed to unFollow user %v:%v", nu, err)
 			continue
@@ -272,6 +277,8 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		pBar.Progress() <- struct{}{}
 
 		if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
+			time.Sleep(svc.instagram.sleep)
+
 			if err := svc.UnFollow(nu); err != nil {
 				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
 				continue
