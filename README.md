@@ -8,7 +8,7 @@
 # instadiff-cli
 
 <p align="center">
-  <img src=".assets/gopher.png" alt="" width="300">
+  <img src="https://github.com/oleg-balunenko/instadiff-cli/blob/master/.assets/gopher.png" alt="" width="300">
   <br>
 </p>
 
