@@ -3,6 +3,7 @@ package config
 
 import (
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -20,6 +21,7 @@ type instagram struct {
 	user      user
 	whitelist []string
 	limits    limits
+	sleep     int64
 }
 
 type user struct {
@@ -55,6 +57,11 @@ func (c Config) Password() string {
 // UnFollowLimits returns unFollow action daily limits.
 func (c Config) UnFollowLimits() int {
 	return c.instagram.limits.unfollow
+}
+
+// Sleep returns wait duration from for instagram operations to avoid blocks.
+func (c Config) Sleep() time.Duration {
+	return time.Second * time.Duration(c.instagram.sleep)
 }
 
 // Whitelist returns map of whitelisted users.
@@ -153,6 +160,7 @@ func Load(path string) (Config, error) {
 			limits: limits{
 				unfollow: viper.GetInt("instagram.limits.unfollow"),
 			},
+			sleep: viper.GetInt("instagram.sleep"),
 		},
 		debug: false,
 	}

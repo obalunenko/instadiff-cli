@@ -39,6 +39,7 @@ func TestLoad(t *testing.T) {
 					limits: limits{
 						unfollow: 100,
 					},
+					sleep: 1,
 				},
 				storage: storage{
 					local: true,

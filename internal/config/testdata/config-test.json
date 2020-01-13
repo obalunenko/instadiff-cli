@@ -11,7 +11,8 @@
     ],
     "limits":{
       "unfollow":100
-    }
+    },
+    "sleep": 1
   },
   "storage": {
     "local": true,
