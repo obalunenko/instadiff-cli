@@ -97,9 +97,7 @@ func commands() []cli.Command {
 	}
 }
 
-type stopFunc func()
-
-func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
+func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) {
 	var err error
 
 	configPath := ctx.GlobalString("config_path")
@@ -113,12 +111,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, stopFunc, error) {
 
 	cfg.SetDebug(ctx.GlobalBool("debug"))
 
-	svc, stop, err := service.New(cfg)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create service")
-	}
-
-	return svc, stop, nil
+	return service.New(cfg)
 }
 
 func cmdListFollowers(ctx *cli.Context) error {
