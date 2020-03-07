@@ -4,12 +4,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/tcnksm/go-input"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/config"
 	"github.com/oleg-balunenko/instadiff-cli/internal/db"
@@ -38,6 +40,9 @@ type limits struct {
 	unFollow int
 }
 
+// StopFunc closure func that will stop service.
+type StopFunc func()
+
 // New creates new instance of Service instance and returns closure func that will stop service.
 //
 // Usage:
@@ -46,14 +51,11 @@ type limits struct {
 // // handle error
 // }
 // defer stop()
-func New(cfg config.Config) (*Service, func(), error) {
-	cl := goinsta.New(cfg.Username(), cfg.Password())
-
-	if err := cl.Login(); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to login")
+func New(cfg config.Config) (*Service, StopFunc, error) {
+	cl, err := makeClient(cfg)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to make instagram client")
 	}
-
-	log.Printf("logged in as %s \n", cl.Account.Username)
 
 	dbc, err := db.Connect(db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
@@ -67,7 +69,7 @@ func New(cfg config.Config) (*Service, func(), error) {
 		return nil, nil, errors.Wrap(err, "failed to connect to db")
 	}
 
-	inst := &Service{
+	inst := Service{
 		instagram: instagram{
 			client:    cl,
 			whitelist: cfg.Whitelist(),
@@ -80,7 +82,50 @@ func New(cfg config.Config) (*Service, func(), error) {
 		debug:   cfg.Debug(),
 	}
 
-	return inst, inst.stop, nil
+	return &inst, inst.stop, nil
+}
+
+func makeClient(cfg config.Config) (*goinsta.Instagram, error) {
+	cl := goinsta.New(cfg.Username(), cfg.Password())
+
+	if err := cl.Login(); err != nil {
+		switch v := err.(type) {
+		case goinsta.ChallengeError:
+			if err = cl.Challenge.Process(v.Challenge.APIPath); err != nil {
+				return nil, errors.Wrap(err, "failed to process challenge")
+			}
+
+			ui := &input.UI{
+				Writer: os.Stdout,
+				Reader: os.Stdin,
+			}
+
+			var code string
+
+			code, err = ui.Ask("What is SMS code for instagram?",
+				&input.Options{
+					Default:  "000000",
+					Required: true,
+					Loop:     true,
+				})
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to process user input")
+			}
+
+			if err = cl.Challenge.SendSecurityCode(code); err != nil {
+				return nil, errors.Wrap(err, "failed to send code")
+			}
+
+			cl.Account = cl.Challenge.LoggedInUser
+
+		default:
+			return nil, errors.Wrap(err, "failed to login")
+		}
+	}
+
+	log.Printf("logged in as %s \n", cl.Account.Username)
+
+	return cl, nil
 }
 
 // GetFollowers returns list of followers for logged in user.
