@@ -33,13 +33,6 @@ import (
 func main() {  
   insta := goinsta.New("USERNAME", "PASSWORD")
 
-  // You can set a proxy as a transporter in goinsta
-  // insta.SetProxy("http://localhost:8080", true) // true for insecure connections
-  if err := insta.Login(); err != nil {
-    fmt.Println(err)
-    return
-  }
-
   // Export your configuration
   // after exporting you can use Import function instead of New function.
   // insta, err := goinsta.Import("~/.goinsta")
@@ -63,6 +56,8 @@ func main() {
 - [gridcube-challenge](https://github.com/rodrwan/gridcube-challenge)
 - [nyaakitties](https://github.com/gracechang/nyaakitties)
 - [InstaFollower](https://github.com/Unanoc/InstaFollower)
+- [follow-sync](https://github.com/kirsle/follow-sync)
+- [Game DB](https://github.com/gamedb/gamedb)
 - ...
 
 ### Legal
@@ -72,8 +67,17 @@ This code is in no way affiliated with, authorized, maintained, sponsored or end
 ### Versioning
 
 Goinsta used gopkg.in as versioning control. Stable new API is the version v2.0. You can get it using:
+
 ```bash
-go get -u -v gopkg.in/ahmdrz/goinsta.v2
+$ go get -u -v gopkg.in/ahmdrz/goinsta.v2
+```
+
+Or 
+
+If you have `GO111MODULE=on`
+
+```
+$ go get -u github.com/ahmdrz/goinsta/v2
 ```
 
 ### Donate

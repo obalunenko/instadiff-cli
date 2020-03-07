@@ -45,9 +45,13 @@ type Instagram struct {
 	pid string
 	// ads id
 	adid string
+	// challenge URL
+	challengeURL string
 
 	// Instagram objects
 
+	// Challenge controls security side of account (Like sms verify / It was me)
+	Challenge *Challenge
 	// Profiles is the user interaction
 	Profiles *Profiles
 	// Account stores all personal data of the user and his/her options.
@@ -77,6 +81,12 @@ func (inst *Instagram) SetHTTPClient(client *http.Client) {
 	inst.c = client
 }
 
+// SetHTTPTransport sets http transport. This further allows users to tweak the underlying
+// low level transport for adding additional fucntionalities.
+func (inst *Instagram) SetHTTPTransport(transport http.RoundTripper) {
+	inst.c.Transport = transport
+}
+
 // SetDeviceID sets device id
 func (inst *Instagram) SetDeviceID(id string) {
 	inst.dID = id
@@ -90,6 +100,20 @@ func (inst *Instagram) SetUUID(uuid string) {
 // SetPhoneID sets phone id
 func (inst *Instagram) SetPhoneID(id string) {
 	inst.pid = id
+}
+
+// SetCookieJar sets the Cookie Jar. This further allows to use a custom implementation
+// of a cookie jar which may be backed by a different data store such as redis.
+func (inst *Instagram) SetCookieJar(jar http.CookieJar) error {
+	url, err := neturl.Parse(goInstaAPIUrl)
+	if err != nil {
+		return err
+	}
+	// First grab the cookies from the existing jar and we'll put it in the new jar.
+	cookies := inst.c.Jar.Cookies(url)
+	inst.c.Jar = jar
+	inst.c.Jar.SetCookies(url, cookies)
+	return nil
 }
 
 // New creates Instagram structure
@@ -117,6 +141,7 @@ func New(username, password string) *Instagram {
 }
 
 func (inst *Instagram) init() {
+	inst.Challenge = newChallenge(inst)
 	inst.Profiles = newProfiles(inst)
 	inst.Activity = newActivity(inst)
 	inst.Timeline = newTimeline(inst)
@@ -209,11 +234,6 @@ func Export(inst *Instagram, writer io.Writer) error {
 //
 // This function does not set proxy automatically. Use SetProxy after this call.
 func ImportReader(r io.Reader) (*Instagram, error) {
-	url, err := neturl.Parse(goInstaAPIUrl)
-	if err != nil {
-		return nil, err
-	}
-
 	bytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -224,6 +244,18 @@ func ImportReader(r io.Reader) (*Instagram, error) {
 	if err != nil {
 		return nil, err
 	}
+	return ImportConfig(config)
+}
+
+// ImportConfig imports instagram configuration from a configuration object.
+//
+// This function does not set proxy automatically. Use SetProxy after this call.
+func ImportConfig(config ConfigFile) (*Instagram, error) {
+	url, err := neturl.Parse(goInstaAPIUrl)
+	if err != nil {
+		return nil, err
+	}
+
 	inst := &Instagram{
 		user:      config.User,
 		dID:       config.DeviceID,
