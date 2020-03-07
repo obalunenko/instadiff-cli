@@ -33,6 +33,11 @@ linters-settings:
   goconst:
     min-len: 2
     min-occurrences: 2
+  gomnd:
+    settings:
+      mnd:
+        # the list of enabled checks, see https://github.com/tommy-muehle/go-mnd/#checks for description.
+        checks: case,condition,operation,return
   misspell:
     locale: US
   lll:

@@ -144,6 +144,7 @@ func (b *realBar) Run(ctx context.Context) {
 		if err := b.bar.Finish(); err != nil {
 			log.Errorf("error when finish bar: %v", err)
 		}
+
 		fmt.Println()
 	}()
 

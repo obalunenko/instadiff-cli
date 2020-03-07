@@ -16,7 +16,7 @@ jobs:
   include:
     - stage: Unit Tests, Metalinter, Sonar
       go:
-        - 1.13.x
+        - 1.14.x
       os:
         - linux
       install:
@@ -32,7 +32,7 @@ jobs:
 
     - stage: Build Application
       go:
-        - 1.13.x
+        - 1.14.x
       os:
         - linux
       go_import_path: github.com/oleg-balunenko/instadiff-cli
