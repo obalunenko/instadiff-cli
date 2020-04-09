@@ -4,6 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/instadiff-cli)](https://goreportcard.com/report/github.com/oleg-balunenko/instadiff-cli)
 [![Coverage Status](https://coveralls.io/repos/github/oleg-balunenko/instadiff-cli/badge.svg?branch=master)](https://coveralls.io/github/oleg-balunenko/instadiff-cli?branch=master)
 [![Latest release artifacts](https://img.shields.io/badge/artifacts-download-blue.svg)](https://github.com/oleg-balunenko/instadiff-cli/releases/latest)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Foleg-balunenko%2Finstadiff-cli.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Foleg-balunenko%2Finstadiff-cli?ref=badge_shield)
 
 # instadiff-cli
 
@@ -103,3 +104,7 @@ Create a json file with configuration and pass the path to it via flag `--config
 ```shell script
 instadiff-cli --config_path ".config.json" [command]
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Foleg-balunenko%2Finstadiff-cli.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Foleg-balunenko%2Finstadiff-cli?ref=badge_large)
