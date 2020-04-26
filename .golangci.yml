@@ -135,7 +135,7 @@ linters-settings:
 
 
 run:
-  issues-exit-code: 1
+  issues-exit-code: 0
   tests: true
   skip-dirs:
     - vendor/
