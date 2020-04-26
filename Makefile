@@ -74,7 +74,6 @@ new-version: lint test compile
 	./scripts/version.sh
 .PHONY: new-version
 
-
 ## Release
 release:
 	${call colored, release is running...}
@@ -106,12 +105,5 @@ docker-down:
 	docker-compose -f ./docker-compose.yml down --volumes
 
 .PHONY: docker-down
-
-## review code
-review:
-	${call colored, review is running...}
-	reviewdog -reporter=github-pr-check
-
-.PHONY: review
 
 .DEFAULT_GOAL := test

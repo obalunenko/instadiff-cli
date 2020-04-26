@@ -22,24 +22,16 @@ func Test_getLostFollowers(t *testing.T) {
 		{
 			name: "one lost user",
 			args: args{
-				old: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
-				new: []models.User{
-					{ID: 1}, {ID: 3}, {ID: 10},
-				},
+				old: []models.User{{ID: 1}, {ID: 2}, {ID: 10}},
+				new: []models.User{{ID: 1}, {ID: 3}, {ID: 10}},
 			},
 			want: []models.User{{ID: 2}},
 		},
 		{
 			name: "equal",
 			args: args{
-				old: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
-				new: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
+				old: []models.User{{ID: 1}, {ID: 2}, {ID: 10}},
+				new: []models.User{{ID: 1}, {ID: 2}, {ID: 10}},
 			},
 			want: nil,
 		},
@@ -68,24 +60,16 @@ func Test_getNewFollowers(t *testing.T) {
 		{
 			name: "new 1 user",
 			args: args{
-				old: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
-				new: []models.User{
-					{ID: 1}, {ID: 3}, {ID: 10},
-				},
+				old: []models.User{{ID: 11}, {ID: 2}, {ID: 12}},
+				new: []models.User{{ID: 11}, {ID: 3}, {ID: 12}},
 			},
 			want: []models.User{{ID: 3}},
 		},
 		{
 			name: "equal",
 			args: args{
-				old: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
-				new: []models.User{
-					{ID: 1}, {ID: 2}, {ID: 10},
-				},
+				old: []models.User{{ID: 11}, {ID: 2}, {ID: 12}},
+				new: []models.User{{ID: 11}, {ID: 2}, {ID: 12}},
 			},
 			want: nil,
 		},
