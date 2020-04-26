@@ -137,8 +137,9 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 	}
 
 	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
-		Users: followers,
-		Type:  models.UsersBatchTypeFollowers,
+		Users:     followers,
+		Type:      models.UsersBatchTypeFollowers,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		log.Errorf("failed to insert %s to db: %v", models.UsersBatchTypeFollowers, err)
@@ -156,8 +157,9 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 	}
 
 	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
-		Users: followings,
-		Type:  models.UsersBatchTypeFollowings,
+		Users:     followings,
+		Type:      models.UsersBatchTypeFollowings,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		log.Errorf("failed to insert %s to db: %v", models.UsersBatchTypeFollowings, err)
@@ -206,8 +208,9 @@ func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 	}
 
 	err = svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
-		Users: notmutual,
-		Type:  models.UsersBatchTypeNotMutual,
+		Users:     notmutual,
+		Type:      models.UsersBatchTypeNotMutual,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		log.Errorf("Failed to insert %s in storage: %v", models.UsersBatchTypeNotMutual, err)
@@ -461,4 +464,91 @@ func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
 	}
 
 	return false
+}
+
+// GetDiffFollowers returns batches with lost and new followers.
+func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
+	ctx, cancel := context.WithCancel(context.TODO())
+
+	defer func() {
+		cancel()
+	}()
+
+	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeFollowers)
+	if err != nil {
+		return nil, errors.Wrap(err, "get last followers list")
+	}
+
+	newList, err := svc.GetFollowers()
+	if err != nil {
+		return nil, errors.Wrap(err, "get followers")
+	}
+
+	now := time.Now()
+
+	lostFlw := getLostFollowers(oldBatch.Users, newList)
+	lostBatch := models.UsersBatch{
+		Users:     lostFlw,
+		Type:      models.UsersBatchTypeLostFollowers,
+		CreatedAt: now,
+	}
+
+	if err := svc.storage.InsertUsersBatch(ctx, lostBatch); err != nil {
+		log.Errorf("Failed to insert [%s]: %v", lostBatch.Type.String(), err)
+	}
+
+	newFlw := getNewFollowers(oldBatch.Users, newList)
+	newBatch := models.UsersBatch{
+		Users:     newFlw,
+		Type:      models.UsersBatchTypeNewFollowers,
+		CreatedAt: now,
+	}
+
+	if err := svc.storage.InsertUsersBatch(ctx, newBatch); err != nil {
+		log.Errorf("Failed to insert [%s]: %v", newBatch.Type.String(), err)
+	}
+
+	return []models.UsersBatch{lostBatch, newBatch}, nil
+}
+
+func getLostFollowers(old []models.User, new []models.User) []models.User {
+	var diff []models.User
+
+	for _, oU := range old {
+		var found bool
+
+		for _, nU := range new {
+			if oU.ID == nU.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			diff = append(diff, oU)
+		}
+	}
+
+	return diff
+}
+
+func getNewFollowers(old []models.User, new []models.User) []models.User {
+	var diff []models.User
+
+	for _, nU := range new {
+		var found bool
+
+		for _, oU := range old {
+			if oU.ID == nU.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			diff = append(diff, nU)
+		}
+	}
+
+	return diff
 }
