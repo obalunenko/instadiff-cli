@@ -54,7 +54,9 @@ func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) 
 func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 	batchType models.UsersBatchType) (models.UsersBatch, error) {
 	filter := bson.M{"batch_type": batchType}
-	resp := m.collection.FindOne(ctx, filter)
+	resp := m.collection.FindOne(ctx, filter, &options.FindOneOptions{
+		Sort: bson.M{"$natural": -1},
+	})
 
 	if err := resp.Err(); err != nil {
 		return models.EmptyUsersBatch, errors.Wrapf(err, "failed to find batch for %s", batchType)

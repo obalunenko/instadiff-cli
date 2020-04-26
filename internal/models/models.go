@@ -1,6 +1,8 @@
 // Package models describes models for database communication.
 package models
 
+import "time"
+
 // User stores information about user.
 type User struct {
 	ID       int64  `bson:"id"`
@@ -10,14 +12,16 @@ type User struct {
 
 // UsersBatch represents info about specific type of users (followers, followings).
 type UsersBatch struct {
-	Users []User         `bson:"users"`
-	Type  UsersBatchType `bson:"batch_type"`
+	Users     []User         `bson:"users"`
+	Type      UsersBatchType `bson:"batch_type"`
+	CreatedAt time.Time      `bson:"created_at"`
 }
 
 // EmptyUsersBatch represents nil batch
 var EmptyUsersBatch = UsersBatch{
-	Users: nil,
-	Type:  UsersBatchTypeUnknown,
+	Users:     nil,
+	Type:      UsersBatchTypeUnknown,
+	CreatedAt: time.Time{},
 }
 
 //go:generate stringer -type=UsersBatchType -trimprefix=UsersBatchType
@@ -28,17 +32,21 @@ type UsersBatchType int
 const (
 	// UsersBatchTypeUnknown is unknown type, to cover default value case.
 	UsersBatchTypeUnknown UsersBatchType = iota
+
 	// UsersBatchTypeFollowers represents user's followers.
 	UsersBatchTypeFollowers
 	// UsersBatchTypeFollowings represents user's followings.
 	UsersBatchTypeFollowings
 	// UsersBatchTypeNotMutual represents users that not following back.
 	UsersBatchTypeNotMutual
-
 	// UsersBatchTypeBusinessAccounts represents business accounts.
 	UsersBatchTypeBusinessAccounts
+	// UsersBatchTypeLostFollowers represents lost followers.
+	UsersBatchTypeLostFollowers
+	// UsersBatchTypeNewFollowers represents new followers.
+	UsersBatchTypeNewFollowers
 
-	usersBatchTypeSentinel // should be always last
+	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )
 
 // Valid checks if value is valid type.

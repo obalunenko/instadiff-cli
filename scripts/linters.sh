@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 function vet() {
   echo "vet project..."
@@ -113,5 +114,6 @@ function golangci-ci_execute() {
         curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin \n"
     exit 1
   fi
+
   echo ""
 }

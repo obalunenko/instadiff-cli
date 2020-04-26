@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 function get_dependencies() {
   cd .tools || exit
@@ -24,7 +25,6 @@ function get_dependencies() {
 
   curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin
 
-  curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
   cd - || exit
 }
 

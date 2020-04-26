@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # Get new tags from the remote
 git fetch --tags

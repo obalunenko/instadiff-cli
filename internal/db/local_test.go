@@ -11,6 +11,8 @@ import (
 )
 
 func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
+	const notExistBatch models.UsersBatchType = 999
+
 	type args struct {
 		batchType models.UsersBatchType
 	}
@@ -43,7 +45,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 		{
 			name: "get invalid type",
 			args: args{
-				batchType: 5,
+				batchType: notExistBatch,
 			},
 			want:    models.EmptyUsersBatch,
 			wantErr: true,
@@ -53,7 +55,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			l := setUpDbWithFixtures(t)
+			l := setUpDBWithFixtures(t)
 
 			got, err := l.GetLastUsersBatchByType(context.TODO(), tt.args.batchType)
 			if tt.wantErr {
@@ -115,7 +117,7 @@ var (
 	}
 )
 
-func setUpDbWithFixtures(t testing.TB) DB {
+func setUpDBWithFixtures(t testing.TB) DB {
 	t.Helper()
 
 	fixtures := map[models.UsersBatchType]models.UsersBatch{

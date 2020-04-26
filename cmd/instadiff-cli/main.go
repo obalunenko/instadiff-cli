@@ -60,23 +60,13 @@ func commands() []cli.Command {
 			Name:   "followers",
 			Usage:  "List your followers",
 			Action: cmdListFollowers,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "list",
-					Usage: "Print the full list instead of only number",
-				},
-			},
+			Flags:  []cli.Flag{addListFlag()},
 		},
 		{
 			Name:   "followings",
 			Usage:  "List your followings",
 			Action: cmdListFollowings,
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  list,
-					Usage: "Print the full list instead of only number",
-				},
-			},
+			Flags:  []cli.Flag{addListFlag()},
 		},
 		{
 			Name:    "clean-followers",
@@ -88,15 +78,29 @@ func commands() []cli.Command {
 			Name:   "unmutual",
 			Usage:  "List all not mutual followings",
 			Action: cmdListNotMutual,
+			Flags:  []cli.Flag{addListFlag()},
 		},
 		{
 			Name:   "bots",
 			Usage:  "List all bots or business accounts (alpha)",
 			Action: cmdListBotsAndBusiness,
+			Flags:  []cli.Flag{addListFlag()},
+		},
+		{
+			Name:   "diff",
+			Usage:  "List diff followers (lost and new)",
+			Action: cmdListDiff,
+			Flags:  []cli.Flag{addListFlag()},
 		},
 	}
 }
 
+func addListFlag() cli.BoolFlag {
+	return cli.BoolFlag{
+		Name:  list,
+		Usage: "Print the full list instead of only number",
+	}
+}
 func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) {
 	var err error
 
@@ -203,6 +207,28 @@ func cmdListNotMutual(ctx *cli.Context) error {
 	log.Infof("Not following back: %d \n", len(notMutualFollowers))
 
 	printUsersList(ctx, notMutualFollowers)
+
+	return nil
+}
+
+func cmdListDiff(ctx *cli.Context) error {
+	svc, stop, err := serviceSetUp(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer stop()
+
+	diff, err := svc.GetDiffFollowers()
+	if err != nil {
+		return err
+	}
+
+	for _, batch := range diff {
+		log.Infof("%s: %d \n", batch.Type, len(batch.Users))
+
+		printUsersList(ctx, batch.Users)
+	}
 
 	return nil
 }
