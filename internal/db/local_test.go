@@ -11,6 +11,8 @@ import (
 )
 
 func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
+	const notExistBatch models.UsersBatchType = 999
+
 	type args struct {
 		batchType models.UsersBatchType
 	}
@@ -43,7 +45,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 		{
 			name: "get invalid type",
 			args: args{
-				batchType: 5,
+				batchType: notExistBatch,
 			},
 			want:    models.EmptyUsersBatch,
 			wantErr: true,
