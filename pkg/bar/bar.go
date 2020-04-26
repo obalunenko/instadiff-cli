@@ -148,6 +148,12 @@ func (b *realBar) Run(ctx context.Context) {
 		fmt.Println()
 	}()
 
+	var (
+		milisecondsNum time.Duration = 10
+		sleep                        = milisecondsNum * time.Millisecond
+		progressInc                  = 1
+	)
+
 	for {
 		select {
 		case _, ok := <-b.bchan:
@@ -155,11 +161,11 @@ func (b *realBar) Run(ctx context.Context) {
 				return
 			}
 
-			if err := b.bar.Add(1); err != nil {
+			if err := b.bar.Add(progressInc); err != nil {
 				log.Errorf("error when add to bar: %v", err)
 			}
 
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(sleep)
 		case <-ctx.Done():
 			log.Errorf("canceled context: %v", ctx.Err())
 			return
