@@ -35,10 +35,10 @@ help:
 
 
 
-## Cross system compile
+## Compile app
 compile:
 	${call colored, compile is running...}
-	./scripts/cross-compile.sh
+	./scripts/compile.sh
 .PHONY: compile
 
 ## lint project
