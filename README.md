@@ -30,7 +30,7 @@ USAGE:
    instadiff-cli [global options] command [command options] [arguments...]
 
 VERSION:
-   GO-unset: v0.5.0-local-cd8bd9f-2020-04-27
+   GO-go1.14.2: 0.5.0-cd8bd9f-2020-04-26T23:44:35Z
 
 
 AUTHOR:
@@ -51,7 +51,6 @@ GLOBAL OPTIONS:
    --debug              Debug mode, where actions has no real effect
    --help, -h           show help
    --version, -v        print the version
-
 ```
 
 To get help for any supported command:
