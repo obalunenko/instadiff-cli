@@ -1,9 +1,11 @@
+[![GO](https://img.shields.io/github/go-mod/go-version/oleg-balunenko/instadiff-cli)](https://golang.org/doc/devel/release.html)
 [![Build Status](https://travis-ci.com/oleg-balunenko/instadiff-cli.svg?branch=master)](https://travis-ci.com/oleg-balunenko/instadiff-cli)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=instadiff-cli&metric=alert_status)](https://sonarcloud.io/dashboard?id=instadiff-cli)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e1b08a94c9cb45f4ac86391ef936166e)](https://www.codacy.com/manual/oleg.balunenko/instadiff-cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=oleg-balunenko/instadiff-cli&amp;utm_campaign=Badge_Grade)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/instadiff-cli)](https://goreportcard.com/report/github.com/oleg-balunenko/instadiff-cli)
 [![Coverage Status](https://coveralls.io/repos/github/oleg-balunenko/instadiff-cli/badge.svg?branch=master)](https://coveralls.io/github/oleg-balunenko/instadiff-cli?branch=master)
-[![Latest release artifacts](https://img.shields.io/badge/artifacts-download-blue.svg)](https://github.com/oleg-balunenko/instadiff-cli/releases/latest)
+[![Latest release artifacts](https://img.shields.io/github/v/release/oleg-balunenko/instadiff-cli)](https://github.com/oleg-balunenko/instadiff-cli/releases/latest)
+[![License](https://img.shields.io/github/license/oleg-balunenko/instadiff-cli)](/LICENSE)
 
 # instadiff-cli
 
@@ -21,19 +23,26 @@ instadiff-cli help
 ```
 
 ```text
-
 NAME:
    instadiff-cli - a command line tool for managing instagram account followers and followings
 
 USAGE:
    instadiff-cli [global options] command [command options] [arguments...]
 
+VERSION:
+   GO-unset: v0.5.0-local-cd8bd9f-2020-04-27
+
+
+AUTHOR:
+   Oleg Balunenko
+
 COMMANDS:
    followers               List your followers
    followings              List your followings
    clean-followers, clean  Un follow not mutual followings, except of whitelisted
    unmutual                List all not mutual followings
-   bots                    List all bots or business accounts
+   bots                    List all bots or business accounts (alpha)
+   diff                    List diff followers (lost and new)
    help, h                 Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -54,30 +63,30 @@ instadiff-cli help [command]
 Example of config file:
 
 ```json
-{  
-  "instagram":{  
-  "user":{  
-  "username":"user",  
-  "password":"pass"  
-  },  
-  "whitelist":[  
-  "user1",  
-  "user2",  
-  "user3"  
-  ],  
-  "limits":{  
-  "unfollow":100  
-  }  
- },  
-  "storage": {  
-  "local": true,  
-  "mongo": {  
-  "url": "mongoURL:test",  
-  "db": "testing",  
-  "collection": "users"  
-  }  
- },  
-  "debug": "false"  
+{
+   "instagram":{
+      "user":{
+         "username":"user",
+         "password":"pass"
+      },
+      "whitelist":[
+         "user1",
+         "user2",
+         "user3"
+      ],
+      "limits":{
+         "unfollow":100
+      }
+   },
+   "storage":{
+      "local":true,
+      "mongo":{
+         "url":"mongoURL:test",
+         "db":"testing",
+         "collection":"users"
+      }
+   },
+   "debug":"false"
 }
 ```
 
