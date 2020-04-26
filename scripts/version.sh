@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 function require_clean_work_tree() {
   # Update the index

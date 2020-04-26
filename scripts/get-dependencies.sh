@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 function get_dependencies() {
   cd .tools || exit
