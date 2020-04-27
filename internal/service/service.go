@@ -51,6 +51,7 @@ type StopFunc func()
 // // handle error
 // }
 // defer stop()
+//
 func New(cfg config.Config) (*Service, StopFunc, error) {
 	cl, err := makeClient(cfg)
 	if err != nil {

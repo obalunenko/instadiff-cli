@@ -57,6 +57,7 @@ type Bar interface {
 // for i := range 100{
 // 	pBar.Progress() <- struct{}{}
 // }
+//
 func New(cap int, barType BType) Bar {
 	switch barType {
 	case BTypeRendered:

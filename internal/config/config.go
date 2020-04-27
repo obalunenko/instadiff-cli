@@ -92,27 +92,27 @@ func (c *Config) SetDebug(debug bool) {
 	c.debug = debug
 }
 
-// IsLocalDBEnabled returns local DB enabled status
+// IsLocalDBEnabled returns local DB enabled status.
 func (c Config) IsLocalDBEnabled() bool {
 	return c.storage.local
 }
 
-// MongoConfigURL returns configured MongoDB URL
+// MongoConfigURL returns configured MongoDB URL.
 func (c Config) MongoConfigURL() string {
 	return c.storage.mongo.url
 }
 
-// MongoDBName returns configured MongoDB name
+// MongoDBName returns configured MongoDB name.
 func (c Config) MongoDBName() string {
 	return c.storage.mongo.db
 }
 
-// MongoDBCollection returns configured MongoDB collection
+// MongoDBCollection returns configured MongoDB collection.
 func (c Config) MongoDBCollection() string {
 	return c.storage.mongo.collection
 }
 
-// Load loads config from passed filepath
+// Load loads config from passed filepath.
 func Load(path string) (Config, error) {
 	var cfg Config
 
@@ -122,7 +122,7 @@ func Load(path string) (Config, error) {
 
 	viper.SetConfigFile(path)
 
-	// Reads the config file
+	// Reads the config file.
 	if err := viper.ReadInConfig(); err != nil {
 		return cfg, errors.Wrapf(err, "failed to read config form path: %s", path)
 	}

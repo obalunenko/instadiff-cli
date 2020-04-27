@@ -17,7 +17,7 @@ type UsersBatch struct {
 	CreatedAt time.Time      `bson:"created_at"`
 }
 
-// EmptyUsersBatch represents nil batch
+// EmptyUsersBatch represents nil batch.
 var EmptyUsersBatch = UsersBatch{
 	Users:     nil,
 	Type:      UsersBatchTypeUnknown,
