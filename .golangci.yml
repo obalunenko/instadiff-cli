@@ -21,6 +21,15 @@ linters-settings:
     simplify: true
   govet:
     check-shadowing: true
+      # settings per analyzer
+    settings:
+       printf: # analyzer name, run `go tool vet help` to see all analyzers
+        funcs: # run `go tool vet help printf` to see available settings for `printf` analyzer
+           - (github.com/pkg/errors/).Wrapf
+           - (github.com/pkg/errors/).Errorf
+           - (github.com/sirupsen/logrus/).Printf
+           - (github.com/sirupsen/logrus/).Infof
+           - (github.com/sirupsen/logrus/).Errorf
     enable-all: true
   golint:
     min-confidence: 0
@@ -90,6 +99,27 @@ linters-settings:
       allow-trailing-comment: false
       # Force newlines in end of case at this limit (0 = never).
       force-case-trailing-whitespace: 0
+  testpackage:
+    # regexp pattern to skip files
+    skip-regexp: (export|internal)_test\.go
+  godot:
+    # check all top-level comments, not only declarations
+    check-all: true
+  nestif:
+    # minimal complexity of if statements to report, 5 by default
+    min-complexity: 4
+  gomodguard:
+    allowed:
+      modules:                                                        # List of allowed modules
+      # - gopkg.in/yaml.v2
+      domains:                                                        # List of allowed module domains
+      # - golang.org
+    blocked:
+      modules:                                                        # List of blocked modules
+      # - github.com/uudashr/go-module:                             # Blocked module
+      #     recommendations:                                        # Recommended modules that should be used instead (Optional)
+      #       - golang.org/x/mod
+      #     reason: "`mod` is the official go.mod parser library."  # Reason why the recommended module should be used (Optional)
   gocritic:
     enabled-checks:
       - docStub
@@ -132,7 +162,6 @@ linters-settings:
         skipTestFuncs: true
       underef:
         skipRecvDeref: true
-
 
 run:
   issues-exit-code: 0
