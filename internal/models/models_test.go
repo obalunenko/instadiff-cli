@@ -1,22 +1,24 @@
-package models
+package models_test
 
 import (
 	"testing"
 
 	"github.com/magiconair/properties/assert"
+
+	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 )
 
 func TestUsersBatchType_Valid(t *testing.T) {
-	const notExisted UsersBatchType = 999
+	const notExisted models.UsersBatchType = 999
 
 	tests := []struct {
 		name string
-		i    UsersBatchType
+		i    models.UsersBatchType
 		want bool
 	}{
 		{
 			name: "valid batch type",
-			i:    UsersBatchTypeBusinessAccounts,
+			i:    models.UsersBatchTypeBusinessAccounts,
 			want: true,
 		},
 		{
@@ -46,7 +48,7 @@ func TestMakeUser(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want User
+		want models.User
 	}{
 		{
 			name: "make user",
@@ -55,7 +57,7 @@ func TestMakeUser(t *testing.T) {
 				username: "Test User",
 				fullname: "Full test name",
 			},
-			want: User{
+			want: models.User{
 				ID:       1,
 				UserName: "Test User",
 				FullName: "Full test name",
@@ -67,7 +69,7 @@ func TestMakeUser(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			got := MakeUser(tt.args.id, tt.args.username, tt.args.fullname)
+			got := models.MakeUser(tt.args.id, tt.args.username, tt.args.fullname)
 			assert.Equal(t, tt.want, got)
 		})
 	}
