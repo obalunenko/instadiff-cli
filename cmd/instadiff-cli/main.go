@@ -2,8 +2,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -113,9 +116,22 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 
 	setLogger(ctx)
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
+
+	cancelCtx, cancelFunc := context.WithCancel(context.Background())
+
+	go func() {
+		sig := <-sigChan
+		// empty line for clear output.
+		fmt.Println()
+		log.Printf("signal [%s] received", sig.String())
+		cancelFunc()
+	}()
+
 	cfg.SetDebug(ctx.GlobalBool("debug"))
 
-	return service.New(cfg)
+	return service.New(cancelCtx, cfg)
 }
 
 func cmdListFollowers(ctx *cli.Context) error {
@@ -177,7 +193,6 @@ func cmdCleanFollowings(ctx *cli.Context) error {
 	log.Info("Cleaning from not mutual followings...")
 
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
-
 	if err != nil {
 		if errors.Cause(err) == service.ErrLimitExceed {
 			log.Infof("Total unfollowed before limit exceeded: %d \n", count)

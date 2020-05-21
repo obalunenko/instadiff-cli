@@ -24,6 +24,7 @@ var ErrLimitExceed = errors.New("limit exceeded")
 
 // Service represents service for operating instagram account.
 type Service struct {
+	ctx       context.Context
 	instagram instagram
 	storage   db.DB
 	debug     bool
@@ -52,7 +53,7 @@ type StopFunc func()
 // }
 // defer stop()
 //
-func New(cfg config.Config) (*Service, StopFunc, error) {
+func New(ctx context.Context, cfg config.Config) (*Service, StopFunc, error) {
 	cl, err := makeClient(cfg)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to make instagram client")
@@ -70,7 +71,8 @@ func New(cfg config.Config) (*Service, StopFunc, error) {
 		return nil, nil, errors.Wrap(err, "failed to connect to db")
 	}
 
-	inst := Service{
+	svc := Service{
+		ctx: ctx,
 		instagram: instagram{
 			client:    cl,
 			whitelist: cfg.Whitelist(),
@@ -83,7 +85,11 @@ func New(cfg config.Config) (*Service, StopFunc, error) {
 		debug:   cfg.Debug(),
 	}
 
-	return &inst, inst.stop, nil
+	stopFunc := func() {
+		svc.stop()
+	}
+
+	return &svc, stopFunc, nil
 }
 
 func makeClient(cfg config.Config) (*goinsta.Instagram, error) {
@@ -137,7 +143,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 		return nil, errors.New("no followers")
 	}
 
-	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
 		Users:     followers,
 		Type:      models.UsersBatchTypeFollowers,
 		CreatedAt: time.Now(),
@@ -157,7 +163,7 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 		return nil, errors.New("no followings")
 	}
 
-	err := svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
 		Users:     followings,
 		Type:      models.UsersBatchTypeFollowings,
 		CreatedAt: time.Now(),
@@ -189,10 +195,14 @@ func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 		return nil, errors.Wrap(err, "failed to get followers")
 	}
 
+	log.Infof("Total followers: %d", len(followers))
+
 	followings, err := svc.GetFollowings()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get followings")
 	}
+
+	log.Infof("Total followings: %d", len(followings))
 
 	followersMap := make(map[int64]struct{}, len(followers))
 
@@ -208,7 +218,7 @@ func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 		}
 	}
 
-	err = svc.storage.InsertUsersBatch(context.TODO(), models.UsersBatch{
+	err = svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
 		Users:     notmutual,
 		Type:      models.UsersBatchTypeNotMutual,
 		CreatedAt: time.Now(),
@@ -256,37 +266,6 @@ func (svc *Service) Follow(user models.User) error {
 	return nil
 }
 
-// UnFollowAllNotMutual clean followings from users that not following back.
-func (svc *Service) UnFollowAllNotMutual() (int, error) {
-	notMutual, err := svc.GetNotMutualFollowers()
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get not mutual followers list")
-	}
-
-	if len(notMutual) == 0 {
-		return 0, nil
-	}
-
-	var count int
-
-	for _, nu := range notMutual {
-		time.Sleep(svc.instagram.sleep)
-
-		if err := svc.UnFollow(nu); err != nil {
-			log.Printf("failed to unFollow user %v:%v", nu, err)
-			continue
-		}
-
-		count++
-
-		if count >= svc.instagram.limits.unFollow {
-			return count, ErrLimitExceed
-		}
-	}
-
-	return count, nil
-}
-
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
@@ -299,13 +278,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		return 0, nil
 	}
 
-	log.Debugf("Not mutual followers: %d", len(notMutual))
-
-	ctx, cancel := context.WithCancel(context.TODO())
-
-	defer func() {
-		cancel()
-	}()
+	log.Infof("Not mutual followers: %d", len(notMutual))
 
 	bType := bar.BTypeRendered
 	if log.GetLevel() != log.InfoLevel {
@@ -314,7 +287,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 
 	pBar := bar.New(len(notMutual), bType)
 
-	go pBar.Run(ctx)
+	go pBar.Run(svc.ctx)
 
 	defer func() {
 		pBar.Finish()
@@ -322,21 +295,30 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 
 	var count int
 
-	for _, nu := range notMutual {
-		pBar.Progress() <- struct{}{}
+	ticker := time.NewTicker(svc.instagram.sleep)
+	defer ticker.Stop()
 
-		if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
-			time.Sleep(svc.instagram.sleep)
-
-			if err := svc.UnFollow(nu); err != nil {
-				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
-				continue
-			}
-			count++
+LOOP:
+	for i, nu := range notMutual {
+		if i != 0 {
+			pBar.Progress() <- struct{}{}
 		}
 
-		if count >= svc.instagram.limits.unFollow {
-			return count, ErrLimitExceed
+		select {
+		case <-svc.ctx.Done():
+			break LOOP
+		case <-ticker.C:
+			if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
+				if err := svc.UnFollow(nu); err != nil {
+					log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
+					continue
+				}
+				count++
+			}
+
+			if count >= svc.instagram.limits.unFollow {
+				return count, ErrLimitExceed
+			}
 		}
 	}
 

@@ -61,18 +61,26 @@ type Bar interface {
 func New(cap int, barType BType) Bar {
 	switch barType {
 	case BTypeRendered:
-		return &realBar{
+		b := realBar{
 			bar:   progressbar.New(cap),
 			stop:  sync.Once{},
 			wg:    sync.WaitGroup{},
-			bchan: make(chan struct{}),
+			bchan: make(chan struct{}, 1),
 		}
+
+		b.wg.Add(1)
+
+		return &b
 	case BTypeVoid:
-		return &voidBar{
+		b := voidBar{
 			wg:    sync.WaitGroup{},
 			stop:  sync.Once{},
-			bchan: make(chan struct{}),
+			bchan: make(chan struct{}, 1),
 		}
+
+		b.wg.Add(1)
+
+		return &b
 	default:
 		return nil
 	}
@@ -97,8 +105,6 @@ func (vb *voidBar) Finish() {
 }
 
 func (vb *voidBar) Run(ctx context.Context) {
-	vb.wg.Add(1)
-
 	defer func() {
 		vb.wg.Done()
 	}()
@@ -135,8 +141,6 @@ func (b *realBar) Progress() chan<- struct{} {
 }
 
 func (b *realBar) Run(ctx context.Context) {
-	b.wg.Add(1)
-
 	defer func() {
 		b.wg.Done()
 	}()
