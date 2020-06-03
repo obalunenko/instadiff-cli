@@ -9,11 +9,6 @@ function get_dependencies() {
     "github.com/mattn/goveralls/..."
     "github.com/Bubblyworld/gogroup/..."
     "golang.org/x/lint/golint"
-    "github.com/kisielk/errcheck"
-    "honnef.co/go/tools/cmd/staticcheck"
-    "github.com/client9/misspell/cmd/misspell"
-    "mvdan.cc/unparam"
-    "github.com/mgechev/revive"
     "golang.org/x/tools/cmd/stringer"
   )
 
