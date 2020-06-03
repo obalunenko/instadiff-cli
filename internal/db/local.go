@@ -41,7 +41,7 @@ func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
 		if batchType.Valid() {
 			batch, exist := l.users[batchType]
 			if !exist {
-				return models.EmptyUsersBatch, nil
+				return models.EmptyUsersBatch, ErrNoData
 			}
 
 			return batch, nil

@@ -61,7 +61,7 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 
 	if err := resp.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return models.EmptyUsersBatch, nil
+			return models.EmptyUsersBatch, ErrNoData
 		}
 
 		return models.EmptyUsersBatch, fmt.Errorf("find batch [%s]: %w", batchType.String(), err)

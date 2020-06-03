@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
@@ -304,6 +303,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	defer ticker.Stop()
 
 	const errsLimit = 3
+
 	var errsNum int
 
 LOOP:
@@ -470,10 +470,17 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 		cancel()
 	}()
 
+	var noPreviousData bool
+
 	bType := models.UsersBatchTypeFollowers
+
 	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bType)
 	if err != nil {
-		return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
+		if errors.Is(err, db.ErrNoData) {
+			noPreviousData = true
+		} else {
+			return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
+		}
 	}
 
 	newList, err := svc.GetFollowers()
@@ -482,6 +489,10 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 	}
 
 	now := time.Now()
+
+	if noPreviousData {
+		oldBatch.Users = newList
+	}
 
 	lostFlw := getLostFollowers(oldBatch.Users, newList)
 	lostBatch := models.UsersBatch{
