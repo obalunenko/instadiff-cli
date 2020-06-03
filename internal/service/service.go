@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
@@ -145,7 +144,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 	followers := makeUsersList(svc.instagram.client.Account.Followers())
 
 	if len(followers) == 0 {
-		return nil, errors.New("no followers")
+		return nil, makeNoUsersError(models.UsersBatchTypeFollowers)
 	}
 
 	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
@@ -165,7 +164,7 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 	followings := makeUsersList(svc.instagram.client.Account.Following())
 
 	if len(followings) == 0 {
-		return nil, errors.New("no followings")
+		return nil, makeNoUsersError(models.UsersBatchTypeFollowings)
 	}
 
 	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
@@ -271,6 +270,15 @@ func (svc *Service) Follow(user models.User) error {
 	return nil
 }
 
+func getBarType() bar.BType {
+	bType := bar.BTypeRendered
+	if log.GetLevel() != log.InfoLevel {
+		bType = bar.BTypeVoid
+	}
+
+	return bType
+}
+
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
@@ -285,12 +293,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 
 	log.Infof("Not mutual followers: %d", len(notMutual))
 
-	bType := bar.BTypeRendered
-	if log.GetLevel() != log.InfoLevel {
-		bType = bar.BTypeVoid
-	}
-
-	pBar := bar.New(len(notMutual), bType)
+	pBar := bar.New(len(notMutual), getBarType())
 
 	go pBar.Run(svc.ctx)
 
@@ -298,12 +301,17 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		pBar.Finish()
 	}()
 
+	return svc.processNotMutual(pBar, notMutual)
+}
+
+func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
 	defer ticker.Stop()
 
 	const errsLimit = 3
+
 	var errsNum int
 
 LOOP:
@@ -408,7 +416,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 	}
 
 	if len(businessAccs) == 0 {
-		return nil, errors.New("no business accounts")
+		return nil, makeNoUsersError(models.UsersBatchTypeBusinessAccounts)
 	}
 
 	return businessAccs, nil
@@ -470,10 +478,17 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 		cancel()
 	}()
 
+	var noPreviousData bool
+
 	bType := models.UsersBatchTypeFollowers
+
 	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bType)
 	if err != nil {
-		return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
+		if errors.Is(err, db.ErrNoData) {
+			noPreviousData = true
+		} else {
+			return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
+		}
 	}
 
 	newList, err := svc.GetFollowers()
@@ -482,6 +497,10 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 	}
 
 	now := time.Now()
+
+	if noPreviousData {
+		oldBatch.Users = newList
+	}
 
 	lostFlw := getLostFollowers(oldBatch.Users, newList)
 	lostBatch := models.UsersBatch{

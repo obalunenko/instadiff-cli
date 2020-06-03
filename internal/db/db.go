@@ -3,9 +3,13 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 )
+
+// ErrNoData returned when no data found in collection.
+var ErrNoData = errors.New("no data in collection")
 
 // DB represents database interaction contract.
 type DB interface {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/magiconair/properties/assert"
@@ -73,7 +74,7 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	bType := models.UsersBatchTypeFollowers
 
 	gotBatch, err := ldb.GetLastUsersBatchByType(context.TODO(), bType)
-	require.NoError(t, err)
+	require.True(t, err == nil || errors.Is(err, ErrNoData))
 	assert.Equal(t, models.EmptyUsersBatch, gotBatch)
 
 	goldenBatch := models.UsersBatch{

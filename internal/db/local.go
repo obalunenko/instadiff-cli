@@ -3,7 +3,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/oleg-balunenko/instadiff-cli/internal/models"
 )
@@ -23,12 +22,13 @@ func (l *localDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch)
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		if users.Type.Valid() {
-			l.users[users.Type] = users
-			return nil
+		if !users.Type.Valid() {
+			return models.MakeInvalidBatchTypeError(users.Type)
 		}
 
-		return fmt.Errorf("invalid users type: %s", users.Type.String())
+		l.users[users.Type] = users
+
+		return nil
 	}
 }
 
@@ -38,15 +38,15 @@ func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
 	case <-ctx.Done():
 		return models.EmptyUsersBatch, ctx.Err()
 	default:
-		if batchType.Valid() {
-			batch, exist := l.users[batchType]
-			if !exist {
-				return models.EmptyUsersBatch, nil
-			}
-
-			return batch, nil
+		if !batchType.Valid() {
+			return models.EmptyUsersBatch, models.MakeInvalidBatchTypeError(batchType)
 		}
 
-		return models.EmptyUsersBatch, fmt.Errorf("invalid users type: %s", batchType.String())
+		batch, exist := l.users[batchType]
+		if !exist {
+			return models.EmptyUsersBatch, ErrNoData
+		}
+
+		return batch, nil
 	}
 }
