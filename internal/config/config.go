@@ -113,12 +113,17 @@ func (c Config) MongoDBCollection() string {
 	return c.storage.mongo.collection
 }
 
+var (
+	// ErrEmptyPath returned when empty path is passed.
+	ErrEmptyPath = errors.New("config path is empty")
+)
+
 // Load loads config from passed filepath.
 func Load(path string) (Config, error) {
 	var cfg Config
 
 	if path == "" {
-		return Config{}, errors.New("config path is empty")
+		return Config{}, ErrEmptyPath
 	}
 
 	viper.SetConfigFile(path)

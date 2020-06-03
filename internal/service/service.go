@@ -144,7 +144,7 @@ func (svc *Service) GetFollowers() ([]models.User, error) {
 	followers := makeUsersList(svc.instagram.client.Account.Followers())
 
 	if len(followers) == 0 {
-		return nil, errors.New("no followers")
+		return nil, makeNoUsersError(models.UsersBatchTypeFollowers)
 	}
 
 	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
@@ -164,7 +164,7 @@ func (svc *Service) GetFollowings() ([]models.User, error) {
 	followings := makeUsersList(svc.instagram.client.Account.Following())
 
 	if len(followings) == 0 {
-		return nil, errors.New("no followings")
+		return nil, makeNoUsersError(models.UsersBatchTypeFollowings)
 	}
 
 	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
@@ -416,7 +416,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 	}
 
 	if len(businessAccs) == 0 {
-		return nil, errors.New("no business accounts")
+		return nil, makeNoUsersError(models.UsersBatchTypeBusinessAccounts)
 	}
 
 	return businessAccs, nil

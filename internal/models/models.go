@@ -1,7 +1,11 @@
 // Package models describes models for database communication.
 package models
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 // User stores information about user.
 type User struct {
@@ -48,6 +52,16 @@ const (
 
 	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )
+
+var (
+	// ErrInvalidUsersBatchType means that batch type not supported.
+	ErrInvalidUsersBatchType = errors.New("invalid users batch type")
+)
+
+// MakeInvalidBatchTypeError returns ErrInvalidUsersBatchType with added bathtype info.
+func MakeInvalidBatchTypeError(t UsersBatchType) error {
+	return fmt.Errorf("%s: %w", t.String(), ErrInvalidUsersBatchType)
+}
 
 // Valid checks if value is valid type.
 func (i UsersBatchType) Valid() bool {
