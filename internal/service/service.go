@@ -19,8 +19,12 @@ import (
 	"github.com/oleg-balunenko/instadiff-cli/pkg/bar"
 )
 
-// ErrLimitExceed returned when limit for action exceeded.
-var ErrLimitExceed = errors.New("limit exceeded")
+var (
+	// ErrLimitExceed returned when limit for action exceeded.
+	ErrLimitExceed = errors.New("limit exceeded")
+	// ErrCorrupted returned when instagram returned error response more than one time during loop processing.
+	ErrCorrupted = errors.New("unable to continue - instagram responses with errors")
+)
 
 // Service represents service for operating instagram account.
 type Service struct {
@@ -298,8 +302,15 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	ticker := time.NewTicker(svc.instagram.sleep)
 	defer ticker.Stop()
 
+	const errsLimit = 3
+	var errsNum int
+
 LOOP:
 	for i, nu := range notMutual {
+		if errsNum >= errsLimit {
+			return count, ErrCorrupted
+		}
+
 		if i != 0 {
 			pBar.Progress() <- struct{}{}
 		}
@@ -311,6 +322,7 @@ LOOP:
 			if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
 				if err := svc.UnFollow(nu); err != nil {
 					log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
+					errsNum++
 					continue
 				}
 				count++
