@@ -11,6 +11,8 @@ addons:
   sonarcloud:
     organization: oleg-balunenko-github
     token: "$SONAR_TOKEN"
+git:
+  depth: false
 
 jobs:
   include:
