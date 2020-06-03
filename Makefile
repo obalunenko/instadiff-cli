@@ -63,6 +63,11 @@ test:
 	./scripts/run-tests.sh
 .PHONY: test
 
+test-ci: test
+	${call colored, test-ci is running...}
+	./scripts/run-tests-ci.sh
+.PHONY: test-ci
+
 ## Test coverage
 test-cover:
 	${call colored, test-cover is running...}

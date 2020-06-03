@@ -22,8 +22,7 @@ jobs:
       install:
         - make dependencies
       script:
-        - echo "Run unit tests..."
-        - go test -v -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.out -json ./... > tests.out
+        - make test-ci
         - make lint-ci
         - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken ${COVERALLS_TOKEN}
         - sonar-scanner -Dsonar.projectVersion=${TRAVIS_TAG}
