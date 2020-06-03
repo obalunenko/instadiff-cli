@@ -3,8 +3,9 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -45,7 +46,7 @@ func newMongoDB(params MongoParams) (*mongoDB, error) {
 
 func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) error {
 	if _, err := m.collection.InsertOne(ctx, users); err != nil {
-		return errors.Wrap(err, "failed to insert batch")
+		return fmt.Errorf("insert batch: %w", err)
 	}
 
 	return nil
@@ -59,13 +60,17 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 	})
 
 	if err := resp.Err(); err != nil {
-		return models.EmptyUsersBatch, errors.Wrapf(err, "failed to find batch for %s", batchType)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return models.EmptyUsersBatch, nil
+		}
+
+		return models.EmptyUsersBatch, fmt.Errorf("find batch [%s]: %w", batchType.String(), err)
 	}
 
 	var ub models.UsersBatch
 
 	if err := resp.Decode(&ub); err != nil {
-		return models.EmptyUsersBatch, errors.Wrap(err, "failed tp decode response")
+		return models.EmptyUsersBatch, fmt.Errorf("decode response: %w", err)
 	}
 
 	return ub, nil

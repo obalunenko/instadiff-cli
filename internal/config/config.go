@@ -2,10 +2,11 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -124,7 +125,7 @@ func Load(path string) (Config, error) {
 
 	// Reads the config file.
 	if err := viper.ReadInConfig(); err != nil {
-		return cfg, errors.Wrapf(err, "failed to read config form path: %s", path)
+		return cfg, fmt.Errorf("read config: %w", err)
 	}
 
 	// Reset viper to free memory.
