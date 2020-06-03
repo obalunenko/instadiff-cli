@@ -117,7 +117,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 	setLogger(ctx)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
 	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
@@ -193,6 +193,7 @@ func cmdCleanFollowings(ctx *cli.Context) error {
 	log.Info("Cleaning from not mutual followings...")
 
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
+
 	switch {
 	case err == nil:
 		log.Infof("Total unfollowed: %d \n", count)
