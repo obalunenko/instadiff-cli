@@ -270,6 +270,15 @@ func (svc *Service) Follow(user models.User) error {
 	return nil
 }
 
+func getBarType() bar.BType {
+	bType := bar.BTypeRendered
+	if log.GetLevel() != log.InfoLevel {
+		bType = bar.BTypeVoid
+	}
+
+	return bType
+}
+
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
@@ -284,12 +293,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 
 	log.Infof("Not mutual followers: %d", len(notMutual))
 
-	bType := bar.BTypeRendered
-	if log.GetLevel() != log.InfoLevel {
-		bType = bar.BTypeVoid
-	}
-
-	pBar := bar.New(len(notMutual), bType)
+	pBar := bar.New(len(notMutual), getBarType())
 
 	go pBar.Run(svc.ctx)
 
@@ -297,6 +301,10 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		pBar.Finish()
 	}()
 
+	return svc.processNotMutual(pBar, notMutual)
+}
+
+func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
