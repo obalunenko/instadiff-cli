@@ -1,5 +1,5 @@
 language: go
-dist: trusty
+dist: xenial
 sudo: false
 install: true
 env:
