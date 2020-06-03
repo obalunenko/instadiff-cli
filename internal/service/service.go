@@ -3,13 +3,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/ahmdrz/goinsta/v2"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
@@ -19,8 +20,12 @@ import (
 	"github.com/oleg-balunenko/instadiff-cli/pkg/bar"
 )
 
-// ErrLimitExceed returned when limit for action exceeded.
-var ErrLimitExceed = errors.New("limit exceeded")
+var (
+	// ErrLimitExceed returned when limit for action exceeded.
+	ErrLimitExceed = errors.New("limit exceeded")
+	// ErrCorrupted returned when instagram returned error response more than one time during loop processing.
+	ErrCorrupted = errors.New("unable to continue - instagram responses with errors")
+)
 
 // Service represents service for operating instagram account.
 type Service struct {
@@ -56,7 +61,7 @@ type StopFunc func()
 func New(ctx context.Context, cfg config.Config) (*Service, StopFunc, error) {
 	cl, err := makeClient(cfg)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to make instagram client")
+		return nil, nil, fmt.Errorf("make client: %w", err)
 	}
 
 	dbc, err := db.Connect(db.Params{
@@ -68,7 +73,7 @@ func New(ctx context.Context, cfg config.Config) (*Service, StopFunc, error) {
 		},
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to db")
+		return nil, nil, fmt.Errorf("db connect: %w", err)
 	}
 
 	svc := Service{
@@ -99,7 +104,7 @@ func makeClient(cfg config.Config) (*goinsta.Instagram, error) {
 		switch v := err.(type) {
 		case goinsta.ChallengeError:
 			if err = cl.Challenge.Process(v.Challenge.APIPath); err != nil {
-				return nil, errors.Wrap(err, "failed to process challenge")
+				return nil, fmt.Errorf("process challenge: %w", err)
 			}
 
 			ui := &input.UI{
@@ -116,17 +121,17 @@ func makeClient(cfg config.Config) (*goinsta.Instagram, error) {
 					Loop:     true,
 				})
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to process user input")
+				return nil, fmt.Errorf("process input: %w", err)
 			}
 
 			if err = cl.Challenge.SendSecurityCode(code); err != nil {
-				return nil, errors.Wrap(err, "failed to send code")
+				return nil, fmt.Errorf("send security code: %w", err)
 			}
 
 			cl.Account = cl.Challenge.LoggedInUser
 
 		default:
-			return nil, errors.Wrap(err, "failed to login")
+			return nil, fmt.Errorf("failed to login: %w", err)
 		}
 	}
 
@@ -192,14 +197,14 @@ func makeUsersList(users *goinsta.Users) []models.User {
 func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 	followers, err := svc.GetFollowers()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get followers")
+		return nil, fmt.Errorf("get followers: %w", err)
 	}
 
 	log.Infof("Total followers: %d", len(followers))
 
 	followings, err := svc.GetFollowings()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get followings")
+		return nil, fmt.Errorf("get followings: %w", err)
 	}
 
 	log.Infof("Total followings: %d", len(followings))
@@ -242,7 +247,7 @@ func (svc *Service) UnFollow(user models.User) error {
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Unfollow(); err != nil {
-		return errors.Wrapf(err, "failed to unfollow user %v", user)
+		return fmt.Errorf("[%s] unfollow: %w", user.UserName, err)
 	}
 
 	return nil
@@ -260,7 +265,7 @@ func (svc *Service) Follow(user models.User) error {
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Follow(); err != nil {
-		return errors.Wrapf(err, "failed to follow user %v", user)
+		return fmt.Errorf("[%s] follow: %w", user.UserName, err)
 	}
 
 	return nil
@@ -271,7 +276,7 @@ func (svc *Service) Follow(user models.User) error {
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	notMutual, err := svc.GetNotMutualFollowers()
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get not mutual followers list")
+		return 0, fmt.Errorf("get not mutual followers: %w", err)
 	}
 
 	if len(notMutual) == 0 {
@@ -298,8 +303,15 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	ticker := time.NewTicker(svc.instagram.sleep)
 	defer ticker.Stop()
 
+	const errsLimit = 3
+	var errsNum int
+
 LOOP:
 	for i, nu := range notMutual {
+		if errsNum >= errsLimit {
+			return count, ErrCorrupted
+		}
+
 		if i != 0 {
 			pBar.Progress() <- struct{}{}
 		}
@@ -311,6 +323,7 @@ LOOP:
 			if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
 				if err := svc.UnFollow(nu); err != nil {
 					log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
+					errsNum++
 					continue
 				}
 				count++
@@ -346,7 +359,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 		return nil, err
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(svc.ctx)
 	defer cancel()
 
 	bType := bar.BTypeRendered
@@ -451,20 +464,21 @@ func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
 
 // GetDiffFollowers returns batches with lost and new followers.
 func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(svc.ctx)
 
 	defer func() {
 		cancel()
 	}()
 
-	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeFollowers)
+	bType := models.UsersBatchTypeFollowers
+	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bType)
 	if err != nil {
-		return nil, errors.Wrap(err, "get last followers list")
+		return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
 	}
 
 	newList, err := svc.GetFollowers()
 	if err != nil {
-		return nil, errors.Wrap(err, "get followers")
+		return nil, fmt.Errorf("get followers: %w", err)
 	}
 
 	now := time.Now()

@@ -3,12 +3,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
@@ -111,7 +111,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 
 	cfg, err := config.Load(configPath)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to load config")
+		return nil, nil, fmt.Errorf("load config: %w", err)
 	}
 
 	setLogger(ctx)
@@ -193,17 +193,16 @@ func cmdCleanFollowings(ctx *cli.Context) error {
 	log.Info("Cleaning from not mutual followings...")
 
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
-	if err != nil {
-		if errors.Cause(err) == service.ErrLimitExceed {
-			log.Infof("Total unfollowed before limit exceeded: %d \n", count)
-		} else {
-			return err
-		}
-	} else {
+	switch {
+	case err == nil:
 		log.Infof("Total unfollowed: %d \n", count)
+	case errors.Is(err, service.ErrLimitExceed):
+		log.Infof("Total unfollowed before limit exceeded: %d \n", count)
+	case errors.Is(err, service.ErrCorrupted):
+		log.Infof("Total unfollowed before corrupted: %d \n", count)
 	}
 
-	return nil
+	return err
 }
 
 func cmdListNotMutual(ctx *cli.Context) error {
