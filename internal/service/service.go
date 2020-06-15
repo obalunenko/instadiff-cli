@@ -104,7 +104,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 		cl *goinsta.Instagram
 	)
 
-	sessFile := fmt.Sprintf("%s.sess", cfg.Username())
+	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", cfg.Username()))
 
 	if i, err := goinsta.Import(sessFile); err == nil {
 		log.Infof("session imported from file: %s", sessFile)
@@ -119,32 +119,10 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	if err := cl.Login(); err != nil {
 		switch v := err.(type) {
 		case goinsta.ChallengeError:
-			if err = cl.Challenge.Process(v.Challenge.APIPath); err != nil {
-				return nil, fmt.Errorf("process challenge: %w", err)
-			}
-
-			ui := &input.UI{
-				Writer: os.Stdout,
-				Reader: os.Stdin,
-			}
-
-			var code string
-
-			code, err = ui.Ask("What is SMS code for instagram?",
-				&input.Options{
-					Default:  "000000",
-					Required: true,
-					Loop:     true,
-				})
+			cl, err = challenge(cl, v.Challenge.APIPath)
 			if err != nil {
-				return nil, fmt.Errorf("process input: %w", err)
+				return nil, fmt.Errorf("challenge: %w", err)
 			}
-
-			if err = cl.Challenge.SendSecurityCode(code); err != nil {
-				return nil, fmt.Errorf("send security code: %w", err)
-			}
-
-			cl.Account = cl.Challenge.LoggedInUser
 
 		default:
 			return nil, fmt.Errorf("failed to login: %w", err)
@@ -156,6 +134,40 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 			log.Errorf("save session: %v", err)
 		}
 	}
+
+	return cl, nil
+}
+
+func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
+	var (
+		err error
+	)
+	if err = cl.Challenge.Process(chURL); err != nil {
+		return nil, fmt.Errorf("process challenge: %w", err)
+	}
+
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+
+	var code string
+
+	code, err = ui.Ask("What is SMS code for instagram?",
+		&input.Options{
+			Default:  "000000",
+			Required: true,
+			Loop:     true,
+		})
+	if err != nil {
+		return nil, fmt.Errorf("process input: %w", err)
+	}
+
+	if err = cl.Challenge.SendSecurityCode(code); err != nil {
+		return nil, fmt.Errorf("send security code: %w", err)
+	}
+
+	cl.Account = cl.Challenge.LoggedInUser
 
 	return cl, nil
 }
