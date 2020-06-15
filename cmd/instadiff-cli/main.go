@@ -131,7 +131,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 
 	cfg.SetDebug(ctx.GlobalBool("debug"))
 
-	return service.New(cancelCtx, cfg)
+	return service.New(cancelCtx, cfg, configPath)
 }
 
 func cmdListFollowers(ctx *cli.Context) error {

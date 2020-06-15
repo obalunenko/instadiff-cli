@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -57,11 +58,13 @@ type StopFunc func()
 // }
 // defer stop()
 //
-func New(ctx context.Context, cfg config.Config) (*Service, StopFunc, error) {
-	cl, err := makeClient(cfg)
+func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, StopFunc, error) {
+	cl, err := makeClient(cfg, cfgPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("make client: %w", err)
 	}
+
+	log.Printf("logged in as %s \n", cl.Account.Username)
 
 	dbc, err := db.Connect(db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
@@ -96,45 +99,70 @@ func New(ctx context.Context, cfg config.Config) (*Service, StopFunc, error) {
 	return &svc, stopFunc, nil
 }
 
-func makeClient(cfg config.Config) (*goinsta.Instagram, error) {
-	cl := goinsta.New(cfg.Username(), cfg.Password())
+func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
+	var (
+		cl *goinsta.Instagram
+	)
+
+	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", cfg.Username()))
+
+	if i, err := goinsta.Import(sessFile); err == nil {
+		log.Infof("session imported from file: %s", sessFile)
+
+		cl = i
+
+		return i, nil
+	}
+
+	cl = goinsta.New(cfg.Username(), cfg.Password())
 
 	if err := cl.Login(); err != nil {
 		switch v := err.(type) {
 		case goinsta.ChallengeError:
-			if err = cl.Challenge.Process(v.Challenge.APIPath); err != nil {
-				return nil, fmt.Errorf("process challenge: %w", err)
-			}
-
-			ui := &input.UI{
-				Writer: os.Stdout,
-				Reader: os.Stdin,
-			}
-
-			var code string
-
-			code, err = ui.Ask("What is SMS code for instagram?",
-				&input.Options{
-					Default:  "000000",
-					Required: true,
-					Loop:     true,
-				})
+			cl, err = challenge(cl, v.Challenge.APIPath)
 			if err != nil {
-				return nil, fmt.Errorf("process input: %w", err)
+				return nil, fmt.Errorf("challenge: %w", err)
 			}
-
-			if err = cl.Challenge.SendSecurityCode(code); err != nil {
-				return nil, fmt.Errorf("send security code: %w", err)
-			}
-
-			cl.Account = cl.Challenge.LoggedInUser
 
 		default:
 			return nil, fmt.Errorf("failed to login: %w", err)
 		}
 	}
 
-	log.Printf("logged in as %s \n", cl.Account.Username)
+	if cfg.StoreSession() {
+		if err := cl.Export(filepath.Join(cfgPath)); err != nil {
+			log.Errorf("save session: %v", err)
+		}
+	}
+
+	return cl, nil
+}
+
+func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
+	if err := cl.Challenge.Process(chURL); err != nil {
+		return nil, fmt.Errorf("process challenge: %w", err)
+	}
+
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+
+	code, err := ui.Ask("What is SMS code for instagram?",
+		&input.Options{
+			Default:  "000000",
+			Required: true,
+			Loop:     true,
+		})
+	if err != nil {
+		return nil, fmt.Errorf("process input: %w", err)
+	}
+
+	if err = cl.Challenge.SendSecurityCode(code); err != nil {
+		return nil, fmt.Errorf("send security code: %w", err)
+	}
+
+	cl.Account = cl.Challenge.LoggedInUser
 
 	return cl, nil
 }

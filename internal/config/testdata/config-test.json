@@ -4,6 +4,7 @@
       "username":"user",
       "password":"pass"
     },
+    "save": true,
     "whitelist":[
       "user1",
       "user2",
