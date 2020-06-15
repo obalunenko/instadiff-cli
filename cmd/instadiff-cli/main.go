@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -109,6 +110,8 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 
 	configPath := ctx.GlobalString("config_path")
 
+	cfgDir := filepath.Dir(configPath)
+
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("load config: %w", err)
@@ -131,7 +134,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 
 	cfg.SetDebug(ctx.GlobalBool("debug"))
 
-	return service.New(cancelCtx, cfg, configPath)
+	return service.New(cancelCtx, cfg, cfgDir)
 }
 
 func cmdListFollowers(ctx *cli.Context) error {
