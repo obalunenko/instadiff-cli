@@ -139,10 +139,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 }
 
 func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
-	var (
-		err error
-	)
-	if err = cl.Challenge.Process(chURL); err != nil {
+	if err := cl.Challenge.Process(chURL); err != nil {
 		return nil, fmt.Errorf("process challenge: %w", err)
 	}
 
@@ -151,9 +148,7 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 		Reader: os.Stdin,
 	}
 
-	var code string
-
-	code, err = ui.Ask("What is SMS code for instagram?",
+	code, err := ui.Ask("What is SMS code for instagram?",
 		&input.Options{
 			Default:  "000000",
 			Required: true,
