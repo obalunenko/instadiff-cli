@@ -31,6 +31,7 @@ func TestLoad(t *testing.T) {
 						username: "user",
 						password: "pass",
 					},
+					save: true,
 					whitelist: []string{
 						"user1",
 						"user2",

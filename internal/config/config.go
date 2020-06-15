@@ -20,6 +20,7 @@ type Config struct {
 
 type instagram struct {
 	user      user
+	save      bool
 	whitelist []string
 	limits    limits
 	sleep     int64
@@ -113,6 +114,11 @@ func (c Config) MongoDBCollection() string {
 	return c.storage.mongo.collection
 }
 
+// StoreSession returns flag if session should be stored locally.
+func (c Config) StoreSession() bool {
+	return c.instagram.save
+}
+
 var (
 	// ErrEmptyPath returned when empty path is passed.
 	ErrEmptyPath = errors.New("config path is empty")
@@ -162,6 +168,7 @@ func Load(path string) (Config, error) {
 				username: viper.GetString("instagram.user.username"),
 				password: viper.GetString("instagram.user.password"),
 			},
+			save:      viper.GetBool("instagram.save"),
 			whitelist: viper.GetStringSlice("instagram.whitelist"),
 			limits: limits{
 				unfollow: viper.GetInt("instagram.limits.unfollow"),
