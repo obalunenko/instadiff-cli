@@ -107,7 +107,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	sessFile := fmt.Sprintf("%s.sess", cfg.Username())
 
 	if i, err := goinsta.Import(sessFile); err == nil {
-		log.Info("session imported from file: %s", sessFile)
+		log.Infof("session imported from file: %s", sessFile)
 
 		cl = i
 
