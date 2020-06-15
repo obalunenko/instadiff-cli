@@ -130,7 +130,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	}
 
 	if cfg.StoreSession() {
-		if err := cl.Export(filepath.Join(cfgPath)); err != nil {
+		if err := cl.Export(sessFile); err != nil {
 			log.Errorf("save session: %v", err)
 		}
 	}
