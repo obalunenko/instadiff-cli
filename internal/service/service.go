@@ -360,27 +360,28 @@ func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int
 	whitelist := svc.instagram.Whitelist()
 
 LOOP:
-	for i, nu := range notMutual {
+	for _, nu := range notMutual {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
-		}
-
-		if i != 0 {
-			pBar.Progress() <- struct{}{}
 		}
 
 		select {
 		case <-svc.ctx.Done():
 			break LOOP
 		case <-ticker.C:
-			if _, ok := whitelist[nu.UserName]; !ok {
-				if err := svc.UnFollow(nu); err != nil {
-					log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
-					errsNum++
-					continue
-				}
-				count++
+			if _, exist := whitelist[nu.UserName]; exist {
+				continue
 			}
+
+			pBar.Progress() <- struct{}{}
+
+			if err := svc.UnFollow(nu); err != nil {
+				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
+				errsNum++
+				continue
+			}
+
+			count++
 
 			if count >= svc.instagram.limits.unFollow {
 				return count, ErrLimitExceed
