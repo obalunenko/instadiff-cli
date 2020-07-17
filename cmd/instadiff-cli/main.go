@@ -105,6 +105,7 @@ func addListFlag() cli.BoolFlag {
 		Usage: "Print the full list instead of only number",
 	}
 }
+
 func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) {
 	var err error
 

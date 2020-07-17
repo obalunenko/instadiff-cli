@@ -14,7 +14,7 @@ func Test_getLostFollowers(t *testing.T) {
 		new []models.User
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		name string
 		args args
 		want []models.User
@@ -52,7 +52,7 @@ func Test_getNewFollowers(t *testing.T) {
 		new []models.User
 	}
 
-	var tests = []struct {
+	tests := []struct {
 		name string
 		args args
 		want []models.User

@@ -116,9 +116,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 }
 
 func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
-	var (
-		cl *goinsta.Instagram
-	)
+	var cl *goinsta.Instagram
 
 	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", cfg.Username()))
 
