@@ -53,10 +53,8 @@ const (
 	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )
 
-var (
-	// ErrInvalidUsersBatchType means that batch type not supported.
-	ErrInvalidUsersBatchType = errors.New("invalid users batch type")
-)
+// ErrInvalidUsersBatchType means that batch type not supported.
+var ErrInvalidUsersBatchType = errors.New("invalid users batch type")
 
 // MakeInvalidBatchTypeError returns ErrInvalidUsersBatchType with added bathtype info.
 func MakeInvalidBatchTypeError(t UsersBatchType) error {

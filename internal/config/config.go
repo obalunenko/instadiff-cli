@@ -119,10 +119,8 @@ func (c Config) StoreSession() bool {
 	return c.instagram.save
 }
 
-var (
-	// ErrEmptyPath returned when empty path is passed.
-	ErrEmptyPath = errors.New("config path is empty")
-)
+// ErrEmptyPath returned when empty path is passed.
+var ErrEmptyPath = errors.New("config path is empty")
 
 // Load loads config from passed filepath.
 func Load(path string) (Config, error) {
