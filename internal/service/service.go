@@ -42,6 +42,22 @@ type instagram struct {
 	sleep     time.Duration
 }
 
+func (i instagram) Whitelist() map[string]struct{} {
+	return i.whitelist
+}
+
+func (i instagram) Limits() limits {
+	return i.limits
+}
+
+func (i instagram) Client() *goinsta.Instagram {
+	return i.client
+}
+
+func (i instagram) Sleep() time.Duration {
+	return i.sleep
+}
+
 type limits struct {
 	unFollow int
 }
@@ -320,8 +336,9 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	}
 
 	log.Infof("Not mutual followers: %d", len(notMutual))
+	log.Infof("Whitelisted: %d", len(svc.instagram.Whitelist()))
 
-	pBar := bar.New(len(notMutual), getBarType())
+	pBar := bar.New(len(notMutual)-len(svc.instagram.Whitelist()), getBarType())
 
 	go pBar.Run(svc.ctx)
 
@@ -342,6 +359,8 @@ func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int
 
 	var errsNum int
 
+	whitelist := svc.instagram.Whitelist()
+
 LOOP:
 	for i, nu := range notMutual {
 		if errsNum >= errsLimit {
@@ -356,7 +375,7 @@ LOOP:
 		case <-svc.ctx.Done():
 			break LOOP
 		case <-ticker.C:
-			if _, ok := svc.instagram.whitelist[nu.UserName]; !ok {
+			if _, ok := whitelist[nu.UserName]; !ok {
 				if err := svc.UnFollow(nu); err != nil {
 					log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
 					errsNum++
