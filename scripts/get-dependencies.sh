@@ -10,6 +10,7 @@ function get_dependencies() {
     "github.com/Bubblyworld/gogroup/..."
     "golang.org/x/lint/golint"
     "golang.org/x/tools/cmd/stringer"
+    "mvdan.cc/gofumpt/..."
   )
 
   ## now loop through the above array
