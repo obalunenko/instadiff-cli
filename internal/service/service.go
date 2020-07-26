@@ -336,7 +336,13 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	log.Infof("Not mutual followers: %d", len(notMutual))
 	log.Infof("Whitelisted: %d", len(svc.instagram.Whitelist()))
 
-	pBar := bar.New(len(notMutual)-len(svc.instagram.Whitelist()), getBarType())
+	diff := svc.whitelistNotMutual(notMutual)
+
+	if len(diff) == 0 {
+		return 0, nil
+	}
+
+	pBar := bar.New(len(diff), getBarType())
 
 	go pBar.Run(svc.ctx)
 
@@ -345,6 +351,22 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 	}()
 
 	return svc.processNotMutual(pBar, notMutual)
+}
+
+func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
+	result := make([]models.User, 0, len(notMutual))
+
+	whitelist := svc.instagram.Whitelist()
+
+	for i := range notMutual {
+		u := notMutual[i]
+
+		if _, exist := whitelist[u.UserName]; !exist {
+			result = append(result, u)
+		}
+	}
+
+	return result
 }
 
 func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int, error) {
