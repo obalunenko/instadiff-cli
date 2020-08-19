@@ -27,10 +27,6 @@ func (c *changeStreamDeployment) SelectServer(context.Context, description.Serve
 	return c, nil
 }
 
-func (c *changeStreamDeployment) SupportsRetryWrites() bool {
-	return false
-}
-
 func (c *changeStreamDeployment) Kind() description.TopologyKind {
 	return c.topologyKind
 }
@@ -39,11 +35,11 @@ func (c *changeStreamDeployment) Connection(context.Context) (driver.Connection,
 	return c.conn, nil
 }
 
-func (c *changeStreamDeployment) ProcessError(err error) {
+func (c *changeStreamDeployment) ProcessError(err error, conn driver.Connection) {
 	ep, ok := c.server.(driver.ErrorProcessor)
 	if !ok {
 		return
 	}
 
-	ep.ProcessError(err)
+	ep.ProcessError(err, conn)
 }
