@@ -1,6 +1,6 @@
 module github.com/oleg-balunenko/instadiff-cli
 
-go 1.14
+go 1.15
 
 require (
 	github.com/ahmdrz/goinsta/v2 v2.4.5
