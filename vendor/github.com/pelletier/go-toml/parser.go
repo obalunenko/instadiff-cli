@@ -158,11 +158,6 @@ func (p *tomlParser) parseGroup() tomlParserStateFn {
 	if err := p.tree.createSubTree(keys, startToken.Position); err != nil {
 		p.raiseError(key, "%s", err)
 	}
-	destTree := p.tree.GetPath(keys)
-	if target, ok := destTree.(*Tree); ok && target != nil && target.inline {
-		p.raiseError(key, "could not re-define exist inline table or its sub-table : %s",
-			strings.Join(keys, "."))
-	}
 	p.assume(tokenRightBracket)
 	p.currentTable = keys
 	return p.parseStart
@@ -203,11 +198,6 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 		targetNode = p.tree.GetPath(tableKey).(*Tree)
 	default:
 		p.raiseError(key, "Unknown table type for path: %s",
-			strings.Join(tableKey, "."))
-	}
-
-	if targetNode.inline {
-		p.raiseError(key, "could not add key or sub-table to exist inline table or its sub-table : %s",
 			strings.Join(tableKey, "."))
 	}
 
@@ -323,41 +313,7 @@ func (p *tomlParser) parseRvalue() interface{} {
 		}
 		return val
 	case tokenDate:
-		layout := time.RFC3339Nano
-		if !strings.Contains(tok.val, "T") {
-			layout = strings.Replace(layout, "T", " ", 1)
-		}
-		val, err := time.ParseInLocation(layout, tok.val, time.UTC)
-		if err != nil {
-			p.raiseError(tok, "%s", err)
-		}
-		return val
-	case tokenLocalDate:
-		v := strings.Replace(tok.val, " ", "T", -1)
-		isDateTime := false
-		isTime := false
-		for _, c := range v {
-			if c == 'T' || c == 't' {
-				isDateTime = true
-				break
-			}
-			if c == ':' {
-				isTime = true
-				break
-			}
-		}
-
-		var val interface{}
-		var err error
-
-		if isDateTime {
-			val, err = ParseLocalDateTime(v)
-		} else if isTime {
-			val, err = ParseLocalTime(v)
-		} else {
-			val, err = ParseLocalDate(v)
-		}
-
+		val, err := time.ParseInLocation(time.RFC3339Nano, tok.val, time.UTC)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
@@ -400,15 +356,12 @@ Loop:
 			}
 			key := p.getToken()
 			p.assume(tokenEqual)
-
-			parsedKey, err := parseKey(key.val)
-			if err != nil {
-				p.raiseError(key, "invalid key: %s", err)
-			}
-
 			value := p.parseRvalue()
-			tree.SetPath(parsedKey, value)
+			tree.Set(key.val, value)
 		case tokenComma:
+			if previous == nil {
+				p.raiseError(follow, "inline table cannot start with a comma")
+			}
 			if tokenIsComma(previous) {
 				p.raiseError(follow, "need field between two commas in inline table")
 			}
@@ -421,13 +374,12 @@ Loop:
 	if tokenIsComma(previous) {
 		p.raiseError(previous, "trailing comma at the end of inline table")
 	}
-	tree.inline = true
 	return tree
 }
 
 func (p *tomlParser) parseArray() interface{} {
 	var array []interface{}
-	arrayType := reflect.TypeOf(newTree())
+	arrayType := reflect.TypeOf(nil)
 	for {
 		follow := p.peek()
 		if follow == nil || follow.typ == tokenEOF {
@@ -438,8 +390,11 @@ func (p *tomlParser) parseArray() interface{} {
 			break
 		}
 		val := p.parseRvalue()
+		if arrayType == nil {
+			arrayType = reflect.TypeOf(val)
+		}
 		if reflect.TypeOf(val) != arrayType {
-			arrayType = nil
+			p.raiseError(follow, "mixed types in array")
 		}
 		array = append(array, val)
 		follow = p.peek()
@@ -452,12 +407,6 @@ func (p *tomlParser) parseArray() interface{} {
 		if follow.typ == tokenComma {
 			p.getToken()
 		}
-	}
-
-	// if the array is a mixed-type array or its length is 0,
-	// don't convert it to a table array
-	if len(array) <= 0 {
-		arrayType = nil
 	}
 	// An array of Trees is actually an array of inline
 	// tables, which is a shorthand for a table array. If the

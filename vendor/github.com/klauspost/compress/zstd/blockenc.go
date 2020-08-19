@@ -295,7 +295,7 @@ func (b *blockEnc) encodeRaw(a []byte) {
 	b.output = bh.appendTo(b.output[:0])
 	b.output = append(b.output, a...)
 	if debug {
-		println("Adding RAW block, length", len(a), "last:", b.last)
+		println("Adding RAW block, length", len(a))
 	}
 }
 
@@ -308,7 +308,7 @@ func (b *blockEnc) encodeRawTo(dst, src []byte) []byte {
 	dst = bh.appendTo(dst)
 	dst = append(dst, src...)
 	if debug {
-		println("Adding RAW block, length", len(src), "last:", b.last)
+		println("Adding RAW block, length", len(src))
 	}
 	return dst
 }
@@ -322,7 +322,7 @@ func (b *blockEnc) encodeLits(raw bool) error {
 	// Don't compress extremely small blocks
 	if len(b.literals) < 32 || raw {
 		if debug {
-			println("Adding RAW block, length", len(b.literals), "last:", b.last)
+			println("Adding RAW block, length", len(b.literals))
 		}
 		bh.setType(blockTypeRaw)
 		b.output = bh.appendTo(b.output)
@@ -338,10 +338,18 @@ func (b *blockEnc) encodeLits(raw bool) error {
 	if len(b.literals) >= 1024 {
 		// Use 4 Streams.
 		out, reUsed, err = huff0.Compress4X(b.literals, b.litEnc)
+		if len(out) > len(b.literals)-len(b.literals)>>4 {
+			// Bail out of compression is too little.
+			err = huff0.ErrIncompressible
+		}
 	} else if len(b.literals) > 32 {
 		// Use 1 stream
 		single = true
 		out, reUsed, err = huff0.Compress1X(b.literals, b.litEnc)
+		if len(out) > len(b.literals)-len(b.literals)>>4 {
+			// Bail out of compression is too little.
+			err = huff0.ErrIncompressible
+		}
 	} else {
 		err = huff0.ErrIncompressible
 	}
@@ -349,7 +357,7 @@ func (b *blockEnc) encodeLits(raw bool) error {
 	switch err {
 	case huff0.ErrIncompressible:
 		if debug {
-			println("Adding RAW block, length", len(b.literals), "last:", b.last)
+			println("Adding RAW block, length", len(b.literals))
 		}
 		bh.setType(blockTypeRaw)
 		b.output = bh.appendTo(b.output)
@@ -444,9 +452,9 @@ func fuzzFseEncoder(data []byte) int {
 }
 
 // encode will encode the block and append the output in b.output.
-func (b *blockEnc) encode(raw, rawAllLits bool) error {
+func (b *blockEnc) encode(raw bool) error {
 	if len(b.sequences) == 0 {
-		return b.encodeLits(rawAllLits)
+		return b.encodeLits(raw)
 	}
 	// We want some difference
 	if len(b.literals) > (b.size - (b.size >> 5)) {
@@ -806,7 +814,7 @@ func (b *blockEnc) genCodes() {
 		mlH[v]++
 		if v > mlMax {
 			mlMax = v
-			if debugAsserts && mlMax > maxMatchLengthSymbol {
+			if debug && mlMax > maxMatchLengthSymbol {
 				panic(fmt.Errorf("mlMax > maxMatchLengthSymbol (%d), matchlen: %d", mlMax, seq.matchLen))
 			}
 		}
@@ -821,13 +829,13 @@ func (b *blockEnc) genCodes() {
 		}
 		return int(max)
 	}
-	if debugAsserts && mlMax > maxMatchLengthSymbol {
+	if mlMax > maxMatchLengthSymbol {
 		panic(fmt.Errorf("mlMax > maxMatchLengthSymbol (%d)", mlMax))
 	}
-	if debugAsserts && ofMax > maxOffsetBits {
+	if ofMax > maxOffsetBits {
 		panic(fmt.Errorf("ofMax > maxOffsetBits (%d)", ofMax))
 	}
-	if debugAsserts && llMax > maxLiteralLengthSymbol {
+	if llMax > maxLiteralLengthSymbol {
 		panic(fmt.Errorf("llMax > maxLiteralLengthSymbol (%d)", llMax))
 	}
 
