@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
@@ -30,8 +31,9 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 				batchType: models.UsersBatchTypeFollowers,
 			},
 			want: models.UsersBatch{
-				Users: followersFixture,
-				Type:  models.UsersBatchTypeFollowers,
+				Users:     followersFixture,
+				Type:      models.UsersBatchTypeFollowers,
+				CreatedAt: time.Time{},
 			},
 			wantErr: false,
 		},
@@ -61,6 +63,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			got, err := l.GetLastUsersBatchByType(context.TODO(), tt.args.batchType)
 			if tt.wantErr {
 				require.Error(t, err)
+
 				return
 			}
 			require.NoError(t, err)
@@ -78,8 +81,9 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	assert.Equal(t, models.EmptyUsersBatch, gotBatch)
 
 	goldenBatch := models.UsersBatch{
-		Users: followersFixture,
-		Type:  models.UsersBatchTypeFollowers,
+		Users:     followersFixture,
+		Type:      models.UsersBatchTypeFollowers,
+		CreatedAt: time.Time{},
 	}
 
 	err = ldb.InsertUsersBatch(context.TODO(), goldenBatch)

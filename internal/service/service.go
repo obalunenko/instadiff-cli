@@ -14,10 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/config"
-	"github.com/oleg-balunenko/instadiff-cli/internal/db"
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
-	"github.com/oleg-balunenko/instadiff-cli/pkg/bar"
+	"github.com/obalunenko/instadiff-cli/internal/config"
+	"github.com/obalunenko/instadiff-cli/internal/db"
+	"github.com/obalunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/pkg/bar"
 )
 
 var (
@@ -72,7 +72,7 @@ type StopFunc func()
 // if err != nil{
 // // handle error
 // }
-// defer stop()
+// defer stop().
 //
 func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, StopFunc, error) {
 	cl, err := makeClient(cfg, cfgPath)
@@ -131,15 +131,15 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	cl = goinsta.New(cfg.Username(), cfg.Password())
 
 	if err := cl.Login(); err != nil {
-		switch v := err.(type) {
-		case goinsta.ChallengeError:
-			cl, err = challenge(cl, v.Challenge.APIPath)
-			if err != nil {
-				return nil, fmt.Errorf("challenge: %w", err)
-			}
+		var chErr *goinsta.ChallengeError
 
-		default:
+		if !errors.As(err, &chErr) {
 			return nil, fmt.Errorf("failed to login: %w", err)
+		}
+
+		cl, err = challenge(cl, chErr.Challenge.APIPath)
+		if err != nil {
+			return nil, fmt.Errorf("challenge: %w", err)
 		}
 	}
 
@@ -164,9 +164,16 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 
 	code, err := ui.Ask("What is SMS code for instagram?",
 		&input.Options{
-			Default:  "000000",
-			Required: true,
-			Loop:     true,
+			Default:      "000000",
+			Loop:         true,
+			Required:     true,
+			HideDefault:  false,
+			HideOrder:    false,
+			Hide:         false,
+			Mask:         false,
+			MaskDefault:  false,
+			MaskVal:      "",
+			ValidateFunc: nil,
 		})
 	if err != nil {
 		return nil, fmt.Errorf("process input: %w", err)
@@ -284,7 +291,72 @@ func (svc *Service) UnFollow(user models.User) error {
 		return nil
 	}
 
-	us := goinsta.User{ID: user.ID, Username: user.UserName}
+	us := goinsta.User{
+		ID:                         user.ID,
+		Username:                   user.UserName,
+		FullName:                   "",
+		Biography:                  "",
+		ProfilePicURL:              "",
+		Email:                      "",
+		PhoneNumber:                "",
+		IsBusiness:                 false,
+		Gender:                     0,
+		ProfilePicID:               "",
+		HasAnonymousProfilePicture: false,
+		IsPrivate:                  false,
+		IsUnpublished:              false,
+		AllowedCommenterType:       "",
+		IsVerified:                 false,
+		MediaCount:                 0,
+		FollowerCount:              0,
+		FollowingCount:             0,
+		FollowingTagCount:          0,
+		MutualFollowersID:          nil,
+		ProfileContext:             "",
+		GeoMediaCount:              0,
+		ExternalURL:                "",
+		HasBiographyTranslation:    false,
+		ExternalLynxURL:            "",
+		BiographyWithEntities: struct {
+			RawText  string        `json:"raw_text"`
+			Entities []interface{} `json:"entities"`
+		}{},
+		UsertagsCount:                0,
+		HasChaining:                  false,
+		IsFavorite:                   false,
+		IsFavoriteForStories:         false,
+		IsFavoriteForHighlights:      false,
+		CanBeReportedAsFraud:         false,
+		ShowShoppableFeed:            false,
+		ShoppablePostsCount:          0,
+		ReelAutoArchive:              "",
+		HasHighlightReels:            false,
+		PublicEmail:                  "",
+		PublicPhoneNumber:            "",
+		PublicPhoneCountryCode:       "",
+		ContactPhoneNumber:           "",
+		CityID:                       0,
+		CityName:                     "",
+		AddressStreet:                "",
+		DirectMessaging:              "",
+		Latitude:                     0,
+		Longitude:                    0,
+		Category:                     "",
+		BusinessContactMethod:        "",
+		IncludeDirectBlacklistStatus: false,
+		HdProfilePicURLInfo:          goinsta.PicURLInfo{},
+		HdProfilePicVersions:         nil,
+		School:                       goinsta.School{},
+		Byline:                       "",
+		SocialContext:                "",
+		SearchSocialContext:          "",
+		MutualFollowersCount:         0,
+		LatestReelMedia:              0,
+		IsCallToActionEnabled:        false,
+		FbPageCallToActionID:         "",
+		Zip:                          "",
+		Friendship:                   goinsta.Friendship{},
+	}
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Unfollow(); err != nil {
@@ -302,7 +374,72 @@ func (svc *Service) Follow(user models.User) error {
 		return nil
 	}
 
-	us := goinsta.User{ID: user.ID, Username: user.UserName}
+	us := goinsta.User{
+		ID:                         user.ID,
+		Username:                   user.UserName,
+		FullName:                   "",
+		Biography:                  "",
+		ProfilePicURL:              "",
+		Email:                      "",
+		PhoneNumber:                "",
+		IsBusiness:                 false,
+		Gender:                     0,
+		ProfilePicID:               "",
+		HasAnonymousProfilePicture: false,
+		IsPrivate:                  false,
+		IsUnpublished:              false,
+		AllowedCommenterType:       "",
+		IsVerified:                 false,
+		MediaCount:                 0,
+		FollowerCount:              0,
+		FollowingCount:             0,
+		FollowingTagCount:          0,
+		MutualFollowersID:          nil,
+		ProfileContext:             "",
+		GeoMediaCount:              0,
+		ExternalURL:                "",
+		HasBiographyTranslation:    false,
+		ExternalLynxURL:            "",
+		BiographyWithEntities: struct {
+			RawText  string        `json:"raw_text"`
+			Entities []interface{} `json:"entities"`
+		}{},
+		UsertagsCount:                0,
+		HasChaining:                  false,
+		IsFavorite:                   false,
+		IsFavoriteForStories:         false,
+		IsFavoriteForHighlights:      false,
+		CanBeReportedAsFraud:         false,
+		ShowShoppableFeed:            false,
+		ShoppablePostsCount:          0,
+		ReelAutoArchive:              "",
+		HasHighlightReels:            false,
+		PublicEmail:                  "",
+		PublicPhoneNumber:            "",
+		PublicPhoneCountryCode:       "",
+		ContactPhoneNumber:           "",
+		CityID:                       0,
+		CityName:                     "",
+		AddressStreet:                "",
+		DirectMessaging:              "",
+		Latitude:                     0,
+		Longitude:                    0,
+		Category:                     "",
+		BusinessContactMethod:        "",
+		IncludeDirectBlacklistStatus: false,
+		HdProfilePicURLInfo:          goinsta.PicURLInfo{},
+		HdProfilePicVersions:         nil,
+		School:                       goinsta.School{},
+		Byline:                       "",
+		SocialContext:                "",
+		SearchSocialContext:          "",
+		MutualFollowersCount:         0,
+		LatestReelMedia:              0,
+		IsCallToActionEnabled:        false,
+		FbPageCallToActionID:         "",
+		Zip:                          "",
+		Friendship:                   goinsta.Friendship{},
+	}
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Follow(); err != nil {
@@ -400,6 +537,7 @@ LOOP:
 			if err := svc.UnFollow(nu); err != nil {
 				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
 				errsNum++
+
 				continue
 			}
 
@@ -500,6 +638,7 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 
 	if ctx.Err() != nil {
 		log.Errorf("canceled context: %v", ctx.Err())
+
 		return
 	}
 
@@ -604,6 +743,7 @@ func getLostFollowers(old []models.User, new []models.User) []models.User {
 		for _, nU := range new {
 			if oU.ID == nU.ID {
 				found = true
+
 				break
 			}
 		}
@@ -625,6 +765,7 @@ func getNewFollowers(old []models.User, new []models.User) []models.User {
 		for _, oU := range old {
 			if oU.ID == nU.ID {
 				found = true
+
 				break
 			}
 		}

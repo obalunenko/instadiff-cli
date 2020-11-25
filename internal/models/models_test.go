@@ -5,7 +5,7 @@ import (
 
 	"github.com/magiconair/properties/assert"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 func TestUsersBatchType_Valid(t *testing.T) {

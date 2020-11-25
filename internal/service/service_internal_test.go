@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 func Test_getLostFollowers(t *testing.T) {

@@ -4,7 +4,7 @@ package db
 import (
 	"context"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 type localDB struct {

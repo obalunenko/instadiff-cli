@@ -70,7 +70,7 @@ function go-lint() {
 function go-group() {
   echo "gogroup..."
   if [[ -f "$(go env GOPATH)/bin/gogroup" ]] || [[ -f "/usr/local/bin/gogroup" ]]; then
-    declare -a lints=$(gogroup -order std,other,prefix=github.com/oleg-balunenko/ $(find . -type f -name "*.go" | grep -v "vendor/"))
+    declare -a lints=$(gogroup -order std,other,prefix=github.com/obalunenko/ $(find . -type f -name "*.go" | grep -v "vendor/"))
 
     if [[ ${lints} ]]; then
       echo "fix it:"

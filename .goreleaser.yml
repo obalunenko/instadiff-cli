@@ -1,6 +1,6 @@
 release:
   github:
-    owner: oleg-balunenko
+    owner: obalunenko
     name: instadiff-cli
 
 before:

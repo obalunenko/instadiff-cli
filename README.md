@@ -1,16 +1,16 @@
-[![GO](https://img.shields.io/github/go-mod/go-version/oleg-balunenko/instadiff-cli)](https://golang.org/doc/devel/release.html)
-[![Build Status](https://travis-ci.com/oleg-balunenko/instadiff-cli.svg?branch=master)](https://travis-ci.com/oleg-balunenko/instadiff-cli)
+[![GO](https://img.shields.io/github/go-mod/go-version/obalunenko/instadiff-cli)](https://golang.org/doc/devel/release.html)
+[![Build Status](https://travis-ci.com/obalunenko/instadiff-cli.svg?branch=master)](https://travis-ci.com/obalunenko/instadiff-cli)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=instadiff-cli&metric=alert_status)](https://sonarcloud.io/dashboard?id=instadiff-cli)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e1b08a94c9cb45f4ac86391ef936166e)](https://www.codacy.com/manual/oleg.balunenko/instadiff-cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=oleg-balunenko/instadiff-cli&amp;utm_campaign=Badge_Grade)
-[![Go Report Card](https://goreportcard.com/badge/github.com/oleg-balunenko/instadiff-cli)](https://goreportcard.com/report/github.com/oleg-balunenko/instadiff-cli)
-[![Coverage Status](https://coveralls.io/repos/github/oleg-balunenko/instadiff-cli/badge.svg?branch=master)](https://coveralls.io/github/oleg-balunenko/instadiff-cli?branch=master)
-[![Latest release artifacts](https://img.shields.io/github/v/release/oleg-balunenko/instadiff-cli)](https://github.com/oleg-balunenko/instadiff-cli/releases/latest)
-[![License](https://img.shields.io/github/license/oleg-balunenko/instadiff-cli)](/LICENSE)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e1b08a94c9cb45f4ac86391ef936166e)](https://www.codacy.com/manual/oleg.balunenko/instadiff-cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=obalunenko/instadiff-cli&amp;utm_campaign=Badge_Grade)
+[![Go Report Card](https://goreportcard.com/badge/github.com/obalunenko/instadiff-cli)](https://goreportcard.com/report/github.com/obalunenko/instadiff-cli)
+[![Coverage Status](https://coveralls.io/repos/github/obalunenko/instadiff-cli/badge.svg?branch=master)](https://coveralls.io/github/obalunenko/instadiff-cli?branch=master)
+[![Latest release artifacts](https://img.shields.io/github/v/release/obalunenko/instadiff-cli)](https://github.com/obalunenko/instadiff-cli/releases/latest)
+[![License](https://img.shields.io/github/license/obalunenko/instadiff-cli)](/LICENSE)
 
 # instadiff-cli
 
 <p align="center">
-  <img src="https://github.com/oleg-balunenko/instadiff-cli/blob/master/.assets/gopher.png" alt="" width="300">
+  <img src="https://github.com/obalunenko/instadiff-cli/blob/master/.assets/gopher.png" alt="" width="300">
   <br>
 </p>
 

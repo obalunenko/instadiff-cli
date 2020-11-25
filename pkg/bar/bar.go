@@ -56,10 +56,10 @@ type Bar interface {
 //
 // for i := range 100{
 // 	pBar.Progress() <- struct{}{}
-// }
+// }.
 //
 func New(cap int, barType BType) Bar {
-	switch barType {
+	switch barType { //nolint:exhaustive
 	case BTypeRendered:
 		b := realBar{
 			bar:   progressbar.New(cap),
@@ -173,6 +173,7 @@ func (b *realBar) Run(ctx context.Context) {
 			time.Sleep(sleep)
 		case <-ctx.Done():
 			log.Errorf("canceled context: %v", ctx.Err())
+
 			return
 		}
 	}

@@ -2,6 +2,7 @@ linters:
   enable-all: true
   disable:
     - gochecknoglobals
+    - paralleltest
 
 linters-settings:
   errcheck:
@@ -59,7 +60,7 @@ linters-settings:
     # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
     max-func-lines: 30
   goimports:
-    local-prefixes: github.com/oleg-balunenko/instadiff-cli/
+    local-prefixes: github.com/obalunenko/instadiff-cli/
   unparam:
     algo: cha
     check-exported: false
