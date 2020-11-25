@@ -71,6 +71,7 @@ func TestLoad(t *testing.T) {
 			got, err := Load(tt.args.path)
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 			assert.NoError(t, err)

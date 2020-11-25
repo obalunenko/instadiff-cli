@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 // ErrNoUsers means that no users found.

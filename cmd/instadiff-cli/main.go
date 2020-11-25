@@ -13,9 +13,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/config"
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
-	"github.com/oleg-balunenko/instadiff-cli/internal/service"
+	"github.com/obalunenko/instadiff-cli/internal/config"
+	"github.com/obalunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/service"
 )
 
 const list = "list"
@@ -37,20 +37,32 @@ func main() {
 func globalFlags() []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:  "config_path",
-			Value: ".config.json",
-			Usage: "Path to the config file",
+			Name:        "config_path",
+			Usage:       "Path to the config file",
+			EnvVar:      "",
+			FilePath:    "",
+			Required:    false,
+			Hidden:      false,
+			TakesFile:   false,
+			Value:       ".config.json",
+			Destination: nil,
 		},
 		cli.StringFlag{
-			Name:     "log_level",
-			Usage:    "Level of output logs",
-			Required: false,
-			Hidden:   false,
-			Value:    log.InfoLevel.String(),
+			Name:        "log_level",
+			Usage:       "Level of output logs",
+			EnvVar:      "",
+			FilePath:    "",
+			Required:    false,
+			Hidden:      false,
+			TakesFile:   false,
+			Value:       log.InfoLevel.String(),
+			Destination: nil,
 		},
 		cli.BoolFlag{
 			Name:        "debug",
 			Usage:       "Debug mode, where actions has no real effect",
+			EnvVar:      "",
+			FilePath:    "",
 			Required:    false,
 			Hidden:      false,
 			Destination: nil,
@@ -101,8 +113,13 @@ func commands() []cli.Command {
 
 func addListFlag() cli.BoolFlag {
 	return cli.BoolFlag{
-		Name:  list,
-		Usage: "Print the full list instead of only number",
+		Name:        list,
+		Usage:       "Print the full list instead of only number",
+		EnvVar:      "",
+		FilePath:    "",
+		Required:    false,
+		Hidden:      false,
+		Destination: nil,
 	}
 }
 
@@ -274,10 +291,21 @@ func cmdListBotsAndBusiness(ctx *cli.Context) error {
 
 func setLogger(ctx *cli.Context) {
 	formatter := log.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02 15:04:05",
-		DisableSorting:  false,
-		ForceColors:     true,
+		ForceColors:               true,
+		DisableColors:             false,
+		ForceQuote:                false,
+		DisableQuote:              false,
+		EnvironmentOverrideColors: false,
+		DisableTimestamp:          false,
+		FullTimestamp:             true,
+		TimestampFormat:           "2006-01-02 15:04:05",
+		DisableSorting:            false,
+		SortingFunc:               nil,
+		DisableLevelTruncation:    false,
+		PadLevelText:              false,
+		QuoteEmptyFields:          false,
+		FieldMap:                  nil,
+		CallerPrettyfier:          nil,
 	}
 
 	log.SetFormatter(&formatter)

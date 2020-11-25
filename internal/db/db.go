@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 // ErrNoData returned when no data found in collection.

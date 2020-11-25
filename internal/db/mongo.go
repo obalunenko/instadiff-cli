@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/oleg-balunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 // MongoParams represents mongo db configuration parameters.
@@ -56,7 +56,24 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 	batchType models.UsersBatchType) (models.UsersBatch, error) {
 	filter := bson.M{"batch_type": batchType}
 	resp := m.collection.FindOne(ctx, filter, &options.FindOneOptions{
-		Sort: bson.M{"$natural": -1},
+		AllowPartialResults: nil,
+		BatchSize:           nil,
+		Collation:           nil,
+		Comment:             nil,
+		CursorType:          nil,
+		Hint:                nil,
+		Max:                 nil,
+		MaxAwaitTime:        nil,
+		MaxTime:             nil,
+		Min:                 nil,
+		NoCursorTimeout:     nil,
+		OplogReplay:         nil,
+		Projection:          nil,
+		ReturnKey:           nil,
+		ShowRecordID:        nil,
+		Skip:                nil,
+		Snapshot:            nil,
+		Sort:                bson.M{"$natural": -1},
 	})
 
 	if err := resp.Err(); err != nil {
