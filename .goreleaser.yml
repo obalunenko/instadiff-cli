@@ -5,7 +5,7 @@ release:
 
 before:
   hooks:
-    - go mod tidy
+    - echo "no hooks yet"
 
 builds:
   - id: cli
