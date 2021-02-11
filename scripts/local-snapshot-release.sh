@@ -9,4 +9,6 @@ git fetch --tags
 latestTag=$(git describe --tags $(git rev-list --tags --max-count=1))
 echo "${latestTag}"
 
-curl -sL https://git.io/goreleaser | bash
+export GOVERSION=$(go version | awk '{print $3;}')
+
+goreleaser --snapshot --skip-publish --rm-dist
