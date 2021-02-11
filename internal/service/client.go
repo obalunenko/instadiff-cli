@@ -1,3 +1,4 @@
+// Package service implements instagram account operations and business logic.
 package service
 
 import (
