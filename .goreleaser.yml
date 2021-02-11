@@ -16,7 +16,6 @@ builds:
      - linux
     goarch:
      - amd64
-     - arm
     env:
      - CGO_ENABLED=0
     main: ./cmd/instadiff-cli
