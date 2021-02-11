@@ -63,36 +63,32 @@ Example of config file:
 
 ```json
 {
-   "instagram":{
-      "user":{
-         "username":"user",
-         "password":"pass"
-      },
-      "whitelist":[
-         "user1",
-         "user2",
-         "user3"
-      ],
-      "limits":{
-         "unfollow":100
-      }
-   },
-   "storage":{
-      "local":true,
-      "mongo":{
-         "url":"mongoURL:test",
-         "db":"testing",
-         "collection":"users"
-      }
-   },
-   "debug":"false"
+  "instagram":{
+    "save": true,
+    "whitelist":[
+      "user1",
+      "user2",
+      "user3"
+    ],
+    "limits":{
+      "unfollow":100
+    },
+    "sleep": 1
+  },
+  "storage": {
+    "local": true,
+    "mongo": {
+      "url": "mongoURL:test",
+      "db": "testing",
+      "collection": "users"
+    }
+  },
+  "debug": "false"
 }
 ```
 
 * instagram: it is an config for instagram
-	* user: user credentials to login into user's account
-		* username: login
-		* password: password
+	* save: sets if session should be stored locally.
 	* whitelist: list of followings that will be not unfollowed even if they are unmutual.
 	* limits: limits per one run.
 		* unfollow: number of users that could be unfollowed in one run (be careful will big numbers - account could be bunned)
