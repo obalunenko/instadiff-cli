@@ -25,12 +25,10 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 
 	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
 
-	if i, err := goinsta.Import(sessFile); err == nil {
+	if cl, err = goinsta.Import(sessFile); err == nil {
 		log.Infof("session imported from file: %s", sessFile)
 
-		cl = i
-
-		return i, nil
+		return cl, nil
 	}
 
 	pwd, err := password()
@@ -40,7 +38,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 
 	cl = goinsta.New(uname, pwd)
 
-	if err := cl.Login(); err != nil {
+	if err = cl.Login(); err != nil {
 		var chErr *goinsta.ChallengeError
 
 		if !errors.As(err, &chErr) {
@@ -54,7 +52,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	}
 
 	if cfg.StoreSession() {
-		if err := cl.Export(sessFile); err != nil {
+		if err = cl.Export(sessFile); err != nil {
 			log.Errorf("save session: %v", err)
 		}
 	}
