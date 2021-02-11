@@ -2,7 +2,7 @@
 
 function check_status() {
   # first param is error message to print in case of error
-  if [ $? -ne 0 ]
+  if [ "$?" -ne 0 ]
     then
       if [ -n "$1" ]
 	    then
@@ -19,9 +19,9 @@ function run_go_install_in_parallel() {
 	export GO111MODULE="on"
 	for app in "$@"
 	do
-	    if [ -d ${app} ]
+	    if [ -d "${app}" ]
 		then
-		  apps+=(${app}/...)
+		  apps+=("${app}/...")
 		  echo "[INFO]: Going to build $app binary..."
 		else
 		  echo "[WARN]: $app not found, skipping..."
@@ -42,4 +42,5 @@ run_go_install_in_parallel \
 "./vendor/golang.org/x/tools/cmd/stringer" \
 "./vendor/github.com/golang/mock/mockgen" \
 "./vendor/github.com/go-bindata/go-bindata/v3/go-bindata" \
-"./vendor/golang.org/x/lint/golint"
+"./vendor/golang.org/x/lint/golint" \
+"./vendor/github.com/mattn/goveralls"
