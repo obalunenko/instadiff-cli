@@ -44,7 +44,7 @@ type Bar interface {
 }
 
 // New creates Bar instance for bar progress rendering.
-// cap - is the expected amount of work.
+// max - is the expected amount of work.
 // barType - is a desired type of bar that constructor will return.
 // Usage:
 //
@@ -59,11 +59,11 @@ type Bar interface {
 // 	pBar.Progress() <- struct{}{}
 // }.
 //
-func New(cap int, barType BType) Bar {
+func New(max int, barType BType) Bar {
 	switch barType { //nolint:exhaustive
 	case BTypeRendered:
 		b := realBar{
-			bar:   progressbar.New(cap),
+			bar:   progressbar.New(max),
 			stop:  sync.Once{},
 			wg:    sync.WaitGroup{},
 			bchan: make(chan struct{}, 1),
