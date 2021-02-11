@@ -5,14 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/ahmdrz/goinsta/v2"
+	"github.com/TheForgotten69/goinsta/v2"
 	log "github.com/sirupsen/logrus"
-	"github.com/tcnksm/go-input"
 
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
@@ -113,79 +110,6 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 	}
 
 	return &svc, stopFunc, nil
-}
-
-func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
-	var cl *goinsta.Instagram
-
-	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", cfg.Username()))
-
-	if i, err := goinsta.Import(sessFile); err == nil {
-		log.Infof("session imported from file: %s", sessFile)
-
-		cl = i
-
-		return i, nil
-	}
-
-	cl = goinsta.New(cfg.Username(), cfg.Password())
-
-	if err := cl.Login(); err != nil {
-		var chErr *goinsta.ChallengeError
-
-		if !errors.As(err, &chErr) {
-			return nil, fmt.Errorf("failed to login: %w", err)
-		}
-
-		cl, err = challenge(cl, chErr.Challenge.APIPath)
-		if err != nil {
-			return nil, fmt.Errorf("challenge: %w", err)
-		}
-	}
-
-	if cfg.StoreSession() {
-		if err := cl.Export(sessFile); err != nil {
-			log.Errorf("save session: %v", err)
-		}
-	}
-
-	return cl, nil
-}
-
-func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
-	if err := cl.Challenge.Process(chURL); err != nil {
-		return nil, fmt.Errorf("process challenge: %w", err)
-	}
-
-	ui := &input.UI{
-		Writer: os.Stdout,
-		Reader: os.Stdin,
-	}
-
-	code, err := ui.Ask("What is SMS code for instagram?",
-		&input.Options{
-			Default:      "000000",
-			Loop:         true,
-			Required:     true,
-			HideDefault:  false,
-			HideOrder:    false,
-			Hide:         false,
-			Mask:         false,
-			MaskDefault:  false,
-			MaskVal:      "",
-			ValidateFunc: nil,
-		})
-	if err != nil {
-		return nil, fmt.Errorf("process input: %w", err)
-	}
-
-	if err = cl.Challenge.SendSecurityCode(code); err != nil {
-		return nil, fmt.Errorf("send security code: %w", err)
-	}
-
-	cl.Account = cl.Challenge.LoggedInUser
-
-	return cl, nil
 }
 
 // GetFollowers returns list of followers for logged in user.
@@ -664,7 +588,7 @@ func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
 		return true
 	}
 
-	fmt.Printf("processig[%s]: following[%d] \n", user.Username, flwsNum)
+	log.Debugf("processig[%s]: following[%d] \n", user.Username, flwsNum)
 
 	if user.CanBeReportedAsFraud {
 		return true
@@ -734,13 +658,13 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 	return []models.UsersBatch{lostBatch, newBatch}, nil
 }
 
-func getLostFollowers(old []models.User, new []models.User) []models.User {
+func getLostFollowers(oldlist []models.User, newlist []models.User) []models.User {
 	var diff []models.User
 
-	for _, oU := range old {
+	for _, oU := range oldlist {
 		var found bool
 
-		for _, nU := range new {
+		for _, nU := range newlist {
 			if oU.ID == nU.ID {
 				found = true
 
@@ -756,13 +680,13 @@ func getLostFollowers(old []models.User, new []models.User) []models.User {
 	return diff
 }
 
-func getNewFollowers(old []models.User, new []models.User) []models.User {
+func getNewFollowers(oldlist []models.User, newlist []models.User) []models.User {
 	var diff []models.User
 
-	for _, nU := range new {
+	for _, nU := range newlist {
 		var found bool
 
-		for _, oU := range old {
+		for _, oU := range oldlist {
 			if oU.ID == nU.ID {
 				found = true
 

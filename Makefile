@@ -41,6 +41,12 @@ compile:
 	./scripts/compile.sh
 .PHONY: compile
 
+## recreate all generated code.
+generate:
+	${call colored, generate is running...}
+	./scripts/generate.sh
+.PHONY: generate
+
 ## lint project
 lint:
 	${call colored, lint is running...}
@@ -85,17 +91,16 @@ release:
 	./scripts/release.sh
 .PHONY: release
 
-## Fix imports sorting
-imports:
-	${call colored, sort and group imports...}
-	./scripts/fix-imports.sh
-.PHONY: imports
 
-## dependencies - fetch all dependencies for sripts
-dependencies:
-	${call colored, dependensies is running...}
-	./scripts/get-dependencies.sh
-.PHONY: dependencies
+## Installs tools from vendor.
+install-tools:
+	./scripts/install-tools.sh
+.PHONY: install-tools
+
+## Sync vendor of root project and tools.
+sync-vendor:
+	./scripts/sync-vendor.sh
+.PHONY: sync-vendor
 
 ## Docker compose up
 docker-up:
@@ -110,5 +115,27 @@ docker-down:
 	docker-compose -f ./docker-compose.yml down --volumes
 
 .PHONY: docker-down
+
+## Fix imports sorting.
+imports:
+	${call colored, fix-imports is running...}
+	./scripts/fix-imports.sh
+.PHONY: imports
+
+## Format code.
+fmt:
+	${call colored, fmt is running...}
+	./scripts/fmt.sh
+.PHONY: fmt
+
+## Format code and sort imports.
+format-project: fmt imports
+.PHONY: format-project
+
+## vet project
+vet:
+	${call colored, vet is running...}
+	./scripts/vet.sh
+.PHONY: vet
 
 .DEFAULT_GOAL := test

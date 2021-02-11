@@ -1,9 +1,6 @@
 {
   "instagram":{
-    "user":{
-      "username":"user",
-      "password":"pass"
-    },
+    "save": true,
     "whitelist":[
       "user1",
       "user2",
@@ -11,7 +8,8 @@
     ],
     "limits":{
       "unfollow":100
-    }
+    },
+    "sleep": 1
   },
   "storage": {
     "local": true,
