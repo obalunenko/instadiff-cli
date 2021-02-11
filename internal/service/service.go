@@ -819,13 +819,13 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 	return []models.UsersBatch{lostBatch, newBatch}, nil
 }
 
-func getLostFollowers(old []models.User, new []models.User) []models.User {
+func getLostFollowers(oldlist []models.User, newlist []models.User) []models.User {
 	var diff []models.User
 
-	for _, oU := range old {
+	for _, oU := range oldlist {
 		var found bool
 
-		for _, nU := range new {
+		for _, nU := range newlist {
 			if oU.ID == nU.ID {
 				found = true
 
@@ -841,13 +841,13 @@ func getLostFollowers(old []models.User, new []models.User) []models.User {
 	return diff
 }
 
-func getNewFollowers(old []models.User, new []models.User) []models.User {
+func getNewFollowers(oldlist []models.User, newlist []models.User) []models.User {
 	var diff []models.User
 
-	for _, nU := range new {
+	for _, nU := range newlist {
 		var found bool
 
-		for _, oU := range old {
+		for _, oU := range oldlist {
 			if oU.ID == nU.ID {
 				found = true
 
