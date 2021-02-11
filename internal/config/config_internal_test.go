@@ -27,10 +27,6 @@ func TestLoad(t *testing.T) {
 			},
 			want: Config{
 				instagram: instagram{
-					user: user{
-						username: "user",
-						password: "pass",
-					},
 					save: true,
 					whitelist: []string{
 						"user1",

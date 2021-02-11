@@ -1,9 +1,5 @@
 {
   "instagram":{
-    "user":{
-      "username":"user",
-      "password":"pass"
-    },
     "save": true,
     "whitelist":[
       "user1",

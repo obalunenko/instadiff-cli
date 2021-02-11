@@ -22,7 +22,7 @@ jobs:
       os:
         - linux
       install:
-        - make dependencies
+        - make install-tools
       script:
         - make test-ci
         - make lint-ci

@@ -124,8 +124,6 @@ func addListFlag() cli.BoolFlag {
 }
 
 func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) {
-	var err error
-
 	configPath := ctx.GlobalString("config_path")
 
 	cfgDir := filepath.Dir(configPath)
@@ -145,8 +143,7 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 	go func() {
 		sig := <-sigChan
 		// empty line for clear output.
-		fmt.Println()
-		log.Printf("signal [%s] received", sig.String())
+		log.Printf("\nsignal [%s] received", sig.String())
 		cancelFunc()
 	}()
 
@@ -158,17 +155,19 @@ func serviceSetUp(ctx *cli.Context) (*service.Service, service.StopFunc, error) 
 func cmdListFollowers(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
 
 	followers, err := svc.GetFollowers()
 	if err != nil {
-		return err
+		return fmt.Errorf("get followers: %w", err)
 	}
 
-	fmt.Printf("Followers: %d \n", len(followers))
+	log.WithFields(log.Fields{
+		"count": len(followers),
+	}).Info("Followers")
 
 	printUsersList(ctx, followers)
 
@@ -178,7 +177,7 @@ func cmdListFollowers(ctx *cli.Context) error {
 func printUsersList(ctx *cli.Context, users []models.User) {
 	if ctx.Bool(list) {
 		for _, us := range users {
-			fmt.Printf("%s - %d \n", us.UserName, us.ID)
+			_, _ = fmt.Fprintf(os.Stdout, "%s - %d \n", us.UserName, us.ID)
 		}
 	}
 }
@@ -186,17 +185,19 @@ func printUsersList(ctx *cli.Context, users []models.User) {
 func cmdListFollowings(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
 
 	followings, err := svc.GetFollowings()
 	if err != nil {
-		return err
+		return fmt.Errorf("get followings: %w", err)
 	}
 
-	fmt.Printf("Followings: %d \n", len(followings))
+	log.WithFields(log.Fields{
+		"count": len(followings),
+	}).Info("Followings")
 
 	printUsersList(ctx, followings)
 
@@ -206,7 +207,7 @@ func cmdListFollowings(ctx *cli.Context) error {
 func cmdCleanFollowings(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
@@ -214,33 +215,43 @@ func cmdCleanFollowings(ctx *cli.Context) error {
 	log.Info("Cleaning from not mutual followings...")
 
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted()
+	if err != nil {
+		if errors.Is(err, service.ErrLimitExceed) {
+			log.Infof("Total unfollowed before limit exceeded: %d \n", count)
 
-	switch {
-	case err == nil:
-		log.Infof("Total unfollowed: %d \n", count)
-	case errors.Is(err, service.ErrLimitExceed):
-		log.Infof("Total unfollowed before limit exceeded: %d \n", count)
-	case errors.Is(err, service.ErrCorrupted):
-		log.Infof("Total unfollowed before corrupted: %d \n", count)
+			return nil
+		}
+
+		if errors.Is(err, service.ErrCorrupted) {
+			log.Infof("Total unfollowed before corrupted: %d \n", count)
+
+			return fmt.Errorf("clean notmutual: %w", err)
+		}
+
+		return fmt.Errorf("clean notmutual: %w", err)
 	}
 
-	return err
+	log.Infof("Total unfollowed: %d \n", count)
+
+	return nil
 }
 
 func cmdListNotMutual(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
 
 	notMutualFollowers, err := svc.GetNotMutualFollowers()
 	if err != nil {
-		return err
+		return fmt.Errorf("get not mutual: %w", err)
 	}
 
-	log.Infof("Not following back: %d \n", len(notMutualFollowers))
+	log.WithFields(log.Fields{
+		"count": len(notMutualFollowers),
+	}).Info("Not following back")
 
 	printUsersList(ctx, notMutualFollowers)
 
@@ -250,14 +261,14 @@ func cmdListNotMutual(ctx *cli.Context) error {
 func cmdListDiff(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
 
 	diff, err := svc.GetDiffFollowers()
 	if err != nil {
-		return err
+		return fmt.Errorf("fet diff followers: %w", err)
 	}
 
 	for _, batch := range diff {
@@ -272,14 +283,14 @@ func cmdListDiff(ctx *cli.Context) error {
 func cmdListBotsAndBusiness(ctx *cli.Context) error {
 	svc, stop, err := serviceSetUp(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("service setup: %w", err)
 	}
 
 	defer stop()
 
 	bots, err := svc.GetBusinessAccountsOrBotsFromFollowers()
 	if err != nil {
-		return err
+		return fmt.Errorf("get business and bots: %w", err)
 	}
 
 	log.Infof("Could be blocked: %d \n", len(bots))

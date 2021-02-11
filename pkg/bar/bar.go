@@ -4,6 +4,7 @@ package bar
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -150,7 +151,7 @@ func (b *realBar) Run(ctx context.Context) {
 			log.Errorf("error when finish bar: %v", err)
 		}
 
-		fmt.Println()
+		_, _ = fmt.Fprintln(os.Stdout)
 	}()
 
 	var (

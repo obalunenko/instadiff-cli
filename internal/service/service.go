@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/ahmdrz/goinsta/v2"
+	"github.com/TheForgotten69/goinsta/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
@@ -118,7 +119,17 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	var cl *goinsta.Instagram
 
-	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", cfg.Username()))
+	uname, err := username()
+	if err != nil {
+		return nil, fmt.Errorf("username: %w", err)
+	}
+
+	pwd, err := password()
+	if err != nil {
+		return nil, fmt.Errorf("password: %w", err)
+	}
+
+	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
 
 	if i, err := goinsta.Import(sessFile); err == nil {
 		log.Infof("session imported from file: %s", sessFile)
@@ -128,7 +139,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 		return i, nil
 	}
 
-	cl = goinsta.New(cfg.Username(), cfg.Password())
+	cl = goinsta.New(uname, pwd)
 
 	if err := cl.Login(); err != nil {
 		var chErr *goinsta.ChallengeError
@@ -152,6 +163,75 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	return cl, nil
 }
 
+// ErrEmptyInput returned in case when user input is empty.
+var ErrEmptyInput = errors.New("should not be empty")
+
+func username() (string, error) {
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+
+	name, err := ui.Ask("What is your username?",
+		&input.Options{
+			Default:     "",
+			Loop:        true,
+			Required:    true,
+			HideDefault: false,
+			HideOrder:   false,
+			Hide:        false,
+			Mask:        false,
+			MaskDefault: false,
+			MaskVal:     "",
+			ValidateFunc: func(s string) error {
+				s = strings.TrimSpace(s)
+				if s == "" {
+					return ErrEmptyInput
+				}
+
+				return nil
+			},
+		})
+	if err != nil {
+		return "", fmt.Errorf("username input: %w", err)
+	}
+
+	return name, nil
+}
+
+func password() (string, error) {
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+
+	pwd, err := ui.Ask("What is your password?",
+		&input.Options{
+			Default:     "",
+			Loop:        true,
+			Required:    true,
+			HideDefault: false,
+			HideOrder:   false,
+			Hide:        false,
+			Mask:        false,
+			MaskDefault: false,
+			MaskVal:     "",
+			ValidateFunc: func(s string) error {
+				s = strings.TrimSpace(s)
+				if s == "" {
+					return ErrEmptyInput
+				}
+
+				return nil
+			},
+		})
+	if err != nil {
+		return "", fmt.Errorf("password input: %w", err)
+	}
+
+	return pwd, nil
+}
+
 func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
 	if err := cl.Challenge.Process(chURL); err != nil {
 		return nil, fmt.Errorf("process challenge: %w", err)
@@ -164,16 +244,23 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 
 	code, err := ui.Ask("What is SMS code for instagram?",
 		&input.Options{
-			Default:      "000000",
-			Loop:         true,
-			Required:     true,
-			HideDefault:  false,
-			HideOrder:    false,
-			Hide:         false,
-			Mask:         false,
-			MaskDefault:  false,
-			MaskVal:      "",
-			ValidateFunc: nil,
+			Default:     "",
+			Loop:        true,
+			Required:    true,
+			HideDefault: false,
+			HideOrder:   false,
+			Hide:        false,
+			Mask:        false,
+			MaskDefault: false,
+			MaskVal:     "",
+			ValidateFunc: func(s string) error {
+				s = strings.TrimSpace(s)
+				if s == "" {
+					return ErrEmptyInput
+				}
+
+				return nil
+			},
 		})
 	if err != nil {
 		return nil, fmt.Errorf("process input: %w", err)
@@ -182,8 +269,6 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 	if err = cl.Challenge.SendSecurityCode(code); err != nil {
 		return nil, fmt.Errorf("send security code: %w", err)
 	}
-
-	cl.Account = cl.Challenge.LoggedInUser
 
 	return cl, nil
 }
@@ -664,7 +749,7 @@ func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
 		return true
 	}
 
-	fmt.Printf("processig[%s]: following[%d] \n", user.Username, flwsNum)
+	log.Debugf("processig[%s]: following[%d] \n", user.Username, flwsNum)
 
 	if user.CanBeReportedAsFraud {
 		return true

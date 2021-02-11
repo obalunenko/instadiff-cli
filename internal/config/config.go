@@ -19,16 +19,10 @@ type Config struct {
 }
 
 type instagram struct {
-	user      user
 	save      bool
 	whitelist []string
 	limits    limits
 	sleep     int64
-}
-
-type user struct {
-	username string
-	password string
 }
 
 type limits struct {
@@ -44,16 +38,6 @@ type mongo struct {
 	url        string
 	db         string
 	collection string
-}
-
-// Username returns username.
-func (c Config) Username() string {
-	return c.instagram.user.username
-}
-
-// Password returns password.
-func (c Config) Password() string {
-	return c.instagram.user.password
 }
 
 // UnFollowLimits returns unFollow action daily limits.
@@ -162,10 +146,6 @@ func Load(path string) (Config, error) {
 			},
 		},
 		instagram: instagram{
-			user: user{
-				username: viper.GetString("instagram.user.username"),
-				password: viper.GetString("instagram.user.password"),
-			},
 			save:      viper.GetBool("instagram.save"),
 			whitelist: viper.GetStringSlice("instagram.whitelist"),
 			limits: limits{

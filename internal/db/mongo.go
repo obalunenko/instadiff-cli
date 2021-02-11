@@ -31,7 +31,7 @@ func newMongoDB(params MongoParams) (*mongoDB, error) {
 
 	cl, err := mongo.Connect(ctx, options.Client().ApplyURI(params.URL))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect: %w", err)
 	}
 
 	database := cl.Database(params.Database)
