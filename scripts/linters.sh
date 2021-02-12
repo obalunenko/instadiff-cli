@@ -3,7 +3,7 @@ set -e
 
 function vet() {
   echo "vet project..."
-  declare -a vet_errs=$(go vet $(go list ./...))
+  declare -a vet_errs=$(go vet $(go list ./...) 2>&1 >/dev/null)
   EXIT_CODE=$?
   if [[ ${EXIT_CODE} -ne 0 ]]; then
     exit 1
@@ -26,7 +26,7 @@ function vet() {
 
 function fmt() {
   echo "fmt lint..."
-  declare -a fmts=$(gofmt -s -l $(find . -type f -name '*.go' | grep -v 'vendor' | grep -v '.git'))
+  declare -a fmts=$(gofmt -s -l -d $(find . -type f -name '*.go' | grep -v 'vendor' | grep -v '.git'))
 
   if [[ ${fmts} ]]; then
     echo "fix it:"
