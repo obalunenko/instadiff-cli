@@ -3,7 +3,7 @@ module github.com/obalunenko/instadiff-cli
 go 1.15
 
 require (
-	github.com/TheForgotten69/goinsta/v2 v2.4.9
+	github.com/TheForgotten69/goinsta/v2 v2.5.0
 	github.com/aws/aws-sdk-go v1.37.8 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect

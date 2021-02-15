@@ -1,4 +1,4 @@
-# github.com/TheForgotten69/goinsta/v2 v2.4.9
+# github.com/TheForgotten69/goinsta/v2 v2.5.0
 ## explicit
 github.com/TheForgotten69/goinsta/v2
 # github.com/aws/aws-sdk-go v1.37.8
