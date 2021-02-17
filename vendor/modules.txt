@@ -53,6 +53,9 @@ github.com/klauspost/compress/huff0
 github.com/klauspost/compress/snappy
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/magefile/mage v1.10.0
+github.com/magefile/mage/mg
+github.com/magefile/mage/sh
 # github.com/magiconair/properties v1.8.4
 ## explicit
 github.com/magiconair/properties
@@ -75,7 +78,7 @@ github.com/russross/blackfriday/v2
 # github.com/schollz/progressbar/v2 v2.15.0
 ## explicit
 github.com/schollz/progressbar/v2
-# github.com/sirupsen/logrus v1.7.0
+# github.com/sirupsen/logrus v1.7.1
 ## explicit
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.5.1
