@@ -73,7 +73,7 @@ func (users *Users) Next() bool {
 					users.err = err
 					return false
 				}
-			} else {
+			} else if usrs.RawNextID != nil {
 				var nextID int64
 				if err := json.Unmarshal(usrs.RawNextID, &nextID); err != nil {
 					users.err = err
