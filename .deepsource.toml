@@ -7,7 +7,7 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_paths = ["github.com/obalunenko/advent-of-code"]
+  import_paths = ["https://github.com/obalunenko/instadiff-cli"]
   dependencies_vendored = true
 
 [[analyzers]]
