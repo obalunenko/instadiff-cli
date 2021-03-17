@@ -1,0 +1,19 @@
+version = 1
+
+exclude_patterns = ["vendor/*"]
+
+[[analyzers]]
+name = "go"
+enabled = true
+
+  [analyzers.meta]
+  import_paths = ["github.com/obalunenko/advent-of-code"]
+  dependencies_vendored = true
+
+[[analyzers]]
+name = "shell"
+enabled = true
+
+[[transformers]]
+name = "gofmt"
+enabled = true
