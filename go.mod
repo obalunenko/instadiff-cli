@@ -9,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/klauspost/compress v1.11.7 // indirect
-	github.com/magiconair/properties v1.8.4
+	github.com/magiconair/properties v1.8.5
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
