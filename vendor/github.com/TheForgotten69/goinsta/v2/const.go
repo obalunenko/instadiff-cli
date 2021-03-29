@@ -50,6 +50,7 @@ const (
 	urlSetPrivate    = "accounts/set_private/"
 	urlSetPublic     = "accounts/set_public/"
 	urlRemoveProfPic = "accounts/remove_profile_picture/"
+	urlChangeProfPic = "accounts/change_profile_picture/"
 	urlFeedSaved     = "feed/saved/"
 	urlSetBiography  = "accounts/set_biography/"
 	urlEditProfile   = "accounts/edit_profile"
