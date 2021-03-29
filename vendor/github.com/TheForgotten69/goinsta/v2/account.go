@@ -3,6 +3,7 @@ package goinsta
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 )
 
 type accountResp struct {
@@ -140,6 +141,38 @@ func (account *Account) RemoveProfilePic() error {
 	body, err := insta.sendRequest(
 		&reqOptions{
 			Endpoint: urlRemoveProfPic,
+			Query:    generateSignature(data),
+			IsPost:   true,
+		},
+	)
+	if err == nil {
+		resp := profResp{}
+		err = json.Unmarshal(body, &resp)
+		if err == nil {
+			*account = resp.Account
+			account.inst = insta
+		}
+	}
+	return err
+}
+
+// ChangeProfilePic Update profile picture
+//
+// See example: examples/account/change-profile-pic/main.go
+func (account *Account) ChangeProfilePic(photo io.Reader) error {
+	insta := account.inst
+	config, err := insta.postPhoto(photo, "", 1, 1, false)
+	if err != nil {
+		return err
+	}
+	data, err := insta.prepareData(config)
+	if err != nil {
+		return err
+	}
+
+	body, err := insta.sendRequest(
+		&reqOptions{
+			Endpoint: urlChangeProfPic,
 			Query:    generateSignature(data),
 			IsPost:   true,
 		},
