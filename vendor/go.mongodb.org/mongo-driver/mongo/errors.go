@@ -106,8 +106,8 @@ func IsTimeout(err error) bool {
 			return ne.Timeout()
 		}
 		//timeout error labels
-		if se, ok := err.(ServerError); ok {
-			if se.HasErrorLabel("NetworkTimeoutError") || se.HasErrorLabel("ExceededTimeLimitError") {
+		if le, ok := err.(labeledError); ok {
+			if le.HasErrorLabel("NetworkTimeoutError") || le.HasErrorLabel("ExceededTimeLimitError") {
 				return true
 			}
 		}
@@ -127,14 +127,19 @@ func unwrap(err error) error {
 	return u.Unwrap()
 }
 
-// IsNetworkError returns true if err is a network error
-func IsNetworkError(err error) bool {
+// errorHasLabel returns true if err contains the specified label
+func errorHasLabel(err error, label string) bool {
 	for ; err != nil; err = unwrap(err) {
-		if e, ok := err.(ServerError); ok {
-			return e.HasErrorLabel("NetworkError")
+		if le, ok := err.(labeledError); ok && le.HasErrorLabel(label) {
+			return true
 		}
 	}
 	return false
+}
+
+// IsNetworkError returns true if err is a network error
+func IsNetworkError(err error) bool {
+	return errorHasLabel(err, "NetworkError")
 }
 
 // MongocryptError represents an libmongocrypt error during client-side encryption.
@@ -177,6 +182,12 @@ func (e MongocryptdError) Error() string {
 // Unwrap returns the underlying error.
 func (e MongocryptdError) Unwrap() error {
 	return e.Wrapped
+}
+
+type labeledError interface {
+	error
+	// HasErrorLabel returns true if the error contains the specified label.
+	HasErrorLabel(string) bool
 }
 
 // ServerError is the interface implemented by errors returned from the server. Custom implementations of this

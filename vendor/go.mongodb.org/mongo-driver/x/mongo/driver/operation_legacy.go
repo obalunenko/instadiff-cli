@@ -339,7 +339,7 @@ func (op Operation) createLegacyKillCursorsWiremessage(dst []byte, desc descript
 	}
 
 	var collName string
-	var cursors bsoncore.Document
+	var cursors bsoncore.Array
 	for _, elem := range cmdElems {
 		switch elem.Key() {
 		case "killCursors":
@@ -438,12 +438,17 @@ func (op Operation) createLegacyListCollectionsWiremessage(dst []byte, desc desc
 		optsElems = bsoncore.AppendDocumentElement(optsElems, "$readPreference", rp)
 	}
 
+	var batchSize int32
+	if val, ok := cmdDoc.Lookup("cursor", "batchSize").AsInt32OK(); ok {
+		batchSize = val
+	}
+
 	var wmIdx int32
 	wmIdx, dst = wiremessage.AppendHeaderStart(dst, info.requestID, 0, wiremessage.OpQuery)
 	dst = wiremessage.AppendQueryFlags(dst, op.slaveOK(desc))
 	dst = wiremessage.AppendQueryFullCollectionName(dst, op.getFullCollectionName(listCollectionsNamespace))
 	dst = wiremessage.AppendQueryNumberToSkip(dst, 0)
-	dst = wiremessage.AppendQueryNumberToReturn(dst, 0)
+	dst = wiremessage.AppendQueryNumberToReturn(dst, batchSize)
 	dst = op.appendLegacyQueryDocument(dst, filter, optsElems)
 	// leave out returnFieldsSelector because it is optional
 
