@@ -336,6 +336,31 @@ func (inst *Instagram) contactPrefill() error {
 	return err
 }
 
+type ConsentResponse struct {
+	ScreenKey string `json:"screen_key"`
+}
+
+func (inst *Instagram) consent(other ...map[string]interface{}) (ConsentResponse, error) {
+	data, err := inst.prepareData(other...)
+	if err != nil {
+		return ConsentResponse{}, err
+	}
+	body, err := inst.sendRequest(
+		&reqOptions{
+			Endpoint:   urlConsent,
+			IsPost:     true,
+			Connection: "keep-alive",
+			Query:      generateSignature(data),
+		},
+	)
+	resp := ConsentResponse{}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return ConsentResponse{}, err
+	}
+	return resp, nil
+}
+
 func (inst *Instagram) zrToken() error {
 	_, err := inst.sendRequest(
 		&reqOptions{
@@ -441,6 +466,35 @@ func (inst *Instagram) Login() (err error) {
 	inst.Account = &res.Account
 	inst.Account.inst = inst
 	inst.rankToken = strconv.FormatInt(inst.Account.ID, 10) + "_" + inst.uuid
+	consentRep, err := inst.consent()
+	if err != nil {
+		return
+	}
+	if consentRep.ScreenKey != "already_finished" {
+		_, err = inst.consent(map[string]interface{}{
+			"current_screen_key": "qp_intro",
+			"updates":            `{"existing_user_intro_state": "2"}`,
+		})
+		if err != nil {
+			return
+		}
+		_, err = inst.consent(map[string]interface{}{
+			"current_screen_key": "tos_and_two_age_button",
+			"updates":            `{"age_consent_state": "2", "tos_data_policy_consent_state": "2" }`,
+		})
+		if err != nil {
+			return
+		}
+		_, err = inst.consent(map[string]interface{}{
+			"current_screen_key": "dob",
+			"day":                "7",
+			"month":              "6",
+			"year":               "1994",
+		})
+		if err != nil {
+			return
+		}
+	}
 	err = inst.zrToken()
 	if err != nil {
 		return
