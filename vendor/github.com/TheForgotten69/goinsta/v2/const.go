@@ -53,8 +53,9 @@ const (
 	urlChangeProfPic = "accounts/change_profile_picture/"
 	urlFeedSaved     = "feed/saved/"
 	urlSetBiography  = "accounts/set_biography/"
-	urlEditProfile   = "accounts/edit_profile"
+	urlEditProfile   = "accounts/edit_profile/"
 	urlFeedLiked     = "feed/liked/"
+	urlConsent       = "consent/existing_user_flow/"
 
 	// account and profile
 	urlFollowers = "friendships/%d/followers/"
