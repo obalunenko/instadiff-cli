@@ -440,7 +440,6 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 
 		}
 		users = append(users, u)
-		time.Sleep(svc.instagram.sleep)
 	}
 
 	return users, nil
