@@ -91,6 +91,24 @@ func commands() []cli.Command {
 			Action:  cmdCleanFollowings,
 		},
 		{
+			Name:    "remove-followers",
+			Aliases: []string{"rm", "remove"},
+			Usage:   "Remove a list of followers, by username.",
+			Action:  cmdRemoveFollowers,
+			Flags: []cli.Flag{
+				cli.StringSliceFlag{
+					Name:      "follower",
+					Usage:     "Follower to remove",
+					EnvVar:    "",
+					FilePath:  "",
+					Required:  true,
+					Hidden:    false,
+					TakesFile: false,
+					Value:     &cli.StringSlice{},
+				},
+			},
+		},
+		{
 			Name:   "unmutual",
 			Usage:  "List all not mutual followings",
 			Action: cmdListNotMutual,
@@ -229,6 +247,40 @@ func cmdCleanFollowings(ctx *cli.Context) error {
 		}
 
 		return fmt.Errorf("clean notmutual: %w", err)
+	}
+
+	log.Infof("Total unfollowed: %d \n", count)
+
+	return nil
+}
+
+func cmdRemoveFollowers(ctx *cli.Context) error {
+	svc, stop, err := serviceSetUp(ctx)
+	if err != nil {
+		return fmt.Errorf("service setup: %w", err)
+	}
+
+	defer stop()
+
+	followers := ctx.StringSlice("follower")
+
+	log.Info("Removing followers...", len(followers))
+
+	count, err := svc.RemoveFollowersByUsername(followers)
+	if err != nil {
+		if errors.Is(err, service.ErrLimitExceed) {
+			log.Infof("Total unfollowed before limit exceeded: %d \n", count)
+
+			return nil
+		}
+
+		if errors.Is(err, service.ErrCorrupted) {
+			log.Infof("Total unfollowed before corrupted: %d \n", count)
+
+			return fmt.Errorf("remove followers: %w", err)
+		}
+
+		return fmt.Errorf("remove followers: %w", err)
 	}
 
 	log.Infof("Total unfollowed: %d \n", count)
