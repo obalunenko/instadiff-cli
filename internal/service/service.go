@@ -411,7 +411,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		pBar.Finish()
 	}()
 
-	return svc.processNotMutual(pBar, notMutual)
+	return svc.unfollowUsers(pBar, notMutual)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
@@ -430,7 +430,96 @@ func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
 	return result
 }
 
-func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int, error) {
+func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, error) {
+	users := make([]*goinsta.User, 0)
+	for _, un := range usernames {
+		u, err := svc.instagram.client.Profiles.ByName(un)
+		if err != nil {
+			return nil, err
+		} else {
+
+		}
+		users = append(users, u)
+		time.Sleep(svc.instagram.sleep)
+	}
+
+	return users, nil
+}
+
+func (svc *Service) RemoveFollowersByUsername(usernames []string) (int, error) {
+	pBar := bar.New(len(usernames), getBarType())
+
+	go pBar.Run(svc.ctx)
+
+	defer func() {
+		pBar.Finish()
+	}()
+
+	return svc.removeFollowers(pBar, usernames)
+}
+
+func (svc *Service) removeFollowers(pBar bar.Bar, users []string) (int, error) {
+	var count int
+
+	ticker := time.NewTicker(svc.instagram.sleep)
+	defer ticker.Stop()
+
+	const errsLimit = 3
+
+	var errsNum int
+
+	// whitelist := svc.instagram.Whitelist()
+
+LOOP:
+	for _, un := range users {
+		if errsNum >= errsLimit {
+			return count, ErrCorrupted
+		}
+
+		select {
+		case <-svc.ctx.Done():
+			break LOOP
+		case <-ticker.C:
+			pBar.Progress() <- struct{}{}
+
+			// if _, exist := whitelist[u.Username]; exist {
+			// 	continue
+			// }
+
+			u, err := svc.instagram.client.Profiles.ByName(un)
+			if err != nil {
+				log.Errorf("user lookup failed [%s]: %v", un, err)
+				errsNum++
+				continue
+			}
+
+			if err := u.Block(); err != nil {
+				log.Errorf("failed to block follower [%s]: %v", u.Username, err)
+				errsNum++
+
+				continue
+			}
+			if err := u.Unblock(); err != nil {
+				log.Errorf("failed to unblock follower [%s]: %v", u.Username, err)
+				errsNum++
+
+				continue
+			}
+
+			count++
+
+			if count >= svc.instagram.limits.unFollow {
+				return count, ErrLimitExceed
+			}
+
+			time.Sleep(svc.instagram.sleep)
+		}
+	}
+
+	return count, nil
+}
+
+func (svc *Service) unfollowUsers(pBar bar.Bar, users []models.User) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -443,7 +532,7 @@ func (svc *Service) processNotMutual(pBar bar.Bar, notMutual []models.User) (int
 	whitelist := svc.instagram.Whitelist()
 
 LOOP:
-	for _, nu := range notMutual {
+	for _, u := range users {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
 		}
@@ -452,14 +541,14 @@ LOOP:
 		case <-svc.ctx.Done():
 			break LOOP
 		case <-ticker.C:
-			if _, exist := whitelist[nu.UserName]; exist {
+			if _, exist := whitelist[u.UserName]; exist {
 				continue
 			}
 
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.UnFollow(nu); err != nil {
-				log.Errorf("failed to unfollow [%s]: %v", nu.UserName, err)
+			if err := svc.UnFollow(u); err != nil {
+				log.Errorf("failed to unfollow [%s]: %v", u.UserName, err)
 				errsNum++
 
 				continue
