@@ -467,8 +467,6 @@ func (svc *Service) removeFollowers(pBar bar.Bar, users []string) (int, error) {
 
 	var errsNum int
 
-	// whitelist := svc.instagram.Whitelist()
-
 LOOP:
 	for _, un := range users {
 		if errsNum >= errsLimit {
@@ -480,10 +478,6 @@ LOOP:
 			break LOOP
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
-
-			// if _, exist := whitelist[u.Username]; exist {
-			// 	continue
-			// }
 
 			u, err := svc.instagram.client.Profiles.ByName(un)
 			if err != nil {
