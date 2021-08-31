@@ -21,16 +21,17 @@ linters-settings:
   gofmt:
     simplify: true
   govet:
-    check-shadowing: true
+    check-shadowing:
+      true
       # settings per analyzer
     settings:
-       printf: # analyzer name, run `go tool vet help` to see all analyzers
+      printf: # analyzer name, run `go tool vet help` to see all analyzers
         funcs: # run `go tool vet help printf` to see available settings for `printf` analyzer
-           - (github.com/pkg/errors/).Wrapf
-           - (github.com/pkg/errors/).Errorf
-           - (github.com/sirupsen/logrus/).Printf
-           - (github.com/sirupsen/logrus/).Infof
-           - (github.com/sirupsen/logrus/).Errorf
+          - (github.com/pkg/errors/).Wrapf
+          - (github.com/pkg/errors/).Errorf
+          - (github.com/sirupsen/logrus/).Printf
+          - (github.com/sirupsen/logrus/).Infof
+          - (github.com/sirupsen/logrus/).Errorf
     enable-all: true
   golint:
     min-confidence: 0
@@ -83,7 +84,7 @@ linters-settings:
       max-blank-identifiers: 2
 
     whitespace:
-      multi-if: false   # Enforces newlines (or comments) after every multi-line if statement
+      multi-if: false # Enforces newlines (or comments) after every multi-line if statement
       multi-func: false # Enforces newlines (or comments) after every multi-line function signature
     wsl:
       # If true append is only allowed to be cuddled if appending value is
@@ -111,12 +112,12 @@ linters-settings:
     min-complexity: 4
   gomodguard:
     allowed:
-      modules:                                                        # List of allowed modules
+      modules: # List of allowed modules
       # - gopkg.in/yaml.v2
-      domains:                                                        # List of allowed module domains
+      domains: # List of allowed module domains
       # - golang.org
     blocked:
-      modules:                                                        # List of blocked modules
+      modules: # List of blocked modules
       # - github.com/uudashr/go-module:                             # Blocked module
       #     recommendations:                                        # Recommended modules that should be used instead (Optional)
       #       - golang.org/x/mod
@@ -177,4 +178,3 @@ issues:
   exclude:
     # for "public interface + private struct implementation" cases only!
     - exported func * returns unexported type *, which can be annoying to use
-
