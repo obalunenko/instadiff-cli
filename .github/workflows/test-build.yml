@@ -35,10 +35,6 @@ jobs:
           make install-tools
           echo "${GOBIN}" >> $GITHUB_PATH
 
-      - name: Vet
-        run: |
-          make vet
-
       - name: Golangci-lint
         uses: golangci/golangci-lint-action@v2.5.2
         with:
