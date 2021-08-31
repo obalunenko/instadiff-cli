@@ -1,4 +1,4 @@
-module tools
+module github.com/obalunenko/instadiff-cli/tools
 
 go 1.17
 
