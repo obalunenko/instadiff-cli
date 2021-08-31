@@ -1,0 +1,54 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gofmt
+    - revive
+    - goimports
+    - depguard
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/obalunenko/
+  revive:
+    # see https://github.com/mgechev/revive#available-rules for details.
+    ignore-generated-header: true
+    severity: warning
+    rules:
+      - name: indent-error-flow
+        severity: warning
+      - name: exported
+        severity: warning
+      - name: defer
+        severity: warning
+        arguments: [["call-chain", "loop", "method-call", "recover", "return"]]
+
+  depguard:
+    list-type: blacklist
+    include-go-root: false
+    packages:
+      - github.com/sirupsen/logrus
+      - flag
+    packages-with-error-message:
+      - github.com/sirupsen/logrus: "logging is allowed only by internal/logger"
+      - flag: "flags is only allowed in cmd/config package"
+
+run:
+  issues-exit-code: 1
+  tests: true
+  skip-dirs:
+    - vendor/
+  skip-files:
+    - \.pb\.go$
+    
+issues:
+  exclude-use-default: false
+  exclude:
+    # for "public interface + private struct implementation" cases only!
+    - exported func * returns unexported type *, which can be annoying to use
+    - should have a package comment, unless it's in another file for this package

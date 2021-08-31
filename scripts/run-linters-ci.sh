@@ -1,14 +1,20 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
 
-REPO_ROOT=$(git rev-parse --show-toplevel)
-SCRIPTS_DIR=${REPO_ROOT}/scripts
+set -Eeuo pipefail
 
-# shellcheck disable=SC1090
-source "${SCRIPTS_DIR}"/linters.sh
+SCRIPT_NAME="$(basename "$0")"
 
-vet
-fmt
-go-lint
-go-group
-golangci-ci_execute
+echo "${SCRIPT_NAME} is running... "
+
+if [[ ! -f "$(go env GOPATH)/bin/golangci-lint" ]] && [[ ! -f "/usr/local/bin/golangci-lint" ]]; then
+  echo "Install golangci-lint"
+  echo "run 'make install-tools' "
+  exit 1
+fi
+
+echo "Linting..."
+
+golangci-lint run --no-config --disable-all -E govet
+golangci-lint run --new-from-rev=HEAD~ --config .golangci.pipe.yml
+
+echo "${SCRIPT_NAME} done."
