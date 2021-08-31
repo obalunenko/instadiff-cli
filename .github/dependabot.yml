@@ -13,7 +13,7 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-      
+
   - package-ecosystem: "gomod"
     directory: "/tools"
     schedule:
@@ -27,7 +27,7 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-  
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -41,4 +41,3 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-  

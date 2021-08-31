@@ -11,20 +11,20 @@ builds:
   - id: cli
     binary: instadiff-cli
     goos:
-     - darwin
-     - windows
-     - linux
+      - darwin
+      - windows
+      - linux
     goarch:
-     - amd64
+      - amd64
     env:
-     - CGO_ENABLED=0
+      - CGO_ENABLED=0
     main: ./cmd/instadiff-cli
     ldflags:
-     - -s -w
-     - -X main.version={{.Version}}
-     - -X main.commit={{.ShortCommit}}
-     - -X main.date={{.Date}}
-     - -X main.goversion={{.Env.GOVERSION}}
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{.Date}}
+      - -X main.goversion={{.Env.GOVERSION}}
 
 archives:
   - id: cli

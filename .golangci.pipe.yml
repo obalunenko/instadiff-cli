@@ -45,7 +45,7 @@ run:
     - vendor/
   skip-files:
     - \.pb\.go$
-    
+
 issues:
   exclude-use-default: false
   exclude:
