@@ -13,6 +13,20 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+      
+  - package-ecosystem: "gomod"
+    directory: "/tools"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+    assignees:
+      - "obalunenko"
+    reviewers:
+      - "obalunenko"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
   
   - package-ecosystem: "github-actions"
     directory: "/"
