@@ -1,7 +1,7 @@
 # 4d63.com/gochecknoglobals v0.0.0-20201008074935-acfc0b28355a
 ## explicit; go 1.15
 4d63.com/gochecknoglobals/checknoglobals
-# github.com/Antonboom/errname v0.1.3
+# github.com/Antonboom/errname v0.1.4
 ## explicit; go 1.16
 github.com/Antonboom/errname/pkg/analyzer
 # github.com/BurntSushi/toml v0.4.1
@@ -164,7 +164,7 @@ github.com/golangci/go-misc/deadcode
 ## explicit
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.42.0
+# github.com/golangci/golangci-lint v1.42.1
 ## explicit; go 1.15
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/internal/cache
@@ -325,7 +325,7 @@ github.com/mbilski/exhaustivestruct/pkg/analyzer
 # github.com/mgechev/dots v0.0.0-20190921121421-c36f7dcfbb81
 ## explicit
 github.com/mgechev/dots
-# github.com/mgechev/revive v1.1.0
+# github.com/mgechev/revive v1.1.1
 ## explicit; go 1.12
 github.com/mgechev/revive/config
 github.com/mgechev/revive/formatter
@@ -380,7 +380,7 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/polyfloyd/go-errorlint v0.0.0-20210510181950-ab96adb96fea
+# github.com/polyfloyd/go-errorlint v0.0.0-20210722154253-910bb7978349
 ## explicit; go 1.13
 github.com/polyfloyd/go-errorlint/errorlint
 # github.com/prometheus/client_golang v1.7.1
@@ -480,7 +480,7 @@ github.com/subosito/gotenv
 # github.com/tdakkota/asciicheck v0.0.0-20200416200610-e657995f937b
 ## explicit; go 1.13
 github.com/tdakkota/asciicheck
-# github.com/tetafro/godot v1.4.8
+# github.com/tetafro/godot v1.4.9
 ## explicit; go 1.16
 github.com/tetafro/godot
 # github.com/timakin/bodyclose v0.0.0-20200424151742-cb6215831a94
