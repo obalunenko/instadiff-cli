@@ -6,7 +6,7 @@ require (
 	github.com/axw/gocov v1.0.0
 	github.com/golangci/golangci-lint v1.42.1
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
-	github.com/mattn/goveralls v0.0.9
+	github.com/mattn/goveralls v0.0.11
 	github.com/segmentio/golines v0.5.0
 	github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
