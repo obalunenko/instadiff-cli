@@ -7,13 +7,13 @@ github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fsnotify/fsnotify v1.4.9
+# github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
 # github.com/go-stack/stack v1.8.0
 ## explicit
 github.com/go-stack/stack
-# github.com/golang/snappy v0.0.2
+# github.com/golang/snappy v0.0.3
 ## explicit
 github.com/golang/snappy
 # github.com/hashicorp/hcl v1.0.0
@@ -42,10 +42,10 @@ github.com/magiconair/properties/assert
 # github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db
 ## explicit
 github.com/mitchellh/colorstring
-# github.com/mitchellh/mapstructure v1.4.1
+# github.com/mitchellh/mapstructure v1.4.2
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
-# github.com/pelletier/go-toml v1.9.3
+# github.com/pelletier/go-toml v1.9.4
 ## explicit; go 1.12
 github.com/pelletier/go-toml
 # github.com/pkg/errors v0.9.1
@@ -67,7 +67,7 @@ github.com/sirupsen/logrus
 ## explicit; go 1.13
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.3.1
+# github.com/spf13/cast v1.4.1
 ## explicit
 github.com/spf13/cast
 # github.com/spf13/jwalterweatherman v1.1.0
@@ -76,9 +76,14 @@ github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/spf13/viper v1.8.1
+# github.com/spf13/viper v1.9.0
 ## explicit; go 1.12
 github.com/spf13/viper
+github.com/spf13/viper/internal/encoding
+github.com/spf13/viper/internal/encoding/hcl
+github.com/spf13/viper/internal/encoding/json
+github.com/spf13/viper/internal/encoding/toml
+github.com/spf13/viper/internal/encoding/yaml
 # github.com/stretchr/testify v1.7.0
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
@@ -139,8 +144,8 @@ go.mongodb.org/mongo-driver/x/mongo/driver/session
 go.mongodb.org/mongo-driver/x/mongo/driver/topology
 go.mongodb.org/mongo-driver/x/mongo/driver/uuid
 go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage
-# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-## explicit; go 1.11
+# golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+## explicit; go 1.17
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/ssh/terminal
@@ -148,7 +153,7 @@ golang.org/x/crypto/ssh/terminal
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20210510120138-977fb7262007
+# golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
@@ -157,11 +162,11 @@ golang.org/x/sys/windows
 # golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 ## explicit; go 1.11
 golang.org/x/term
-# golang.org/x/text v0.3.5
+# golang.org/x/text v0.3.6
 ## explicit; go 1.11
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# gopkg.in/ini.v1 v1.62.0
+# gopkg.in/ini.v1 v1.63.2
 ## explicit
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
