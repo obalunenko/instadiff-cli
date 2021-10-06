@@ -6,7 +6,7 @@ require (
 	github.com/TheForgotten69/goinsta/v2 v2.7.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
-	github.com/klauspost/compress v1.11.7 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/magiconair/properties v1.8.5
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/schollz/progressbar/v2 v2.15.0
@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 	github.com/urfave/cli v1.22.5
-	go.mongodb.org/mongo-driver v1.7.2
+	go.mongodb.org/mongo-driver v1.7.3
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 )
