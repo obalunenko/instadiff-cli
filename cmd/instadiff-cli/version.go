@@ -33,7 +33,7 @@ func printVersion(_ context.Context) {
 		version.GetCommit(),
 		version.GetShortCommit(),
 		version.GetBuildDate(),
-		)
+	)
 	if err != nil {
 		log.WithError(err).Error("print version")
 	}

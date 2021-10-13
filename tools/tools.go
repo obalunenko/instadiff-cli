@@ -39,5 +39,6 @@ import (
 	_ "golang.org/x/tools/cmd/cover"
 	_ "golang.org/x/tools/cmd/stringer"
 	_ "gotest.tools/gotestsum"
+
 	_ "github.com/obalunenko/coverbadger/cmd/coverbadger"
 )
