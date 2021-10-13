@@ -1,20 +1,44 @@
-// instadiff-cli is a command line tool for managing instagram account followers and followings.
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"text/tabwriter"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/obalunenko/version"
 )
 
-const unset = "unset"
+func printVersion(_ context.Context) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.TabIndent)
 
-var ( // build info
-	version   = unset
-	date      = unset
-	commit    = unset
-	goversion = unset
-)
+	_, err := fmt.Fprintf(w, `
+| app_name:	%s	|
+| version:	%s	|
+| go_version:	%s	|
+| commit:	%s	|
+| short_commit:	%s	|
+| build_date:	%s	|
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+`,
+		version.GetAppName(),
+		version.GetVersion(),
+		version.GetGoVersion(),
+		version.GetCommit(),
+		version.GetShortCommit(),
+		version.GetBuildDate(),
+	)
+	if err != nil {
+		log.WithError(err).Error("print version")
+	}
+}
 
-// versionInfo returns stringed version info.
 func versionInfo() string {
-	return fmt.Sprintf("GO-%s: %s-%s-%s \n", goversion, version, commit, date)
+	return fmt.Sprintf("%s-%s-%s \n", version.GetVersion(), version.GetCommit(), version.GetBuildDate())
 }

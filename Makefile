@@ -38,46 +38,36 @@ help:
 ## Compile app
 compile:
 	${call colored, compile is running...}
-	./scripts/compile.sh
+	./scripts/build/compile.sh
 .PHONY: compile
 
 ## recreate all generated code.
 generate:
 	${call colored, generate is running...}
-	./scripts/generate.sh
+	./scripts/codegen/generate.sh
 .PHONY: generate
 
 ## lint project
 lint:
 	${call colored, lint is running...}
-	./scripts/run-linters.sh
+	./scripts/linting/run-linters.sh
 .PHONY: lint
 
 lint-ci:
 	${call colored, lint_ci is running...}
-	./scripts/run-linters-ci.sh
+	./scripts/linting/run-linters-ci.sh
 .PHONY: lint-ci
-
-## format markdown files in project
-pretty-markdown:
-	find . -name '*.md' -not -wholename './vendor/*' | xargs prettier --write
-.PHONY: pretty-markdown
 
 ## Test all packages
 test:
 	${call colored, test is running...}
-	./scripts/run-tests.sh
+	./scripts/tests/run.sh
 .PHONY: test
-
-test-ci: test
-	${call colored, test-ci is running...}
-	./scripts/run-tests-ci.sh
-.PHONY: test-ci
 
 ## Test coverage
 test-cover:
 	${call colored, test-cover is running...}
-	./scripts/coverage.sh
+	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
 new-version: lint test compile
@@ -88,19 +78,19 @@ new-version: lint test compile
 ## Release
 release:
 	${call colored, release is running...}
-	./scripts/release.sh
+	./scripts/release/release.sh
 .PHONY: release
 
 ## Release local snapshot
 release-local-snapshot:
 	${call colored, release is running...}
-	./scripts/local-snapshot-release.sh
+	./scripts/release/local-snapshot-release.sh
 .PHONY: release-local-snapshot
 
 
 ## Installs tools from vendor.
 install-tools:
-	./scripts/install-tools.sh
+	./scripts/install/vendored-tools.sh
 .PHONY: install-tools
 
 ## Sync vendor of root project and tools.
@@ -125,13 +115,13 @@ docker-down:
 ## Fix imports sorting.
 imports:
 	${call colored, fix-imports is running...}
-	./scripts/fix-imports.sh
+	./scripts/style/fix-imports.sh
 .PHONY: imports
 
 ## Format code.
 fmt:
 	${call colored, fmt is running...}
-	./scripts/fmt.sh
+	./scripts/style/fmt.sh
 .PHONY: fmt
 
 ## Format code and sort imports.
@@ -141,7 +131,17 @@ format-project: fmt imports
 ## vet project
 vet:
 	${call colored, vet is running...}
-	./scripts/vet.sh
+	./scripts/linting/vet.sh
 .PHONY: vet
+
+## Open coverage report.
+open-cover-report: test-cover
+	./scripts/open-coverage-report.sh
+.PHONY: open-cover-report
+
+## Update readme coverage badge.
+update-readme-cover: test-cover
+	./scripts/update-readme-coverage.sh
+.PHONY: update-readme-cover
 
 .DEFAULT_GOAL := test

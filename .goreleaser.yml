@@ -21,10 +21,12 @@ builds:
     main: ./cmd/instadiff-cli
     ldflags:
       - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.ShortCommit}}
-      - -X main.date={{.Date}}
-      - -X main.goversion={{.Env.GOVERSION}}
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.appname=instadiff-cli
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.version={{.Version}}
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.commit={{.Commit}}
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.shortcommit={{.ShortCommit}}
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.builddate={{.Date}}
+      - -X {{.Env.BUILDINFO_VARS_PKG}}.goversion={{.Env.GOVERSION}}
 
 archives:
   - id: cli

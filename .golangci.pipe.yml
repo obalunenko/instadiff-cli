@@ -26,17 +26,7 @@ linters-settings:
         severity: warning
       - name: defer
         severity: warning
-        arguments: [["call-chain", "loop", "method-call", "recover", "return"]]
-
-  depguard:
-    list-type: blacklist
-    include-go-root: false
-    packages:
-      - github.com/sirupsen/logrus
-      - flag
-    packages-with-error-message:
-      - github.com/sirupsen/logrus: "logging is allowed only by internal/logger"
-      - flag: "flags is only allowed in cmd/config package"
+        arguments: [ [ "call-chain", "loop", "method-call", "recover", "return" ] ]
 
 run:
   issues-exit-code: 1
