@@ -2,7 +2,7 @@
 set -e
 
 # Get new tags from the remote
-git fetch --tags
+git fetch --tags -f
 
 # Get the latest tag name
 # shellcheck disable=SC2046
