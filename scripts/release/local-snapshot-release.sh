@@ -9,6 +9,8 @@ git fetch --tags
 latestTag=$(git describe --tags $(git rev-list --tags --max-count=1))
 echo "${latestTag}"
 
+export BUILDINFO_VARS_PKG=github.com/obalunenko/version
+
 export GOVERSION=$(go version | awk '{print $3;}')
 
 goreleaser --snapshot --skip-publish --rm-dist

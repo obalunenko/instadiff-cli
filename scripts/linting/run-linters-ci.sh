@@ -3,14 +3,15 @@
 set -Eeuo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
+SCRIPT_DIR="$(dirname "$0")"
+REPO_ROOT="$(cd "${SCRIPT_DIR}" && git rev-parse --show-toplevel)"
+SCRIPTS_DIR="${REPO_ROOT}/scripts"
 
 echo "${SCRIPT_NAME} is running... "
 
-if [[ ! -f "$(go env GOPATH)/bin/golangci-lint" ]] && [[ ! -f "/usr/local/bin/golangci-lint" ]]; then
-  echo "Install golangci-lint"
-  echo "run 'make install-tools' "
-  exit 1
-fi
+source "${SCRIPTS_DIR}/linting/linters-source.sh"
+
+checkInstalled golangci-lint
 
 echo "Linting..."
 
