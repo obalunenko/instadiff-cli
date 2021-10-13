@@ -13,4 +13,4 @@ export BUILDINFO_VARS_PKG=github.com/obalunenko/version
 
 export GOVERSION=$(go version | awk '{print $3;}')
 
-curl -sL https://git.io/goreleaser | bash
+goreleaser release --rm-dist

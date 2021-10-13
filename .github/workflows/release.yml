@@ -27,10 +27,8 @@ jobs:
           make test
 
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          install-only: true
+        run: |
+          make install-tools
 
       - name: Run GoReleaser
         if: success()
