@@ -64,6 +64,8 @@ function menu() {
 ## Check if git is clean
 require_clean_work_tree "create new version"
 
+git fetch --tags -f
+
 git pull
 
 ## Sem ver update menu
