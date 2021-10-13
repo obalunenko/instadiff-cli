@@ -14,5 +14,6 @@
 .idea
 .config.json
 bin/
-release/
 dist/
+coverage/
+.cover/
