@@ -21,6 +21,8 @@ import (
 const list = "list"
 
 func main() {
+	printVersion(context.Background())
+
 	app := cli.NewApp()
 	app.Name = "instadiff-cli"
 	app.Usage = `a command line tool for managing instagram account followers and followings`
