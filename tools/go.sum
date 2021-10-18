@@ -768,10 +768,10 @@ github.com/nishanths/predeclared v0.2.1/go.mod h1:HvkGJcA3naj4lOwnFXFDkFxVtSqQMB
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
-github.com/obalunenko/coverbadger v1.0.2 h1:KLIhfY0rz7NImsVcZg2T7BUj9+uMY4onatjrjPbLgqE=
-github.com/obalunenko/coverbadger v1.0.2/go.mod h1:uZv+X8xIq/xSLb0m8lYjl7qrWIJ6ShINowgw9ElfpOY=
-github.com/obalunenko/version v1.0.0 h1:mqV/EkwPP0pxoJln8aSfdvm2WCofrUrSEmbjy7QweLo=
-github.com/obalunenko/version v1.0.0/go.mod h1:Or267aCQxNcAtgOeWA7yOe/RqJS4XDaMfcFwk3ohbOg=
+github.com/obalunenko/coverbadger v1.1.0 h1:y21X4KlAkSbtstt3KwcuGk3aFUujzS3AGUb2Hg4ACG8=
+github.com/obalunenko/coverbadger v1.1.0/go.mod h1:fsBJ8JdiRxKDO0Hus3oeNX1rh47X+pV4LTw5xIqyZv8=
+github.com/obalunenko/version v1.1.0 h1:yVua7OHnK3+MJpendeMmAlfzVmq7R1h8MO3Ufz7HEec=
+github.com/obalunenko/version v1.1.0/go.mod h1:Or267aCQxNcAtgOeWA7yOe/RqJS4XDaMfcFwk3ohbOg=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
 github.com/olekukonko/tablewriter v0.0.1/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
@@ -1275,8 +1275,9 @@ golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20210510120138-977fb7262007/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e h1:WUoyKPm6nCo1BnNUvPGnFG3T5DUVem42yDJZZ4CNxMA=
 golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20211015200801-69063c4bb744 h1:KzbpndAYEM+4oHRp9JmB2ewj0NHHxO3Z0g7Gus2O1kk=
+golang.org/x/sys v0.0.0-20211015200801-69063c4bb744/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 h1:v+OssWQX+hTHEmOBgwxdZxK4zHq3yOs8F9J7mk0PY8E=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=

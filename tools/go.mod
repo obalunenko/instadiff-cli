@@ -8,7 +8,7 @@ require (
 	github.com/goreleaser/goreleaser v0.176.0
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
-	github.com/obalunenko/coverbadger v1.0.2
+	github.com/obalunenko/coverbadger v1.1.0
 	github.com/segmentio/golines v0.5.0
 	github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
@@ -169,7 +169,7 @@ require (
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
 	github.com/nishanths/exhaustive v0.2.3 // indirect
 	github.com/nishanths/predeclared v0.2.1 // indirect
-	github.com/obalunenko/version v1.0.0 // indirect
+	github.com/obalunenko/version v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
@@ -225,7 +225,7 @@ require (
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
+	golang.org/x/sys v0.0.0-20211015200801-69063c4bb744 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect

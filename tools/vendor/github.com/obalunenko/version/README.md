@@ -15,6 +15,7 @@ This package contains build information generated at build time and compiled int
 // Please note that all future binaries will be compiled with the embedded information unless the version package is recompiled with new values.
 //
 // Alternative is use ldflags on stage of compiling:
+// GOVERSION=$(go version | awk '{print $3;}')
 // APP=myapp
 // BIN_OUT=bin/${APP}
 // BUILDINFO_VARS_PKG=github.com/obalunenko/version
@@ -23,7 +24,8 @@ This package contains build information generated at build time and compiled int
 //-X ${BUILDINFO_VARS_PKG}.commit=${COMMIT} \
 //-X ${BUILDINFO_VARS_PKG}.shortcommit=${SHORTCOMMIT} \
 //-X ${BUILDINFO_VARS_PKG}.builddate=${DATE} \
-//-X ${BUILDINFO_VARS_PKG}.appname=${APP}"
+//-X ${BUILDINFO_VARS_PKG}.appname=${APP}" \
+//-X ${BUILDINFO_VARS_PKG}.goversion=${GOVERSION}"
 // GO_BUILD_PACKAGE="<PATH to package where main.go located>"
 
 // rm -rf ${BIN_OUT}
