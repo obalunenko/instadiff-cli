@@ -18,8 +18,9 @@ func printVersion(_ context.Context) {
 | app_name:	%s	|
 | version:	%s	|
 | short_commit:	%s	|
-| build_date:	%s	|
 | commit:	%s	|
+| build_date:	%s	|
+| goversion:	%s	|
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -30,8 +31,9 @@ func printVersion(_ context.Context) {
 		version.GetAppName(),
 		version.GetVersion(),
 		version.GetShortCommit(),
+		version.GetCommit(),
 		version.GetBuildDate(),
-		version.GetCommit())
+		version.GetGoVersion())
 	if err != nil {
 		logging.WithError(err).Error("print version")
 	}

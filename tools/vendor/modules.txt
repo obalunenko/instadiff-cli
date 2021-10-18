@@ -753,11 +753,11 @@ github.com/nishanths/exhaustive
 # github.com/nishanths/predeclared v0.2.1
 ## explicit; go 1.14
 github.com/nishanths/predeclared/passes/predeclared
-# github.com/obalunenko/coverbadger v1.0.2
+# github.com/obalunenko/coverbadger v1.1.0
 ## explicit; go 1.17
 github.com/obalunenko/coverbadger/cmd/coverbadger
 github.com/obalunenko/coverbadger/internal/coverbadge
-# github.com/obalunenko/version v1.0.0
+# github.com/obalunenko/version v1.1.0
 ## explicit; go 1.17
 github.com/obalunenko/version
 # github.com/olekukonko/tablewriter v0.0.5
@@ -1038,7 +1038,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e
+# golang.org/x/sys v0.0.0-20211015200801-69063c4bb744
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
