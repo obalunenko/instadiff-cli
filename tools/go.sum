@@ -931,8 +931,8 @@ github.com/sassoftware/go-rpmutils v0.0.0-20190420191620-a8f1baeba37b/go.mod h1:
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/securego/gosec/v2 v2.9.1 h1:anHKLS/ApTYU6NZkKa/5cQqqcbKZURjvc+MtR++S4EQ=
 github.com/securego/gosec/v2 v2.9.1/go.mod h1:oDcDLcatOJxkCGaCaq8lua1jTnYf6Sou4wdiJ1n4iHc=
-github.com/segmentio/golines v0.5.0 h1:FxTOrpBd0/5t4MchrXGxUs23vq5vr+YrcBVJUIY0+M8=
-github.com/segmentio/golines v0.5.0/go.mod h1:xWPVv0hvYMEnV9mwILVKeJB1C6sPvnp2VD1WBs3jLQE=
+github.com/segmentio/golines v0.6.0 h1:Z0Z5WGeI1Ms0QTWU/GmvL0w+98rDKWkoftzsOudQyjU=
+github.com/segmentio/golines v0.6.0/go.mod h1:eXSdyDk0r5/OaFkN3eDrAvTgyNM4fuYrrpdZA3j+I3Y=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
 github.com/sergi/go-diff v1.2.0 h1:XU+rvMAioB0UC3q1MFrIQy4Vo5/4VsRDQQXHsEya6xQ=
