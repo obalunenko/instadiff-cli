@@ -74,10 +74,15 @@ test:
 	./scripts/tests/run.sh
 .PHONY: test
 
-## Test coverage
+## Test coverage report.
 test-cover:
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
+
+## Tests sonar report generate.
+test-sonar-report:
+	./scripts/tests/sonar-report.sh
+.PHONY: test-sonar-report
 
 ## Installs tools from vendor.
 install-tools:
