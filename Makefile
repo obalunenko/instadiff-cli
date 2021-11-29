@@ -119,12 +119,6 @@ fmt:
 format-project: fmt imports
 .PHONY: format-project
 
-## vet project
-vet:
-	${call colored, vet is running...}
-	./scripts/linting/vet.sh
-.PHONY: vet
-
 ## Open coverage report.
 open-cover-report: test-cover
 	./scripts/open-coverage-report.sh
