@@ -29,6 +29,10 @@ if [ -z "${VERSION}" ] || [ "${VERSION}" = "${SHORTCOMMIT}" ]
   VERSION="v0.0.0"
 fi
 
+
+VERSION="${VERSION}-local"
+
+
 BUILDINFO_VARS_PKG=github.com/obalunenko/version
 export GO_BUILD_LDFLAGS="-s -w \
 -X ${BUILDINFO_VARS_PKG}.version=${VERSION} \
@@ -38,4 +42,6 @@ export GO_BUILD_LDFLAGS="-s -w \
 -X ${BUILDINFO_VARS_PKG}.appname=${APP} \
 -X ${BUILDINFO_VARS_PKG}.goversion=${GOVERSION}"
 
-goreleaser release --rm-dist
+goreleaser check
+
+goreleaser build --rm-dist --single-target --snapshot

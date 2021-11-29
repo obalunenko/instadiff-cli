@@ -3,30 +3,63 @@ release:
     owner: obalunenko
     name: instadiff-cli
 
+gomod:
+  proxy: true
+  # If proxy is true, use these environment variables when running `go mod` commands (namely, `go mod tidy`).
+  # Defaults to `os.Environ()`.
+  env:
+    - GOPROXY=https://proxy.golang.org,direct
+    - GOSUMDB=sum.golang.org
+    - GOPRIVATE=example.com/blah
+    - CGO_ENABLED=0
+  # Which Go binary to use.
+  # Defaults to `go`.
+  gobinary: go
+
 before:
   hooks:
-    - echo "no hooks yet"
+    - go mod verify
 
 builds:
   - id: cli
     binary: instadiff-cli
     goos:
+      - linux
       - darwin
       - windows
-      - linux
     goarch:
+      - 386
       - amd64
+      - arm
+      - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
     env:
       - CGO_ENABLED=0
     main: ./cmd/instadiff-cli
+    flags:
+      - -trimpath
     ldflags:
-      - -s -w
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.appname=instadiff-cli
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.version={{.Version}}
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.commit={{.Commit}}
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.shortcommit={{.ShortCommit}}
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.builddate={{.Date}}
-      - -X {{.Env.BUILDINFO_VARS_PKG}}.goversion={{.Env.GOVERSION}}
+      - "{{ .Env.GO_BUILD_LDFLAGS }}"
+      -
+universal_binaries:
+  -
+    # ID of the source build
+    #
+    # Defaults to the project name.
+    id: cli
+
+    # Universal binary name template.
+    #
+    # You will want to change this if you have multiple builds!
+    #
+    # Defaults to '{{ .ProjectName }}'
+    name_template: 'instadiff-cli'
+
+    # Whether to remove the previous single-arch binaries from the artifact list.
+    # If left as false, your end release might have both several macOS archives: amd64, arm64 and all.
+    #
+    # Defaults to false.
+    replace: true
 
 archives:
   - id: cli
@@ -46,9 +79,6 @@ archives:
     files:
       - LICENSE
       - README.md
-      - docker-compose.yml
-      - config-example.json
-
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 

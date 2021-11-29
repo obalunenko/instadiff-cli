@@ -70,24 +70,6 @@ test-cover:
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
-new-version: lint test compile
-	${call colored, new version is running...}
-	./scripts/version.sh
-.PHONY: new-version
-
-## Release
-release:
-	${call colored, release is running...}
-	./scripts/release/release.sh
-.PHONY: release
-
-## Release local snapshot
-release-local-snapshot:
-	${call colored, release is running...}
-	./scripts/release/local-snapshot-release.sh
-.PHONY: release-local-snapshot
-
-
 ## Installs tools from vendor.
 install-tools:
 	./scripts/install/vendored-tools.sh
@@ -143,5 +125,25 @@ open-cover-report: test-cover
 update-readme-cover: test-cover
 	./scripts/update-readme-coverage.sh
 .PHONY: update-readme-cover
+
+## Release
+release:
+	./scripts/release/release.sh
+.PHONY: release
+
+## Release local snapshot
+release-local-snapshot:
+	./scripts/release/local-snapshot-release.sh
+.PHONY: release-local-snapshot
+
+## Check goreleaser config.
+check-releaser:
+	./scripts/release/check.sh
+.PHONY: check-releaser
+
+## Issue new release.
+new-version: vet test build
+	./scripts/release/new-version.sh
+.PHONY: new-release
 
 .DEFAULT_GOAL := test
