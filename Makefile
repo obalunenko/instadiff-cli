@@ -36,14 +36,16 @@ help:
 
 
 ## Compile app
-compile:
-	${call colored, compile is running...}
+compile-instadiff-cli:
 	./scripts/build/compile.sh
-.PHONY: compile
+.PHONY: compile-instadiff-cli
+
+## Build the app.
+build: compile-instadiff-cli
+.PHONY: build
 
 ## recreate all generated code.
 generate:
-	${call colored, generate is running...}
 	./scripts/codegen/generate.sh
 .PHONY: generate
 
@@ -69,13 +71,11 @@ lint-sonar:
 
 ## Test all packages
 test:
-	${call colored, test is running...}
 	./scripts/tests/run.sh
 .PHONY: test
 
 ## Test coverage
 test-cover:
-	${call colored, test-cover is running...}
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
