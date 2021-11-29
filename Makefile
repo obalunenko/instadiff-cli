@@ -47,16 +47,25 @@ generate:
 	./scripts/codegen/generate.sh
 .PHONY: generate
 
-## lint project
-lint:
-	${call colored, lint is running...}
-	./scripts/linting/run-linters.sh
-.PHONY: lint
+## vet project
+vet:
+	./scripts/linting/run-vet.sh
+.PHONY: vet
 
-lint-ci:
-	${call colored, lint_ci is running...}
-	./scripts/linting/run-linters-ci.sh
-.PHONY: lint-ci
+## Run full linting
+lint-full:
+	./scripts/linting/run-linters.sh
+.PHONY: lint-full
+
+## Run linting for build pipeline
+lint-pipeline:
+	./scripts/linting/golangci-pipeline.sh
+.PHONY: lint-pipeline
+
+## Run linting for sonar report
+lint-sonar:
+	./scripts/linting/golangci-sonar.sh
+.PHONY: lint-sonar
 
 ## Test all packages
 test:

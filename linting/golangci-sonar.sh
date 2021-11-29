@@ -15,7 +15,6 @@ checkInstalled golangci-lint
 
 echo "Linting..."
 
-golangci-lint run --no-config --disable-all -E govet
-golangci-lint run --new-from-rev=HEAD~ --config .golangci.pipe.yml
+golangci-lint run --config .golangci.yml > linters.out
 
 echo "${SCRIPT_NAME} done."
