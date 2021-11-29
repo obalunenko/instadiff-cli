@@ -3,22 +3,22 @@ name: Go [lint, test]
 on:
   push:
     branches:
-      - 'master'
+      - "master"
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
     branches:
-      - '*'
+      - "*"
     paths:
-      - 'scripts/**'
-      - 'tools/**'
-      - '**/*.go'
-      - '**/*.gohtml'
-      - '**/*.proto'
-      - 'go.mod'
-      - 'go.sum'
-      - 'Makefile'
-      - '!**.*md'
-      - '.github/workflows/**'
+      - "scripts/**"
+      - "tools/**"
+      - "**/*.go"
+      - "**/*.gohtml"
+      - "**/*.proto"
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - "!**.*md"
+      - ".github/workflows/**"
 
 jobs:
   testing:
@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: [ 'ubuntu-20.04' ]
-        go: [ '1.17' ]
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
     runs-on: ${{ matrix.os }}
     name: Run Tests
     steps:
@@ -39,7 +39,7 @@ jobs:
       - name: Set up go
         uses: actions/setup-go@v2.1.4
         with:
-          stable: 'true'
+          stable: "true"
           go-version: ${{ matrix.go }}
 
       - run: |
@@ -75,8 +75,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: [ 'ubuntu-20.04' ]
-        go: [ '1.17' ]
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
     runs-on: ${{ matrix.os }}
     name: Run linters
     steps:
@@ -88,7 +88,7 @@ jobs:
       - name: Set up go
         uses: actions/setup-go@v2.1.4
         with:
-          stable: 'true'
+          stable: "true"
           go-version: ${{ matrix.go }}
       - run: |
           go version
@@ -98,7 +98,7 @@ jobs:
         run: |
           make vet
         shell: bash
-      
+
       - name: Set up cache
         uses: actions/cache@v2.1.7
         env:
@@ -128,8 +128,8 @@ jobs:
       fail-fast: true
       max-parallel: 1
       matrix:
-        os: [ 'ubuntu-20.04' ]
-        go: [ '1.17' ]
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
     runs-on: ${{ matrix.os }}
     name: Quality reports
     steps:
@@ -141,7 +141,7 @@ jobs:
       - name: Set up go
         uses: actions/setup-go@v2.1.4
         with:
-          stable: 'true'
+          stable: "true"
           go-version: ${{ matrix.go }}
       - run: |
           go version
@@ -162,14 +162,14 @@ jobs:
 
       - name: Install tools
         run: |
-           make install-tools
+          make install-tools
         shell: bash
 
       - name: Prepare test coverage
         run: |
           make test-cover
         shell: bash
-      
+
       - name: Tests report
         run: |
           make test-sonar-report
@@ -179,7 +179,7 @@ jobs:
         run: |
           make lint-sonar
         shell: bash
-          
+
       - name: Cover report upload
         if: success()
         run: |
@@ -198,8 +198,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: [ 'ubuntu-20.04' ]
-        go: [ '1.17' ]
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
     runs-on: ${{ matrix.os }}
     name: Build
     steps:
@@ -211,7 +211,7 @@ jobs:
       - name: Set up go
         uses: actions/setup-go@v2.1.4
         with:
-          stable: 'true'
+          stable: "true"
           go-version: ${{ matrix.go }}
 
       - run: |
