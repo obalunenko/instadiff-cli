@@ -8,7 +8,13 @@ Simple lib to parse envs to structs in Go.
 
 ## Example
 
-A very basic example:
+Get the module with:
+
+```sh
+go get github.com/caarlos0/env/v6
+```
+
+The usage looks like this:
 
 ```go
 package main
@@ -150,7 +156,7 @@ type config struct {
 ## Not Empty fields
 
 While `required` demands the environment variable to be check, it doesn't check its value.
-If you want to make sure the environment is set and not emtpy, you need to use the `notEmpty` tag option instead (`env:"SOME_ENV,notEmpty"`).
+If you want to make sure the environment is set and not empty, you need to use the `notEmpty` tag option instead (`env:"SOME_ENV,notEmpty"`).
 
 Example:
 
@@ -279,6 +285,80 @@ type Config struct {
 func main() {
 	cfg := &Config{}
 	opts := &env.Options{TagName: "json"}
+
+	// Load env vars.
+	if err := env.Parse(cfg, opts); err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the loaded data.
+	fmt.Printf("%+v\n", cfg.envData)
+}
+```
+
+
+### On set hooks
+
+You might want to listen to value sets and, for example, log something or do some other kind of logic.
+You can do this by passing a `OnSet` option:
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/caarlos0/env/v6"
+)
+
+type Config struct {
+	Username string `env:"USERNAME" envDefault:"admin"`
+	Password string `env:"PASSWORD"`
+}
+
+func main() {
+	cfg := &Config{}
+	opts := &env.Options{
+		OnSet: func(tag string, value interface{}, isDefault bool) {
+			fmt.Printf("Set %s to %v (default? %v)\n", tag, value, isDefault)
+		},
+	}
+
+	// Load env vars.
+	if err := env.Parse(cfg, opts); err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the loaded data.
+	fmt.Printf("%+v\n", cfg.envData)
+}
+```
+
+## Making all fields to required
+
+You can make all fields that don't have a default value be required by setting the `RequiredIfNoDef: true` in the `Options`.
+
+For example
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/caarlos0/env/v6"
+)
+
+type Config struct {
+	Username string `env:"USERNAME" envDefault:"admin"`
+	Password string `env:"PASSWORD"`
+}
+
+func main() {
+	cfg := &Config{}
+	opts := &env.Options{RequiredIfNoDef: true}
 
 	// Load env vars.
 	if err := env.Parse(cfg, opts); err != nil {

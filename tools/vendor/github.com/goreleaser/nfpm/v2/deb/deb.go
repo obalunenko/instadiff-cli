@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,10 +18,11 @@ import (
 
 	"github.com/blakesmith/ar"
 	"github.com/goreleaser/chglog"
-
 	"github.com/goreleaser/nfpm/v2"
+	"github.com/goreleaser/nfpm/v2/deprecation"
 	"github.com/goreleaser/nfpm/v2/files"
 	"github.com/goreleaser/nfpm/v2/internal/sign"
+	"github.com/ulikunitz/xz"
 )
 
 const packagerName = "deb"
@@ -34,13 +34,24 @@ func init() {
 
 // nolint: gochecknoglobals
 var archToDebian = map[string]string{
-	"386":     "i386",
-	"arm":     "armhf",
-	"arm5":    "armel",
-	"arm6":    "armhf",
-	"arm7":    "armhf",
-	"mipsle":  "mipsel",
-	"ppc64le": "ppc64el",
+	"386":      "i386",
+	"arm5":     "arm5",
+	"arm6":     "armel",
+	"arm7":     "armhf",
+	"mipsle":   "mipsel",
+	"mips64le": "mips64el",
+	"ppc64le":  "ppc64el",
+	"s390":     "s390x",
+}
+
+func ensureValidArch(info *nfpm.Info) *nfpm.Info {
+	if info.Deb.Arch != "" {
+		info.Arch = info.Deb.Arch
+	} else if arch, ok := archToDebian[info.Arch]; ok {
+		info.Arch = arch
+	}
+
+	return info
 }
 
 // Default deb packager.
@@ -54,16 +65,9 @@ type Deb struct{}
 // to the conventions for debian packages. See:
 // https://manpages.debian.org/buster/dpkg-dev/dpkg-name.1.en.html
 func (*Deb) ConventionalFileName(info *nfpm.Info) string {
-	arch, ok := archToDebian[info.Arch]
-	if !ok {
-		arch = info.Arch
-	}
+	info = ensureValidArch(info)
 
 	version := info.Version
-	if info.Release != "" {
-		version += "-" + info.Release
-	}
-
 	if info.Prerelease != "" {
 		version += "~" + info.Prerelease
 	}
@@ -72,8 +76,12 @@ func (*Deb) ConventionalFileName(info *nfpm.Info) string {
 		version += "+" + info.VersionMetadata
 	}
 
+	if info.Release != "" {
+		version += "-" + info.Release
+	}
+
 	// package_version_architecture.package-type
-	return fmt.Sprintf("%s_%s_%s.deb", info.Name, version, arch)
+	return fmt.Sprintf("%s_%s_%s.deb", info.Name, version, info.Arch)
 }
 
 // ErrInvalidSignatureType happens if the signature type of a deb is not one of
@@ -81,16 +89,16 @@ func (*Deb) ConventionalFileName(info *nfpm.Info) string {
 var ErrInvalidSignatureType = errors.New("invalid signature type")
 
 // Package writes a new deb package to the given writer using the given info.
-func (*Deb) Package(info *nfpm.Info, deb io.Writer) (err error) { // nolint: funlen
-	arch, ok := archToDebian[info.Arch]
-	if ok {
-		info.Arch = arch
-	}
+func (d *Deb) Package(info *nfpm.Info, deb io.Writer) (err error) { // nolint: funlen
+	info = ensureValidArch(info)
 	if err = info.Validate(); err != nil {
 		return err
 	}
 
-	dataTarGz, md5sums, instSize, err := createDataTarGz(info)
+	// Set up some deb specific defaults
+	d.SetPackagerDefaults(info)
+
+	dataTarball, md5sums, instSize, dataTarballName, err := createDataTarball(info)
 	if err != nil {
 		return err
 	}
@@ -115,14 +123,14 @@ func (*Deb) Package(info *nfpm.Info, deb io.Writer) (err error) { // nolint: fun
 		return fmt.Errorf("cannot add control.tar.gz to deb: %w", err)
 	}
 
-	if err := addArFile(w, "data.tar.gz", dataTarGz); err != nil {
+	if err := addArFile(w, dataTarballName, dataTarball); err != nil {
 		return fmt.Errorf("cannot add data.tar.gz to deb: %w", err)
 	}
 
 	// TODO: refactor this
 	if info.Deb.Signature.KeyFile != "" {
 		data := io.MultiReader(bytes.NewReader(debianBinary), bytes.NewReader(controlTarGz),
-			bytes.NewReader(dataTarGz))
+			bytes.NewReader(dataTarball))
 
 		sig, err := sign.PGPArmoredDetachSignWithKeyID(data, info.Deb.Signature.KeyFile, info.Deb.Signature.KeyPassphrase, info.Deb.Signature.KeyID)
 		if err != nil {
@@ -150,6 +158,24 @@ func (*Deb) Package(info *nfpm.Info, deb io.Writer) (err error) { // nolint: fun
 	return nil
 }
 
+func (*Deb) SetPackagerDefaults(info *nfpm.Info) {
+	// Priority should be set on all packages per:
+	//   https://www.debian.org/doc/debian-policy/ch-archive.html#priorities
+	// "optional" seems to be the safe/sane default here
+	if info.Priority == "" {
+		info.Priority = "optional"
+	}
+
+	// The safe thing here feels like defaulting to something like below.
+	// That will prevent existing configs from breaking anyway...  Wondering
+	// if in the long run we should be more strict about this and error when
+	// not set?
+	if info.Maintainer == "" {
+		deprecation.Println("Leaving the 'maintainer' field unset will not be allowed in a future version")
+		info.Maintainer = "Unset Maintainer <unset@localhost>"
+	}
+}
+
 func addArFile(w *ar.Writer, name string, body []byte) error {
 	header := ar.Header{
 		Name:    files.ToNixPath(name),
@@ -164,38 +190,74 @@ func addArFile(w *ar.Writer, name string, body []byte) error {
 	return err
 }
 
-func createDataTarGz(info *nfpm.Info) (dataTarGz, md5sums []byte, instSize int64, err error) {
-	var buf bytes.Buffer
-	compress := gzip.NewWriter(&buf)
-	out := tar.NewWriter(compress)
+type nopCloser struct {
+	io.Writer
+}
 
-	// the writers are properly closed later, this is just in case that we have
-	// an error in another part of the code.
-	defer out.Close()      // nolint: errcheck
-	defer compress.Close() // nolint: errcheck
+func (nopCloser) Close() error { return nil }
 
-	created := map[string]bool{}
-	if err = createEmptyFoldersInsideTarGz(info, out, created); err != nil {
-		return nil, nil, 0, err
+func createDataTarball(info *nfpm.Info) (dataTarBall, md5sums []byte,
+	instSize int64, name string, err error) {
+	var (
+		dataTarball            bytes.Buffer
+		dataTarballWriteCloser io.WriteCloser
+	)
+
+	switch info.Deb.Compression {
+	case "", "gzip": // the default for now
+		dataTarballWriteCloser = gzip.NewWriter(&dataTarball)
+		name = "data.tar.gz"
+	case "xz":
+		dataTarballWriteCloser, err = xz.NewWriter(&dataTarball)
+		if err != nil {
+			return nil, nil, 0, "", err
+		}
+		name = "data.tar.xz"
+	case "none":
+		dataTarballWriteCloser = nopCloser{Writer: &dataTarball}
+		name = "data.tar"
+	default:
+		return nil, nil, 0, "", fmt.Errorf("unknown compression algorithm: %s", info.Deb.Compression)
 	}
 
-	md5buf, instSize, err := createFilesInsideTarGz(info, out, created)
+	// the writer is properly closed later, this is just in case that we error out
+	defer dataTarballWriteCloser.Close() // nolint: errcheck
+
+	md5sums, instSize, err = fillDataTar(info, dataTarballWriteCloser)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, "", err
+	}
+
+	if err := dataTarballWriteCloser.Close(); err != nil {
+		return nil, nil, 0, "", fmt.Errorf("closing data tarball: %w", err)
+	}
+
+	return dataTarball.Bytes(), md5sums, instSize, name, nil
+}
+
+func fillDataTar(info *nfpm.Info, w io.Writer) (md5sums []byte, instSize int64, err error) {
+	out := tar.NewWriter(w)
+
+	// the writer is properly closed later, this is just in case that we have
+	// an error in another part of the code.
+	defer out.Close() // nolint: errcheck
+
+	created := map[string]bool{}
+
+	md5buf, instSize, err := createFilesInsideDataTar(info, out, created)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	if err := out.Close(); err != nil {
-		return nil, nil, 0, fmt.Errorf("closing data.tar.gz: %w", err)
-	}
-	if err := compress.Close(); err != nil {
-		return nil, nil, 0, fmt.Errorf("closing data.tar.gz: %w", err)
+		return nil, 0, fmt.Errorf("closing data.tar.gz: %w", err)
 	}
 
-	return buf.Bytes(), md5buf.Bytes(), instSize, nil
+	return md5buf.Bytes(), instSize, nil
 }
 
-func createSymlinkInsideTarGz(file *files.Content, out *tar.Writer) error {
-	return newItemInsideTarGz(out, []byte{}, &tar.Header{
+func createSymlinkInsideTar(file *files.Content, out *tar.Writer) error {
+	return newItemInsideTar(out, []byte{}, &tar.Header{
 		Name:     normalizePath(file.Destination),
 		Linkname: file.Source,
 		Typeflag: tar.TypeSymlink,
@@ -204,11 +266,43 @@ func createSymlinkInsideTarGz(file *files.Content, out *tar.Writer) error {
 	})
 }
 
-func createFilesInsideTarGz(info *nfpm.Info, tw *tar.Writer, created map[string]bool) (md5buf bytes.Buffer, instSize int64, err error) {
+func createFilesInsideDataTar(info *nfpm.Info, tw *tar.Writer,
+	created map[string]bool) (md5buf bytes.Buffer, instSize int64, err error) {
+	// create explicit directories first
 	for _, file := range info.Contents {
+		// at this point, we don't care about other types yet
+		if file.Type != "dir" {
+			continue
+		}
+
+		// only consider contents for this packager
 		if file.Packager != "" && file.Packager != packagerName {
 			continue
 		}
+
+		err = tw.WriteHeader(&tar.Header{
+			Name:     normalizePath(strings.Trim(file.Destination, "/") + "/"),
+			Mode:     int64(file.FileInfo.Mode),
+			Typeflag: tar.TypeDir,
+			Format:   tar.FormatGNU,
+			Uname:    file.FileInfo.Owner,
+			Gname:    file.FileInfo.Group,
+			ModTime:  file.FileInfo.MTime,
+		})
+		if err != nil {
+			return md5buf, 0, err
+		}
+
+		created[strings.TrimPrefix(file.Destination, "/")] = true
+	}
+
+	// create files and implicit directories
+	for _, file := range info.Contents {
+		// only consider contents for this packager
+		if file.Packager != "" && file.Packager != packagerName {
+			continue
+		}
+		// create implicit directory structure below the current content
 		if err = createTree(tw, file.Destination, created); err != nil {
 			return md5buf, 0, err
 		}
@@ -218,24 +312,11 @@ func createFilesInsideTarGz(info *nfpm.Info, tw *tar.Writer, created map[string]
 		case "ghost":
 			// skip ghost files in apk
 			continue
+		case "dir":
+			// already handled above
+			continue
 		case "symlink":
-			err = createSymlinkInsideTarGz(file, tw)
-		case "doc":
-			// nolint:gocritic
-			// ignoring `emptyFallthrough: remove empty case containing only fallthrough to default case`
-			fallthrough
-		case "licence", "license":
-			// nolint:gocritic
-			// ignoring `emptyFallthrough: remove empty case containing only fallthrough to default case`
-			fallthrough
-		case "readme":
-			// nolint:gocritic
-			// ignoring `emptyFallthrough: remove empty case containing only fallthrough to default case`
-			fallthrough
-		case "config", "config|noreplace":
-			// nolint:gocritic
-			// ignoring `emptyFallthrough: remove empty case containing only fallthrough to default case`
-			fallthrough
+			err = createSymlinkInsideTar(file, tw)
 		default:
 			size, err = copyToTarAndDigest(file, tw, &md5buf)
 		}
@@ -246,7 +327,7 @@ func createFilesInsideTarGz(info *nfpm.Info, tw *tar.Writer, created map[string]
 	}
 
 	if info.Changelog != "" {
-		size, err := createChangelogInsideTarGz(tw, &md5buf, created, info)
+		size, err := createChangelogInsideDataTar(tw, &md5buf, created, info)
 		if err != nil {
 			return md5buf, 0, err
 		}
@@ -255,18 +336,6 @@ func createFilesInsideTarGz(info *nfpm.Info, tw *tar.Writer, created map[string]
 	}
 
 	return md5buf, instSize, nil
-}
-
-func createEmptyFoldersInsideTarGz(info *nfpm.Info, out *tar.Writer, created map[string]bool) error {
-	for _, folder := range info.EmptyFolders {
-		// this .nope is actually not created, because createTree ignore the
-		// last part of the path, assuming it is a file.
-		// TODO: should probably refactor this
-		if err := createTree(out, files.ToNixPath(filepath.Join(folder, ".nope")), created); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func copyToTarAndDigest(file *files.Content, tw *tar.Writer, md5w io.Writer) (int64, error) {
@@ -279,11 +348,16 @@ func copyToTarAndDigest(file *files.Content, tw *tar.Writer, md5w io.Writer) (in
 
 	header, err := tar.FileInfoHeader(file, file.Source)
 	if err != nil {
-		log.Print(err)
 		return 0, err
 	}
+
+	// tar.FileInfoHeader only uses file.Mode().Perm() which masks the mode with
+	// 0o777 which we don't want because we want to be able to set the suid bit.
+	header.Mode = int64(file.Mode())
 	header.Format = tar.FormatGNU
 	header.Name = normalizePath(file.Destination)
+	header.Uname = file.FileInfo.Owner
+	header.Gname = file.FileInfo.Group
 	if err := tw.WriteHeader(header); err != nil {
 		return 0, fmt.Errorf("cannot write header of %s to data.tar.gz: %w", file.Source, err)
 	}
@@ -297,7 +371,8 @@ func copyToTarAndDigest(file *files.Content, tw *tar.Writer, md5w io.Writer) (in
 	return file.Size(), nil
 }
 
-func createChangelogInsideTarGz(tarw *tar.Writer, md5w io.Writer, created map[string]bool, info *nfpm.Info) (int64, error) {
+func createChangelogInsideDataTar(tarw *tar.Writer, md5w io.Writer,
+	created map[string]bool, info *nfpm.Info) (int64, error) {
 	var buf bytes.Buffer
 	out := gzip.NewWriter(&buf)
 	// the writers are properly closed later, this is just in case that we have
@@ -334,7 +409,7 @@ func createChangelogInsideTarGz(tarw *tar.Writer, md5w io.Writer, created map[st
 		return 0, err
 	}
 
-	if err = newFileInsideTarGz(tarw, changelogName, changelogData); err != nil {
+	if err = newFileInsideTar(tarw, changelogName, changelogData); err != nil {
 		return 0, err
 	}
 
@@ -399,7 +474,7 @@ func createControl(instSize int64, md5sums []byte, info *nfpm.Info) (controlTarG
 	}
 
 	for name, content := range filesToCreate {
-		if err := newFileInsideTarGz(out, name, content); err != nil {
+		if err := newFileInsideTar(out, name, content); err != nil {
 			return nil, err
 		}
 	}
@@ -441,7 +516,7 @@ func createControl(instSize int64, md5sums []byte, info *nfpm.Info) (controlTarG
 
 	for path, destMode := range specialFiles {
 		if path != "" {
-			if err := newFilePathInsideTarGz(out, path, destMode.fileName, destMode.mode); err != nil {
+			if err := newFilePathInsideTar(out, path, destMode.fileName, destMode.mode); err != nil {
 				return nil, err
 			}
 		}
@@ -456,7 +531,7 @@ func createControl(instSize int64, md5sums []byte, info *nfpm.Info) (controlTarG
 	return buf.Bytes(), nil
 }
 
-func newItemInsideTarGz(out *tar.Writer, content []byte, header *tar.Header) error {
+func newItemInsideTar(out *tar.Writer, content []byte, header *tar.Header) error {
 	if err := out.WriteHeader(header); err != nil {
 		return fmt.Errorf("cannot write header of %s file to control.tar.gz: %w", header.Name, err)
 	}
@@ -466,8 +541,8 @@ func newItemInsideTarGz(out *tar.Writer, content []byte, header *tar.Header) err
 	return nil
 }
 
-func newFileInsideTarGz(out *tar.Writer, name string, content []byte) error {
-	return newItemInsideTarGz(out, content, &tar.Header{
+func newFileInsideTar(out *tar.Writer, name string, content []byte) error {
+	return newItemInsideTar(out, content, &tar.Header{
 		Name:     normalizePath(name),
 		Size:     int64(len(content)),
 		Mode:     0o644,
@@ -477,7 +552,7 @@ func newFileInsideTarGz(out *tar.Writer, name string, content []byte) error {
 	})
 }
 
-func newFilePathInsideTarGz(out *tar.Writer, path, dest string, mode int64) error {
+func newFilePathInsideTar(out *tar.Writer, path, dest string, mode int64) error {
 	file, err := os.Open(path) //nolint:gosec
 	if err != nil {
 		return err
@@ -486,7 +561,7 @@ func newFilePathInsideTarGz(out *tar.Writer, path, dest string, mode int64) erro
 	if err != nil {
 		return err
 	}
-	return newItemInsideTarGz(out, content, &tar.Header{
+	return newItemInsideTar(out, content, &tar.Header{
 		Name:     normalizePath(dest),
 		Size:     int64(len(content)),
 		Mode:     mode,
@@ -529,7 +604,7 @@ func createTree(tarw *tar.Writer, dst string, created map[string]bool) error {
 
 func pathsToCreate(dst string) []string {
 	paths := []string{}
-	base := strings.TrimPrefix(dst, "/")
+	base := strings.Trim(dst, "/")
 	for {
 		base = filepath.Dir(base)
 		if base == "." {

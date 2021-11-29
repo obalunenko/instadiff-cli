@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/goreleaser/fileglob"
@@ -42,13 +43,26 @@ func (c Contents) Swap(i, j int) {
 
 func (c Contents) Less(i, j int) bool {
 	a, b := c[i], c[j]
+
+	if a.Destination != b.Destination {
+		return a.Destination < b.Destination
+	}
+
 	if a.Type != b.Type {
-		return len(a.Type) < len(b.Type)
+		return a.Type < b.Type
 	}
-	if a.Source != b.Source {
-		return a.Source < b.Source
+
+	return a.Packager < b.Packager
+}
+
+func (c Contents) ContainsDestination(dst string) bool {
+	for _, content := range c {
+		if strings.TrimRight(content.Destination, "/") == strings.TrimRight(dst, "/") {
+			return true
+		}
 	}
-	return a.Destination < b.Destination
+
+	return false
 }
 
 func (c *Content) WithFileInfoDefaults() *Content {
@@ -68,16 +82,29 @@ func (c *Content) WithFileInfoDefaults() *Content {
 	if cc.FileInfo.Group == "" {
 		cc.FileInfo.Group = "root"
 	}
-	info, err := os.Stat(cc.Source)
-	if err == nil {
-		if cc.FileInfo.MTime.IsZero() {
-			cc.FileInfo.MTime = info.ModTime()
-		}
-		if cc.FileInfo.Mode == 0 {
-			cc.FileInfo.Mode = info.Mode()
-		}
-		cc.FileInfo.Size = info.Size()
+	if cc.Type == "dir" && cc.FileInfo.Mode == 0 {
+		cc.FileInfo.Mode = 0o755
 	}
+
+	// determine if we still need info
+	fileInfoAlreadyComplete := (!cc.FileInfo.MTime.IsZero() &&
+		cc.FileInfo.Mode != 0 &&
+		(cc.FileInfo.Size != 0 || cc.Type == "dir"))
+
+	// only stat source when we actually need more information
+	if cc.Source != "" && !fileInfoAlreadyComplete {
+		info, err := os.Stat(cc.Source)
+		if err == nil {
+			if cc.FileInfo.MTime.IsZero() {
+				cc.FileInfo.MTime = info.ModTime()
+			}
+			if cc.FileInfo.Mode == 0 {
+				cc.FileInfo.Mode = info.Mode()
+			}
+			cc.FileInfo.Size = info.Size()
+		}
+	}
+
 	if cc.FileInfo.MTime.IsZero() {
 		cc.FileInfo.MTime = time.Now().UTC()
 	}
@@ -116,33 +143,36 @@ func (c *Content) Sys() interface{} {
 
 // ExpandContentGlobs gathers all of the real files to be copied into the package.
 func ExpandContentGlobs(contents Contents, disableGlobbing bool) (files Contents, err error) {
+	options := []fileglob.OptFunc{fileglob.MatchDirectoryIncludesContents}
+	if disableGlobbing {
+		options = append(options, fileglob.QuoteMeta)
+	}
+
 	for _, f := range contents {
 		var globbed map[string]string
 
 		switch f.Type {
-		case "ghost", "symlink":
-			// Ghost and symlink files need to be in the list, but dont glob them because they do not really exist
-			files, err = appendWithUniqueDestination(files, f.WithFileInfoDefaults())
+		case "ghost", "symlink", "dir":
+			// Ghost, symlinks and dirs need to be in the list, but dont glob
+			// them because they do not really exist
+			files = append(files, f.WithFileInfoDefaults())
+		default:
+			globbed, err = glob.Glob(f.Source, f.Destination, options...)
 			if err != nil {
 				return nil, err
 			}
 
-			continue
+			files, err = appendGlobbedFiles(files, globbed, f)
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		options := []fileglob.OptFunc{fileglob.MatchDirectoryIncludesContents}
-		if disableGlobbing {
-			options = append(options, fileglob.QuoteMeta)
-		}
-		globbed, err = glob.Glob(f.Source, f.Destination, options...)
-		if err != nil {
-			return nil, err
-		}
+	}
 
-		files, err = appendGlobbedFiles(globbed, f, files)
-		if err != nil {
-			return nil, err
-		}
+	err = checkNoCollisions(files)
+	if err != nil {
+		return nil, err
 	}
 
 	// sort the files for reproducibility and general cleanliness
@@ -151,8 +181,7 @@ func ExpandContentGlobs(contents Contents, disableGlobbing bool) (files Contents
 	return files, nil
 }
 
-func appendGlobbedFiles(globbed map[string]string, origFile *Content, incFiles Contents) (files Contents, err error) {
-	files = append(files, incFiles...)
+func appendGlobbedFiles(all Contents, globbed map[string]string, origFile *Content) (Contents, error) {
 	for src, dst := range globbed {
 		newFile := &Content{
 			Destination: ToNixPath(dst),
@@ -162,28 +191,21 @@ func appendGlobbedFiles(globbed map[string]string, origFile *Content, incFiles C
 			Packager:    origFile.Packager,
 		}
 
-		files, err = appendWithUniqueDestination(files, newFile.WithFileInfoDefaults())
-		if err != nil {
-			return nil, err
-		}
+		all = append(all, newFile.WithFileInfoDefaults())
 	}
 
-	return files, nil
+	return all, nil
 }
 
 var ErrContentCollision = fmt.Errorf("content collision")
 
-func appendWithUniqueDestination(slice []*Content, elems ...*Content) ([]*Content, error) {
+func checkNoCollisions(contents Contents) error {
 	alreadyPresent := map[string]*Content{}
 
-	for _, presentElem := range slice {
-		alreadyPresent[presentElem.Destination] = presentElem
-	}
-
-	for _, elem := range elems {
+	for _, elem := range contents {
 		present, ok := alreadyPresent[elem.Destination]
 		if ok && (present.Packager == "" || elem.Packager == "" || present.Packager == elem.Packager) {
-			return nil, fmt.Errorf(
+			return fmt.Errorf(
 				"cannot add %s because %s is already present at the same destination (%s): %w",
 				elem.Source, present.Source, present.Destination, ErrContentCollision)
 		}
@@ -191,7 +213,7 @@ func appendWithUniqueDestination(slice []*Content, elems ...*Content) ([]*Conten
 		alreadyPresent[elem.Destination] = elem
 	}
 
-	return append(slice, elems...), nil
+	return nil
 }
 
 // ToNixPath converts the given path to a nix-style path.

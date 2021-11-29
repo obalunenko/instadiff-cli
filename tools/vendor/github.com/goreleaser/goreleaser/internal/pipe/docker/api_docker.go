@@ -12,6 +12,7 @@ func init() {
 	registerImager(useBuildx, dockerImager{
 		buildx: true,
 	})
+	registerImager(useBuildPacks, buildPackImager{})
 }
 
 type dockerManifester struct{}

@@ -16,11 +16,6 @@ type Archive struct {
 	z *zip.Writer
 }
 
-// Close all closeables.
-func (a Archive) Close() error {
-	return a.z.Close()
-}
-
 // New zip archive.
 func New(target io.Writer) Archive {
 	compressor := zip.NewWriter(target)
@@ -32,6 +27,11 @@ func New(target io.Writer) Archive {
 	}
 }
 
+// Close all closeables.
+func (a Archive) Close() error {
+	return a.z.Close()
+}
+
 // Add a file to the zip archive.
 func (a Archive) Add(f config.File) error {
 	file, err := os.Open(f.Source) // #nosec
@@ -39,7 +39,7 @@ func (a Archive) Add(f config.File) error {
 		return err
 	}
 	defer file.Close()
-	info, err := file.Stat()
+	info, err := os.Lstat(f.Source) // #nosec
 	if err != nil {
 		return err
 	}

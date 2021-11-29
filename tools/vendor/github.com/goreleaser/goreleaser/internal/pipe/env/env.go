@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
@@ -45,16 +44,16 @@ func setDefaultTokenFiles(ctx *context.Context) {
 // Run the pipe.
 func (Pipe) Run(ctx *context.Context) error {
 	templ := tmpl.New(ctx).WithEnvS(os.Environ())
+	tEnv := []string{}
 	for i := range ctx.Config.Env {
 		env, err := templ.Apply(ctx.Config.Env[i])
 		if err != nil {
 			return err
 		}
-		// XXX: this has no risk of panicking because it would already have
-		// panicked at `context.go`'s `splitEnv` method.
-		// Need to properly handle this at some point.
-		parts := strings.SplitN(env, "=", 2)
-		ctx.Env[parts[0]] = parts[1]
+		tEnv = append(tEnv, env)
+	}
+	for k, v := range context.ToEnv(tEnv) {
+		ctx.Env[k] = v
 	}
 
 	setDefaultTokenFiles(ctx)
@@ -83,12 +82,6 @@ func (Pipe) Run(ctx *context.Context) error {
 		return err
 	}
 
-	if githubToken != "" {
-		log.Debug("token type: github")
-		ctx.TokenType = context.TokenTypeGitHub
-		ctx.Token = githubToken
-	}
-
 	if gitlabToken != "" {
 		log.Debug("token type: gitlab")
 		ctx.TokenType = context.TokenTypeGitLab
@@ -99,6 +92,15 @@ func (Pipe) Run(ctx *context.Context) error {
 		log.Debug("token type: gitea")
 		ctx.TokenType = context.TokenTypeGitea
 		ctx.Token = giteaToken
+	}
+
+	if githubToken != "" {
+		log.Debug("token type: github")
+		ctx.Token = githubToken
+	}
+
+	if ctx.TokenType == "" {
+		ctx.TokenType = context.TokenTypeGitHub
 	}
 
 	return nil

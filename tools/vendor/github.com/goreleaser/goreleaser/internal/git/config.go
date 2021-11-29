@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/pkg/config"
 )
 
@@ -14,10 +15,11 @@ func ExtractRepoFromConfig() (result config.Repo, err error) {
 	if !IsRepo() {
 		return result, errors.New("current folder is not a git repository")
 	}
-	out, err := Run("config", "--get", "remote.origin.url")
+	out, err := Run("ls-remote", "--get-url")
 	if err != nil {
-		return result, fmt.Errorf("repository doesn't have an `origin` remote")
+		return result, fmt.Errorf("no remote configured to list refs from")
 	}
+	log.WithField("rawurl", out).Debugf("got git url")
 	return ExtractRepoFromURL(out)
 }
 
@@ -30,7 +32,17 @@ func ExtractRepoFromURL(rawurl string) (config.Repo, error) {
 	// on HTTP and HTTPS URLs it will remove the http(s): prefix,
 	// which is ok. On SSH URLs the whole user@server will be removed,
 	// which is required.
-	s = s[strings.LastIndex(s, ":")+1:]
+
+	// If the url contains more than 1 ':' character, assume we are doing an
+	// http URL with a username/password in it, and normalize the URL.
+	// Gitlab-CI uses this type of URL
+	if strings.Count(s, ":") == 1 {
+		s = s[strings.LastIndex(s, ":")+1:]
+	} else {
+		// Handle Gitlab-ci funky URLs in the form of:
+		// "https://gitlab-ci-token:SOME_TOKEN@gitlab.yourcompany.com/yourgroup/yourproject.git"
+		s = "//" + s[strings.LastIndex(s, "@")+1:]
+	}
 
 	// now we can parse it with net/url
 	u, err := url.Parse(s)
@@ -38,15 +50,17 @@ func ExtractRepoFromURL(rawurl string) (config.Repo, error) {
 		return config.Repo{}, err
 	}
 
-	// split the parsed url path by /, the last two parts should be the owner and name
+	// split the parsed url path by /, the last parts should be the owner and name
 	ss := strings.Split(strings.TrimPrefix(u.Path, "/"), "/")
 
 	// if less than 2 parts, its likely not a valid repository
 	if len(ss) < 2 {
 		return config.Repo{}, fmt.Errorf("unsupported repository URL: %s", rawurl)
 	}
-	return config.Repo{
-		Owner: ss[len(ss)-2],
+	repo := config.Repo{
+		Owner: strings.Join(ss[:len(ss)-1], "/"),
 		Name:  ss[len(ss)-1],
-	}, nil
+	}
+	log.WithField("owner", repo.Owner).WithField("name", repo.Name).Debugf("parsed url")
+	return repo, nil
 }

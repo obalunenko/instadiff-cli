@@ -11,7 +11,6 @@ import (
 	"github.com/goreleaser/goreleaser/internal/client"
 	"github.com/goreleaser/goreleaser/internal/extrafiles"
 	"github.com/goreleaser/goreleaser/internal/git"
-	"github.com/goreleaser/goreleaser/internal/pipe"
 	"github.com/goreleaser/goreleaser/internal/semerrgroup"
 	"github.com/goreleaser/goreleaser/pkg/context"
 )
@@ -23,9 +22,8 @@ var ErrMultipleReleases = errors.New("multiple releases are defined. Only one is
 // Pipe for github release.
 type Pipe struct{}
 
-func (Pipe) String() string {
-	return "github/gitlab/gitea releases"
-}
+func (Pipe) String() string                 { return "scm releases" }
+func (Pipe) Skip(ctx *context.Context) bool { return ctx.Config.Release.Disable }
 
 // Default sets the pipe defaults.
 func (Pipe) Default(ctx *context.Context) error {
@@ -47,41 +45,53 @@ func (Pipe) Default(ctx *context.Context) error {
 		ctx.Config.Release.NameTemplate = "{{.Tag}}"
 	}
 
-	// nolint: exhaustive
 	switch ctx.TokenType {
 	case context.TokenTypeGitLab:
-		{
-			if ctx.Config.Release.GitLab.Name == "" {
-				repo, err := git.ExtractRepoFromConfig()
-				if err != nil {
-					return err
-				}
-				ctx.Config.Release.GitLab = repo
+		if ctx.Config.Release.GitLab.Name == "" {
+			repo, err := git.ExtractRepoFromConfig()
+			if err != nil {
+				return err
 			}
-
-			return nil
+			ctx.Config.Release.GitLab = repo
 		}
+		ctx.ReleaseURL = fmt.Sprintf(
+			"%s/%s/%s/-/releases/%s",
+			ctx.Config.GitLabURLs.Download,
+			ctx.Config.Release.GitLab.Owner,
+			ctx.Config.Release.GitLab.Name,
+			ctx.Git.CurrentTag,
+		)
 	case context.TokenTypeGitea:
-		{
-			if ctx.Config.Release.Gitea.Name == "" {
-				repo, err := git.ExtractRepoFromConfig()
-				if err != nil {
-					return err
-				}
-				ctx.Config.Release.Gitea = repo
+		if ctx.Config.Release.Gitea.Name == "" {
+			repo, err := git.ExtractRepoFromConfig()
+			if err != nil {
+				return err
 			}
-
-			return nil
+			ctx.Config.Release.Gitea = repo
 		}
-	}
-
-	// We keep github as default for now
-	if ctx.Config.Release.GitHub.Name == "" {
-		repo, err := git.ExtractRepoFromConfig()
-		if err != nil && !ctx.Snapshot {
-			return err
+		ctx.ReleaseURL = fmt.Sprintf(
+			"%s/%s/%s/releases/tag/%s",
+			ctx.Config.GiteaURLs.Download,
+			ctx.Config.Release.Gitea.Owner,
+			ctx.Config.Release.Gitea.Name,
+			ctx.Git.CurrentTag,
+		)
+	default:
+		// We keep github as default for now
+		if ctx.Config.Release.GitHub.Name == "" {
+			repo, err := git.ExtractRepoFromConfig()
+			if err != nil && !ctx.Snapshot {
+				return err
+			}
+			ctx.Config.Release.GitHub = repo
 		}
-		ctx.Config.Release.GitHub = repo
+		ctx.ReleaseURL = fmt.Sprintf(
+			"%s/%s/%s/releases/tag/%s",
+			ctx.Config.GitHubURLs.Download,
+			ctx.Config.Release.GitHub.Owner,
+			ctx.Config.Release.GitHub.Name,
+			ctx.Git.CurrentTag,
+		)
 	}
 
 	// Check if we have to check the git tag for an indicator to mark as pre release
@@ -101,9 +111,6 @@ func (Pipe) Default(ctx *context.Context) error {
 
 // Publish the release.
 func (Pipe) Publish(ctx *context.Context) error {
-	if ctx.SkipPublish {
-		return pipe.ErrSkipPublishEnabled
-	}
 	c, err := client.New(ctx)
 	if err != nil {
 		return err
@@ -112,9 +119,6 @@ func (Pipe) Publish(ctx *context.Context) error {
 }
 
 func doPublish(ctx *context.Context, client client.Client) error {
-	if ctx.Config.Release.Disable {
-		return pipe.ErrSkipDisabledPipe
-	}
 	log.WithField("tag", ctx.Git.CurrentTag).
 		WithField("repo", ctx.Config.Release.GitHub.String()).
 		Info("creating or updating release")
@@ -149,6 +153,7 @@ func doPublish(ctx *context.Context, client client.Client) error {
 		artifact.ByType(artifact.UploadableSourceArchive),
 		artifact.ByType(artifact.Checksum),
 		artifact.ByType(artifact.Signature),
+		artifact.ByType(artifact.Certificate),
 		artifact.ByType(artifact.LinuxPackage),
 	)
 

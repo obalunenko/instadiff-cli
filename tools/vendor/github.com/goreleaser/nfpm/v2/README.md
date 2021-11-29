@@ -6,7 +6,7 @@
     <a href="https://github.com/goreleaser/nfpm/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/goreleaser/nfpm.svg?style=for-the-badge"></a>
     <a href="/LICENSE.md"><img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge"></a>
     <a href="https://github.com/goreleaser/nfpm/actions?workflow=build"><img alt="GitHub Actions" src="https://img.shields.io/github/workflow/status/goreleaser/nfpm/build?style=for-the-badge"></a>
-    <a href="https://codecov.io/gh/goreleaser/nfpm"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/goreleaser/nfpm/master.svg?style=for-the-badge"></a>
+    <a href="https://codecov.io/gh/goreleaser/nfpm"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/goreleaser/nfpm/main.svg?style=for-the-badge"></a>
     <a href="https://goreportcard.com/report/github.com/goreleaser/nfpm"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/goreleaser/nfpm?style=for-the-badge"></a>
     <a href="https://pkg.go.dev/github.com/goreleaser/nfpm/v2"><img alt="Go Doc" src="https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge"></a>
     <a href="https://github.com/goreleaser"><img alt="Powered By: GoReleaser" src="https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=for-the-badge"></a>
@@ -16,7 +16,7 @@
 ## Why
 
 While [fpm][] is great, for me, it is a bummer that it depends on `ruby`, `tar`
-and other softwares.
+and other software.
 
 I wanted something that could be used as a binary and/or as a library and that
 was really simple.
@@ -39,7 +39,7 @@ easy and will surely help the developers at least buy some ☕️ or 🍺!
 
 ## Stargazers over time
 
-[![goreleaser/nfpm stargazers over time](https://starcharts.herokuapp.com/goreleaser/nfpm.svg)](https://starcharts.herokuapp.com/goreleaser/nfpm)
+[![goreleaser/nfpm stargazers over time](https://starchart.cc/goreleaser/nfpm.svg)](https://starchart.cc/goreleaser/nfpm)
 
 ---
 
