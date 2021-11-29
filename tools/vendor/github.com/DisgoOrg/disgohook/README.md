@@ -10,6 +10,12 @@
 DisgoHook is a simple [Discord Webhook](https://discord.com/developers/docs/resources/webhook) library written
 in [Go](https://golang.org/) aimed to be easy to use
 
+---
+
+**With v1 of [disgo](https://github.com/DisgoOrg/disgo) webhook support will be included there & this repo will be archived**
+
+---
+
 ## Getting Started
 
 ### Installing

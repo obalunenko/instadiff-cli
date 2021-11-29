@@ -4,7 +4,6 @@ import (
 	"encoding"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"reflect"
@@ -270,7 +269,7 @@ func get(field reflect.StructField, opts []Options) (val string, err error) {
 		defer os.Unsetenv(key)
 	}
 
-	if required && !exists {
+	if required && !exists && len(key) > 0 {
 		return "", fmt.Errorf(`env: required environment variable %q is not set`, key)
 	}
 
@@ -299,7 +298,7 @@ func parseKeyForOption(key string) (string, []string) {
 }
 
 func getFromFile(filename string) (value string, err error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := os.ReadFile(filename)
 	return string(b), err
 }
 

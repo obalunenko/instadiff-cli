@@ -78,6 +78,26 @@ func AccessLevel(v AccessLevelValue) *AccessLevelValue {
 	return p
 }
 
+// AvailabilityValue represents an availability value within GitLab.
+type AvailabilityValue string
+
+// List of available availability values.
+//
+// Undocummented, see code at:
+// https://gitlab.com/gitlab-org/gitlab-foss/-/blob/master/app/models/user_status.rb#L22
+const (
+	NotSet AvailabilityValue = "not_set"
+	Busy   AvailabilityValue = "busy"
+)
+
+// Availability is a helper routine that allocates a new AvailabilityValue
+// to store v and returns a pointer to it.
+func Availability(v AvailabilityValue) *AvailabilityValue {
+	p := new(AvailabilityValue)
+	*p = v
+	return p
+}
+
 // BuildStateValue represents a GitLab build state.
 type BuildStateValue string
 
@@ -175,6 +195,39 @@ const (
 // to store v and returns a pointer to it.
 func FileAction(v FileActionValue) *FileActionValue {
 	p := new(FileActionValue)
+	*p = v
+	return p
+}
+
+// GenericPackageSelectValue represents a generic package select value.
+type GenericPackageSelectValue string
+
+// The available generic package select values.
+const (
+	SelectPackageFile GenericPackageSelectValue = "package_file"
+)
+
+// GenericPackageSelect is a helper routine that allocates a new
+// GenericPackageSelectValue value to store v and returns a pointer to it.
+func GenericPackageSelect(v GenericPackageSelectValue) *GenericPackageSelectValue {
+	p := new(GenericPackageSelectValue)
+	*p = v
+	return p
+}
+
+// GenericPackageStatusValue represents a generic package status.
+type GenericPackageStatusValue string
+
+// The available generic package statuses.
+const (
+	PackageDefault GenericPackageStatusValue = "default"
+	PackageHidden  GenericPackageStatusValue = "hidden"
+)
+
+// GenericPackageStatus is a helper routine that allocates a new
+// GenericPackageStatusValue value to store v and returns a pointer to it.
+func GenericPackageStatus(v GenericPackageStatusValue) *GenericPackageStatusValue {
+	p := new(GenericPackageStatusValue)
 	*p = v
 	return p
 }
@@ -401,6 +454,31 @@ func ProjectCreationLevel(v ProjectCreationLevelValue) *ProjectCreationLevelValu
 	return p
 }
 
+// SharedRunnersSettingValue determines whether shared runners are enabled for a
+// group’s subgroups and projects.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/groups.html#options-for-shared_runners_setting
+type SharedRunnersSettingValue string
+
+// List of available shared runner setting levels.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/groups.html#options-for-shared_runners_setting
+const (
+	EnabledSharedRunnersSettingValue                  SharedRunnersSettingValue = "enabled"
+	DisabledWithOverrideSharedRunnersSettingValue     SharedRunnersSettingValue = "disabled_with_override"
+	DisabledAndUnoverridableSharedRunnersSettingValue SharedRunnersSettingValue = "disabled_and_unoverridable"
+)
+
+// SharedRunnersSetting is a helper routine that allocates a new SharedRunnersSettingValue
+// to store v and returns a pointer to it.
+func SharedRunnersSetting(v SharedRunnersSettingValue) *SharedRunnersSettingValue {
+	p := new(SharedRunnersSettingValue)
+	*p = v
+	return p
+}
+
 // SubGroupCreationLevelValue represents a sub group creation level within GitLab.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/
@@ -419,6 +497,29 @@ const (
 func SubGroupCreationLevel(v SubGroupCreationLevelValue) *SubGroupCreationLevelValue {
 	p := new(SubGroupCreationLevelValue)
 	*p = v
+	return p
+}
+
+// SquashOptionValue represents a squash optional level within GitLab.
+//
+// GitLab API docs: https://docs.gitlab.com/ee/api/projects.html#create-project
+type SquashOptionValue string
+
+// List of available squash options.
+//
+// GitLab API docs: https://docs.gitlab.com/ee/api/projects.html#create-project
+const (
+	SquashOptionNever      SquashOptionValue = "never"
+	SquashOptionAlways     SquashOptionValue = "always"
+	SquashOptionDefaultOff SquashOptionValue = "default_off"
+	SquashOptionDefaultOn  SquashOptionValue = "default_on"
+)
+
+// SquashOption is a helper routine that allocates a new SquashOptionValue
+// to store s and returns a pointer to it.
+func SquashOption(s SquashOptionValue) *SquashOptionValue {
+	p := new(SquashOptionValue)
+	*p = s
 	return p
 }
 

@@ -178,8 +178,8 @@ var (
 	CreateWebhookMessage       = NewAPIRoute(POST, "/webhooks/{webhook.id}/{webhook.token}", "wait", "thread_id")
 	CreateWebhookMessageSlack  = NewAPIRoute(POST, "/webhooks/{webhook.id}/{webhook.token}/slack", "wait")
 	CreateWebhookMessageGithub = NewAPIRoute(POST, "/webhooks/{webhook.id}/{webhook.token}/github", "wait")
-	UpdateWebhookMessage       = NewAPIRoute(POST, "/webhooks/{webhook.id}/{webhook.token}/messages/{message.id}")
-	DeleteWebhookMessage       = NewAPIRoute(POST, "/webhooks/{webhook.id}/{webhook.token}/messages/{message.id}")
+	UpdateWebhookMessage       = NewAPIRoute(PATCH, "/webhooks/{webhook.id}/{webhook.token}/messages/{message.id}")
+	DeleteWebhookMessage       = NewAPIRoute(DELETE, "/webhooks/{webhook.id}/{webhook.token}/messages/{message.id}")
 )
 
 // Invites
