@@ -1,4 +1,4 @@
-FROM golang:1.17.0-alpine
+FROM golang:1.17.3-alpine
 
 RUN apk add --no-cache bash \
 	curl \
@@ -7,9 +7,10 @@ RUN apk add --no-cache bash \
 	git \
 	mercurial \
 	make \
-	build-base
+	build-base \
+	tini
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 CMD [ "-h" ]
 
 COPY scripts/entrypoint.sh /entrypoint.sh

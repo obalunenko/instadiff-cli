@@ -466,11 +466,11 @@ func (s *CommitsService) SetCommitStatus(pid interface{}, sha string, opt *SetCo
 	return cs, resp, err
 }
 
-// GetMergeRequestsByCommit gets merge request associated with a commit.
+// ListMergeRequestsByCommit gets merge request associated with a commit.
 //
 // GitLab API docs:
 // https://docs.gitlab.com/ce/api/commits.html#list-merge-requests-associated-with-a-commit
-func (s *CommitsService) GetMergeRequestsByCommit(pid interface{}, sha string, options ...RequestOptionFunc) ([]*MergeRequest, *Response, error) {
+func (s *CommitsService) ListMergeRequestsByCommit(pid interface{}, sha string, options ...RequestOptionFunc) ([]*MergeRequest, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
@@ -495,7 +495,9 @@ func (s *CommitsService) GetMergeRequestsByCommit(pid interface{}, sha string, o
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/commits.html#cherry-pick-a-commit
 type CherryPickCommitOptions struct {
-	Branch *string `url:"branch,omitempty" json:"branch,omitempty"`
+	Branch  *string `url:"branch,omitempty" json:"branch,omitempty"`
+	DryRun  *bool   `url:"dry_run,omitempty" json:"dry_run,omitempty"`
+	Message *string `url:"message,omitempty" json:"message,omitempty"`
 }
 
 // CherryPickCommit cherry picks a commit to a given branch.

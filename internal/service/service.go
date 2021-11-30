@@ -435,16 +435,16 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 	for _, un := range usernames {
 		u, err := svc.instagram.client.Profiles.ByName(un)
 		if err != nil {
-			return nil, err
-		} else {
-
+			return nil, fmt.Errorf("get user profile by name[%s]: %w", un, err)
 		}
+
 		users = append(users, u)
 	}
 
 	return users, nil
 }
 
+// RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
 func (svc *Service) RemoveFollowersByUsername(usernames []string) (int, error) {
 	pBar := bar.New(len(usernames), getBarType())
 

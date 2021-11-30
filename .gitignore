@@ -9,11 +9,13 @@
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+*.out*
+.vscode/
 
 .idea
-.config.json
+
 bin/
 dist/
+.DS_Store
 coverage/
-.cover/
+tests-report.json

@@ -8,7 +8,13 @@ Simple lib to parse envs to structs in Go.
 
 ## Example
 
-A very basic example:
+Get the module with:
+
+```sh
+go get github.com/caarlos0/env/v6
+```
+
+The usage looks like this:
 
 ```go
 package main
@@ -46,6 +52,8 @@ You can run it like this:
 $ PRODUCTION=true HOSTS="host1:host2:host3" DURATION=1s go run main.go
 {Home:/your/home Port:3000 IsProduction:true Hosts:[host1 host2 host3] Duration:1s}
 ```
+
+⚠️⚠️⚠️ **Attention:** _unexported fields_ will be **ignored**.
 
 ## Supported types and defaults
 
@@ -87,8 +95,6 @@ this behavior by setting the `envSeparator` tag.
 If you set the `envExpand` tag, environment variables (either in `${var}` or
 `$var` format) in the string will be replaced according with the actual value
 of the variable.
-
-**Unexported fields are ignored.**
 
 ## Custom Parser Funcs
 
@@ -150,7 +156,7 @@ type config struct {
 ## Not Empty fields
 
 While `required` demands the environment variable to be check, it doesn't check its value.
-If you want to make sure the environment is set and not emtpy, you need to use the `notEmpty` tag option instead (`env:"SOME_ENV,notEmpty"`).
+If you want to make sure the environment is set and not empty, you need to use the `notEmpty` tag option instead (`env:"SOME_ENV,notEmpty"`).
 
 Example:
 
@@ -287,6 +293,114 @@ func main() {
 
 	// Print the loaded data.
 	fmt.Printf("%+v\n", cfg.envData)
+}
+```
+
+
+### On set hooks
+
+You might want to listen to value sets and, for example, log something or do some other kind of logic.
+You can do this by passing a `OnSet` option:
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/caarlos0/env/v6"
+)
+
+type Config struct {
+	Username string `env:"USERNAME" envDefault:"admin"`
+	Password string `env:"PASSWORD"`
+}
+
+func main() {
+	cfg := &Config{}
+	opts := &env.Options{
+		OnSet: func(tag string, value interface{}, isDefault bool) {
+			fmt.Printf("Set %s to %v (default? %v)\n", tag, value, isDefault)
+		},
+	}
+
+	// Load env vars.
+	if err := env.Parse(cfg, opts); err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the loaded data.
+	fmt.Printf("%+v\n", cfg.envData)
+}
+```
+
+## Making all fields to required
+
+You can make all fields that don't have a default value be required by setting the `RequiredIfNoDef: true` in the `Options`.
+
+For example
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/caarlos0/env/v6"
+)
+
+type Config struct {
+	Username string `env:"USERNAME" envDefault:"admin"`
+	Password string `env:"PASSWORD"`
+}
+
+func main() {
+	cfg := &Config{}
+	opts := &env.Options{RequiredIfNoDef: true}
+
+	// Load env vars.
+	if err := env.Parse(cfg, opts); err != nil {
+		log.Fatal(err)
+	}
+
+	// Print the loaded data.
+	fmt.Printf("%+v\n", cfg.envData)
+}
+```
+
+## Defaults from code
+
+You may define default value also in code, by initialising the config data before it's filled by `env.Parse`.  
+Default values defined as struct tags will overwrite existing values during Parse.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/caarlos0/env/v6"
+)
+
+type Config struct {
+	Username string `env:"USERNAME" envDefault:"admin"`
+	Password string `env:"PASSWORD"`
+}
+
+func main() {
+	var cfg = Config{
+		Username: "test",
+		Password: "123456",
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Println("failed:", err)
+	}
+
+	fmt.Printf("%+v", cfg)  // {Username:admin Password:123456}
 }
 ```
 

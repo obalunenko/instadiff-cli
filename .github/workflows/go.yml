@@ -1,0 +1,247 @@
+name: Go [lint, test]
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - "*"
+    paths:
+      - "scripts/**"
+      - "tools/**"
+      - "**/*.go"
+      - "**/*.gohtml"
+      - "**/*.proto"
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - "!**.*md"
+      - ".github/workflows/**"
+
+jobs:
+  testing:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
+    runs-on: ${{ matrix.os }}
+    name: Run Tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up go
+        uses: actions/setup-go@v2.1.4
+        with:
+          stable: "true"
+          go-version: ${{ matrix.go }}
+
+      - run: |
+          go version
+        shell: bash
+
+      - name: Set up cache
+        uses: actions/cache@v2.1.7
+        env:
+          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
+        with:
+          path: |
+            ${{ env.GOBIN }}
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+
+      - name: Install tools
+        run: |
+          make install-tools
+        shell: bash
+
+      - name: Test
+        run: |
+          make test
+        shell: bash
+
+  linting:
+    needs: testing
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
+    runs-on: ${{ matrix.os }}
+    name: Run linters
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up go
+        uses: actions/setup-go@v2.1.4
+        with:
+          stable: "true"
+          go-version: ${{ matrix.go }}
+      - run: |
+          go version
+        shell: bash
+
+      - name: Vet
+        run: |
+          make vet
+        shell: bash
+
+      - name: Set up cache
+        uses: actions/cache@v2.1.7
+        env:
+          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
+        with:
+          path: |
+            ${{ env.GOBIN }}
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+
+      - name: Install tools
+        run: |
+          make install-tools
+        shell: bash
+
+      - name: Lint
+        run: |
+          make lint-pipeline
+        shell: bash
+
+  reports:
+    needs: linting
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
+    runs-on: ${{ matrix.os }}
+    name: Quality reports
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up go
+        uses: actions/setup-go@v2.1.4
+        with:
+          stable: "true"
+          go-version: ${{ matrix.go }}
+      - run: |
+          go version
+        shell: bash
+
+      - name: Set up cache
+        uses: actions/cache@v2.1.7
+        env:
+          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
+        with:
+          path: |
+            ${{ env.GOBIN }}
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+
+      - name: Install tools
+        run: |
+          make install-tools
+        shell: bash
+
+      - name: Prepare test coverage
+        run: |
+          make test-cover
+        shell: bash
+
+      - name: Tests report
+        run: |
+          make test-sonar-report
+        shell: bash
+
+      - name: Prepare lint report
+        run: |
+          make lint-sonar
+        shell: bash
+
+      - name: Cover report upload
+        if: success()
+        run: |
+          bash <(curl -s https://codecov.io/bash) -f ./coverage/full.cov
+        shell: bash
+
+      - name: SonarCloud report upload
+        uses: sonarsource/sonarcloud-github-action@v1.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build:
+    needs: linting
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        os: ["ubuntu-20.04"]
+        go: ["1.17"]
+    runs-on: ${{ matrix.os }}
+    name: Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up go
+        uses: actions/setup-go@v2.1.4
+        with:
+          stable: "true"
+          go-version: ${{ matrix.go }}
+
+      - run: |
+          go version
+        shell: bash
+
+      - name: Set up cache
+        uses: actions/cache@v2.1.7
+        env:
+          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
+        with:
+          path: |
+            ${{ env.GOBIN }}
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+
+      - name: Install tools
+        run: |
+          make install-tools
+        shell: bash
+
+      - name: Build
+        run: |
+          make build
+        shell: bash
+
+      - name: Check release
+        run: |
+          make check-releaser
+        shell: bash

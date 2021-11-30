@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
@@ -35,13 +36,56 @@ func NewGitLab(ctx *context.Context, token string) (Client, error) {
 		}),
 	}
 	if ctx.Config.GitLabURLs.API != "" {
-		options = append(options, gitlab.WithBaseURL(ctx.Config.GitLabURLs.API))
+		apiURL, err := tmpl.New(ctx).Apply(ctx.Config.GitLabURLs.API)
+		if err != nil {
+			return nil, fmt.Errorf("templating GitLab API URL: %w", err)
+		}
+
+		options = append(options, gitlab.WithBaseURL(apiURL))
 	}
 	client, err := gitlab.NewClient(token, options...)
 	if err != nil {
 		return &gitlabClient{}, err
 	}
 	return &gitlabClient{client: client}, nil
+}
+
+func (c *gitlabClient) Changelog(ctx *context.Context, repo Repo, prev, current string) (string, error) {
+	cmpOpts := &gitlab.CompareOptions{
+		From: &prev,
+		To:   &current,
+	}
+	result, _, err := c.client.Repositories.Compare(repo.String(), cmpOpts)
+	var log []string
+	if err != nil {
+		return "", err
+	}
+
+	for _, commit := range result.Commits {
+		log = append(log, fmt.Sprintf(
+			"%s: %s (%s <%s>)",
+			commit.ShortID,
+			strings.Split(commit.Message, "\n")[0],
+			commit.AuthorName,
+			commit.AuthorEmail,
+		))
+	}
+	return strings.Join(log, "\n"), nil
+}
+
+// GetDefaultBranch get the default branch
+func (c *gitlabClient) GetDefaultBranch(ctx *context.Context, repo Repo) (string, error) {
+	projectID := repo.String()
+	p, res, err := c.client.Projects.GetProject(projectID, nil)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"projectID":  projectID,
+			"statusCode": res.StatusCode,
+			"err":        err.Error(),
+		}).Warn("error checking for default branch")
+		return "", err
+	}
+	return p.DefaultBranch, nil
 }
 
 // CloseMilestone closes a given milestone.
@@ -85,19 +129,42 @@ func (c *gitlabClient) CreateFile(
 	message string, // the commit msg
 ) error {
 	fileName := path
-	// we assume having the formula in the master branch only
-	ref := "master"
-	branch := "master"
+	projectID := repo.String()
+
+	// Use the project default branch if we can get it...otherwise, just use
+	// 'master'
+	var branch, ref string
+	var err error
+	// Use the branch if given one
+	if repo.Branch != "" {
+		branch = repo.Branch
+	} else {
+		// Try to get the default branch from the Git provider
+		branch, err = c.GetDefaultBranch(ctx, repo)
+		if err != nil {
+			// Fall back to 'master' 😭
+			log.WithFields(log.Fields{
+				"fileName":        fileName,
+				"projectID":       repo.String(),
+				"requestedBranch": branch,
+				"err":             err.Error(),
+			}).Warn("error checking for default branch, using master")
+			ref = "master"
+			branch = "master"
+		}
+	}
+	ref = branch
 	opts := &gitlab.GetFileOptions{Ref: &ref}
 	castedContent := string(content)
-	projectID := repo.Owner + "/" + repo.Name
 
 	log.WithFields(log.Fields{
-		"owner": repo.Owner,
-		"name":  repo.Name,
+		"owner":  repo.Owner,
+		"name":   repo.Name,
+		"ref":    ref,
+		"branch": branch,
 	}).Debug("projectID at brew")
 
-	_, res, err := c.client.RepositoryFiles.GetFile(projectID, fileName, opts)
+	_, res, err := c.client.RepositoryFiles.GetFile(repo.String(), fileName, opts)
 	if err != nil && (res == nil || res.StatusCode != 404) {
 		log.WithFields(log.Fields{
 			"fileName":   fileName,
@@ -208,7 +275,7 @@ func (c *gitlabClient) CreateRelease(ctx *context.Context, body string) (release
 	name := title
 	tagName := ctx.Git.CurrentTag
 	release, resp, err := c.client.Releases.GetRelease(projectID, tagName)
-	if err != nil && (resp != nil && resp.StatusCode != 403 && resp.StatusCode != 404) {
+	if err != nil && (resp == nil || (resp.StatusCode != 403 && resp.StatusCode != 404)) {
 		return "", err
 	}
 
@@ -270,17 +337,22 @@ func (c *gitlabClient) ReleaseURLTemplate(ctx *context.Context) (string, error) 
 	if err != nil {
 		return "", err
 	}
+	downloadURL, err := tmpl.New(ctx).Apply(ctx.Config.GitLabURLs.Download)
+	if err != nil {
+		return "", err
+	}
+
 	if ctx.Config.Release.GitLab.Owner != "" {
 		urlTemplate = fmt.Sprintf(
 			"%s/%s/%s/-/releases/{{ .Tag }}/downloads/{{ .ArtifactName }}",
-			ctx.Config.GitLabURLs.Download,
+			downloadURL,
 			ctx.Config.Release.GitLab.Owner,
 			gitlabName,
 		)
 	} else {
 		urlTemplate = fmt.Sprintf(
 			"%s/%s/-/releases/{{ .Tag }}/downloads/{{ .ArtifactName }}",
-			ctx.Config.GitLabURLs.Download,
+			downloadURL,
 			gitlabName,
 		)
 	}
@@ -326,7 +398,11 @@ func (c *gitlabClient) Upload(
 		return err
 	}
 
-	gitlabBaseURL := ctx.Config.GitLabURLs.Download
+	gitlabBaseURL, err := tmpl.New(ctx).Apply(ctx.Config.GitLabURLs.Download)
+	if err != nil {
+		return fmt.Errorf("templating GitLab Download URL: %w", err)
+	}
+
 	linkURL := gitlabBaseURL + "/" + projectDetails.PathWithNamespace + projectFile.URL
 	name := artifact.Name
 	filename := "/" + name

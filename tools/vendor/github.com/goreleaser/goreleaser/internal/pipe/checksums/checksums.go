@@ -11,7 +11,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
-	"github.com/goreleaser/goreleaser/internal/pipe"
+	"github.com/goreleaser/goreleaser/internal/extrafiles"
 	"github.com/goreleaser/goreleaser/internal/semerrgroup"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
 	"github.com/goreleaser/goreleaser/pkg/context"
@@ -20,9 +20,8 @@ import (
 // Pipe for checksums.
 type Pipe struct{}
 
-func (Pipe) String() string {
-	return "calculating checksums"
-}
+func (Pipe) String() string                 { return "calculating checksums" }
+func (Pipe) Skip(ctx *context.Context) bool { return ctx.Config.Checksum.Disable }
 
 // Default sets the pipe defaults.
 func (Pipe) Default(ctx *context.Context) error {
@@ -37,9 +36,6 @@ func (Pipe) Default(ctx *context.Context) error {
 
 // Run the pipe.
 func (Pipe) Run(ctx *context.Context) (err error) {
-	if ctx.Config.Checksum.Disable {
-		return pipe.ErrSkipDisabledPipe
-	}
 	filter := artifact.Or(
 		artifact.ByType(artifact.UploadableArchive),
 		artifact.ByType(artifact.UploadableBinary),
@@ -53,6 +49,19 @@ func (Pipe) Run(ctx *context.Context) (err error) {
 	artifactList := ctx.Artifacts.Filter(filter).List()
 	if len(artifactList) == 0 {
 		return nil
+	}
+
+	extraFiles, err := extrafiles.Find(ctx.Config.Checksum.ExtraFiles)
+	if err != nil {
+		return err
+	}
+
+	for name, path := range extraFiles {
+		artifactList = append(artifactList, &artifact.Artifact{
+			Name: name,
+			Path: path,
+			Type: artifact.UploadableFile,
+		})
 	}
 
 	g := semerrgroup.New(ctx.Parallelism)

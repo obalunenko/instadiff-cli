@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,16 +23,16 @@ import (
 const (
 	dockerConfigExtra = "DockerConfig"
 
-	useBuildx = "buildx"
-	useDocker = "docker"
+	useBuildx     = "buildx"
+	useDocker     = "docker"
+	useBuildPacks = "buildpacks"
 )
 
 // Pipe for docker.
 type Pipe struct{}
 
-func (Pipe) String() string {
-	return "docker images"
-}
+func (Pipe) String() string                 { return "docker images" }
+func (Pipe) Skip(ctx *context.Context) bool { return len(ctx.Config.Dockers) == 0 }
 
 // Default sets the pipe defaults.
 func (Pipe) Default(ctx *context.Context) error {
@@ -88,19 +87,8 @@ func validateImager(use string) error {
 	return fmt.Errorf("docker: invalid use: %s, valid options are %v", use, valid)
 }
 
-// Run the pipe.
-func (Pipe) Run(ctx *context.Context) error {
-	if len(ctx.Config.Dockers) == 0 || len(ctx.Config.Dockers[0].ImageTemplates) == 0 {
-		return pipe.ErrSkipDisabledPipe
-	}
-	return doRun(ctx)
-}
-
 // Publish the docker images.
 func (Pipe) Publish(ctx *context.Context) error {
-	if ctx.SkipPublish {
-		return pipe.ErrSkipPublishEnabled
-	}
 	images := ctx.Artifacts.Filter(artifact.ByType(artifact.PublishableDockerImage)).List()
 	for _, image := range images {
 		if err := dockerPush(ctx, image); err != nil {
@@ -110,7 +98,8 @@ func (Pipe) Publish(ctx *context.Context) error {
 	return nil
 }
 
-func doRun(ctx *context.Context) error {
+// Run the pipe.
+func (Pipe) Run(ctx *context.Context) error {
 	g := semerrgroup.NewSkipAware(semerrgroup.New(ctx.Parallelism))
 	for _, docker := range ctx.Config.Dockers {
 		docker := docker
@@ -147,11 +136,17 @@ func process(ctx *context.Context, docker config.Docker, artifacts []*artifact.A
 		return err
 	}
 
+	if len(images) == 0 {
+		return pipe.Skip("no image templates found")
+	}
+
 	log := log.WithField("image", images[0])
 	log.Debug("tempdir: " + tmp)
 
-	if err := gio.Copy(docker.Dockerfile, filepath.Join(tmp, "Dockerfile")); err != nil {
-		return fmt.Errorf("failed to copy dockerfile: %w", err)
+	if docker.Use != useBuildPacks {
+		if err := gio.Copy(docker.Dockerfile, filepath.Join(tmp, "Dockerfile")); err != nil {
+			return fmt.Errorf("failed to copy dockerfile: %w", err)
+		}
 	}
 	for _, file := range docker.Files {
 		if err := os.MkdirAll(filepath.Join(tmp, filepath.Dir(file)), 0o755); err != nil {
@@ -217,10 +212,6 @@ func processImageTemplates(ctx *context.Context, docker config.Docker) ([]string
 		images = append(images, image)
 	}
 
-	if len(images) == 0 {
-		return images, errors.New("no image templates found")
-	}
-
 	return images, nil
 }
 
@@ -253,7 +244,7 @@ func dockerPush(ctx *context.Context, image *artifact.Artifact) error {
 		Extra:  map[string]interface{}{},
 	}
 	if docker.ID != "" {
-		art.Extra["ID"] = docker.ID
+		art.Extra[artifact.ExtraID] = docker.ID
 	}
 	ctx.Artifacts.Add(art)
 	return nil

@@ -36,57 +36,53 @@ help:
 
 
 ## Compile app
-compile:
-	${call colored, compile is running...}
+compile-instadiff-cli:
 	./scripts/build/compile.sh
-.PHONY: compile
+.PHONY: compile-instadiff-cli
+
+## Build the app.
+build: compile-instadiff-cli
+.PHONY: build
 
 ## recreate all generated code.
 generate:
-	${call colored, generate is running...}
 	./scripts/codegen/generate.sh
 .PHONY: generate
 
-## lint project
-lint:
-	${call colored, lint is running...}
-	./scripts/linting/run-linters.sh
-.PHONY: lint
+## vet project
+vet:
+	./scripts/linting/run-vet.sh
+.PHONY: vet
 
-lint-ci:
-	${call colored, lint_ci is running...}
-	./scripts/linting/run-linters-ci.sh
-.PHONY: lint-ci
+## Run full linting
+lint-full:
+	./scripts/linting/run-linters.sh
+.PHONY: lint-full
+
+## Run linting for build pipeline
+lint-pipeline:
+	./scripts/linting/golangci-pipeline.sh
+.PHONY: lint-pipeline
+
+## Run linting for sonar report
+lint-sonar:
+	./scripts/linting/golangci-sonar.sh
+.PHONY: lint-sonar
 
 ## Test all packages
 test:
-	${call colored, test is running...}
 	./scripts/tests/run.sh
 .PHONY: test
 
-## Test coverage
+## Test coverage report.
 test-cover:
-	${call colored, test-cover is running...}
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
-new-version: lint test compile
-	${call colored, new version is running...}
-	./scripts/version.sh
-.PHONY: new-version
-
-## Release
-release:
-	${call colored, release is running...}
-	./scripts/release/release.sh
-.PHONY: release
-
-## Release local snapshot
-release-local-snapshot:
-	${call colored, release is running...}
-	./scripts/release/local-snapshot-release.sh
-.PHONY: release-local-snapshot
-
+## Tests sonar report generate.
+test-sonar-report:
+	./scripts/tests/sonar-report.sh
+.PHONY: test-sonar-report
 
 ## Installs tools from vendor.
 install-tools:
@@ -128,12 +124,6 @@ fmt:
 format-project: fmt imports
 .PHONY: format-project
 
-## vet project
-vet:
-	${call colored, vet is running...}
-	./scripts/linting/vet.sh
-.PHONY: vet
-
 ## Open coverage report.
 open-cover-report: test-cover
 	./scripts/open-coverage-report.sh
@@ -143,5 +133,25 @@ open-cover-report: test-cover
 update-readme-cover: test-cover
 	./scripts/update-readme-coverage.sh
 .PHONY: update-readme-cover
+
+## Release
+release:
+	./scripts/release/release.sh
+.PHONY: release
+
+## Release local snapshot
+release-local-snapshot:
+	./scripts/release/local-snapshot-release.sh
+.PHONY: release-local-snapshot
+
+## Check goreleaser config.
+check-releaser:
+	./scripts/release/check.sh
+.PHONY: check-releaser
+
+## Issue new release.
+new-version: vet test build
+	./scripts/release/new-version.sh
+.PHONY: new-release
 
 .DEFAULT_GOAL := test

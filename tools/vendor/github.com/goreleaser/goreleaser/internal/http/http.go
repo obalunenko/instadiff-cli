@@ -141,10 +141,6 @@ type ResponseChecker func(*h.Response) error
 
 // Upload does the actual uploading work.
 func Upload(ctx *context.Context, uploads []config.Upload, kind string, check ResponseChecker) error {
-	if ctx.SkipPublish {
-		return pipe.ErrSkipPublishEnabled
-	}
-
 	// Handle every configured upload
 	for _, upload := range uploads {
 		upload := upload
@@ -153,7 +149,7 @@ func Upload(ctx *context.Context, uploads []config.Upload, kind string, check Re
 			filters = append(filters, artifact.ByType(artifact.Checksum))
 		}
 		if upload.Signature {
-			filters = append(filters, artifact.ByType(artifact.Signature))
+			filters = append(filters, artifact.ByType(artifact.Signature), artifact.ByType(artifact.Certificate))
 		}
 		// We support two different modes
 		//	- "archive": Upload all artifacts
