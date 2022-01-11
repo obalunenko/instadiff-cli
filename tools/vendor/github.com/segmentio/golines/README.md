@@ -60,9 +60,9 @@ golines [paths to format]
 ```
 
 The paths can be either directories or individual files. If no paths are
-provided, then input is taken from stdin (as with `gofmt`).
+provided, then input is taken from `stdin` (as with `gofmt`).
 
-By default, the results are printed to stdout. To overwrite the existing
+By default, the results are printed to `stdout`. To overwrite the existing
 files in place, use the `-w` flag.
 
 ## Options
@@ -93,7 +93,8 @@ with the `--shorten-comments` flag.
 
 By default, the tool will use [`goimports`](https://godoc.org/golang.org/x/tools/cmd/goimports) as
 the base formatter (if found), otherwise it will revert to `gofmt`. An explicit formatter can be
-set via the `--base-formatter` flag.
+set via the `--base-formatter` flag; the command provided here should accept its input via
+`stdin` and write its output to `stdout`.
 
 #### Generated files
 
@@ -171,6 +172,18 @@ let g:go_fmt_options = {
 
 4. Save the settings and restart VSCode
 
+### Goland
+
+1. Go into the Goland settings and click "Tools" -> "File Watchers" then click the plus to create a new file watcher
+2. Set the following properties and confirm by clicking OK
+  - __Name:__ golines
+  - __File type:__ Go files
+  - __Scope:__ Project Files
+  - __Program:__ golines
+  - __Arguments:__ $FilePath$ -w
+  - __Output paths to refresh:__ $FilePath$
+3. Activate your newly created file watcher in the Goland settings under "Tools" -> "Actions on save"
+
 ### Others
 
 Coming soon.
@@ -191,7 +204,7 @@ For each input source file, `golines` runs through the following process:
   the newlines around the node and/or its children
 6. Repeat steps 2-5 until no more shortening can be done
 7. Run the base formatter (e.g., `gofmt`) over the results, write these to either
-  stdout or the source file
+  `stdout` or the source file
 
 See [this blog post](https://yolken.net/blog/cleaner-go-code-golines) for more technical details.
 
