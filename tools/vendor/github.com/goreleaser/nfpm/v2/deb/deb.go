@@ -35,8 +35,8 @@ func init() {
 // nolint: gochecknoglobals
 var archToDebian = map[string]string{
 	"386":      "i386",
-	"arm5":     "arm5",
-	"arm6":     "armel",
+	"arm5":     "armel",
+	"arm6":     "armhf",
 	"arm7":     "armhf",
 	"mipsle":   "mipsel",
 	"mips64le": "mips64el",
@@ -280,8 +280,18 @@ func createFilesInsideDataTar(info *nfpm.Info, tw *tar.Writer,
 			continue
 		}
 
+		if err := createTree(tw, file.Destination, created); err != nil {
+			return md5buf, 0, err
+		}
+
+		normalizedName := normalizePath(strings.Trim(file.Destination, "/")) + "/"
+
+		if created[normalizedName] {
+			return md5buf, 0, fmt.Errorf("duplicate directory: %q", normalizedName)
+		}
+
 		err = tw.WriteHeader(&tar.Header{
-			Name:     normalizePath(strings.Trim(file.Destination, "/") + "/"),
+			Name:     normalizedName,
 			Mode:     int64(file.FileInfo.Mode),
 			Typeflag: tar.TypeDir,
 			Format:   tar.FormatGNU,
@@ -293,7 +303,7 @@ func createFilesInsideDataTar(info *nfpm.Info, tw *tar.Writer,
 			return md5buf, 0, err
 		}
 
-		created[strings.TrimPrefix(file.Destination, "/")] = true
+		created[normalizedName] = true
 	}
 
 	// create files and implicit directories
@@ -310,7 +320,7 @@ func createFilesInsideDataTar(info *nfpm.Info, tw *tar.Writer,
 		var size int64 // declare early to avoid shadowing err
 		switch file.Type {
 		case "ghost":
-			// skip ghost files in apk
+			// skip ghost files in deb
 			continue
 		case "dir":
 			// already handled above
@@ -588,12 +598,15 @@ func createTree(tarw *tar.Writer, dst string, created map[string]bool) error {
 			// (eg: usr/)
 			continue
 		}
+
 		if err := tarw.WriteHeader(&tar.Header{
 			Name:     path,
 			Mode:     0o755,
 			Typeflag: tar.TypeDir,
 			Format:   tar.FormatGNU,
 			ModTime:  time.Now(),
+			Uname:    "root",
+			Gname:    "root",
 		}); err != nil {
 			return fmt.Errorf("failed to create folder: %w", err)
 		}

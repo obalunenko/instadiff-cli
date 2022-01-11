@@ -5,7 +5,6 @@ before:
   hooks:
     - go mod tidy
     - ./scripts/completions.sh
-    - wget -c https://raw.githubusercontent.com/goreleaser/goreleaser/master/cosign.key -O /tmp/goreleaser_cosign.key
 
 gomod:
   proxy: true
@@ -140,20 +139,32 @@ nfpms:
     - src: ./completions/nfpm.zsh
       dst: /usr/local/share/zsh/site-functions/_nfpm
 
-
 furies:
   - account: goreleaser
 
+sboms:
+- artifacts: archive
 signs:
 - cmd: cosign
-  stdin: '{{ .Env.COSIGN_PWD }}'
-  args: ["sign-blob", "-key=/tmp/goreleaser_cosign.key", "-output=${signature}", "${artifact}"]
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  certificate: '${artifact}.pem'
+  output: true
   artifacts: checksum
-
+  args:
+    - sign-blob
+    - '--output-certificate=${certificate}'
+    - '--output-signature=${signature}'
+    - '${artifact}'
 docker_signs:
-- artifacts: manifests
-  stdin: '{{ .Env.COSIGN_PWD }}'
-  args: ["sign", "-key=/tmp/goreleaser_cosign.key", "${artifact}"]
+- cmd: cosign
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  artifacts: manifests
+  output: true
+  args:
+  - 'sign'
+  - '${artifact}'
 
 changelog:
   sort: asc
@@ -164,17 +175,32 @@ changelog:
     - '^test:'
     - '^chore'
     - Merge pull request
+    - Merge remote-tracking branch
     - Merge branch
     - go mod tidy
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 10
+    - title: Other work
+      order: 999
 
 checksum:
   name_template: 'checksums.txt'
 
 release:
   footer: |
+    **Full Changelog**: https://github.com/goreleaser/nfpm/compare/{{ .PreviousTag }}...{{ .Tag }}
+
     ---
 
     - Check out [GoReleaser](https://goreleaser.com): it integrates nFPM to the release pipeline of your Go projects.
+
+milestones:
+  - close: true
 
 announce:
   skip: "{{gt .Patch 0}}"

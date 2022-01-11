@@ -2,7 +2,6 @@ package docker
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -126,7 +125,7 @@ func (Pipe) Run(ctx *context.Context) error {
 }
 
 func process(ctx *context.Context, docker config.Docker, artifacts []*artifact.Artifact) error {
-	tmp, err := ioutil.TempDir(ctx.Config.Dist, "goreleaserdocker")
+	tmp, err := os.MkdirTemp(ctx.Config.Dist, "goreleaserdocker")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
@@ -229,7 +228,7 @@ func processBuildFlagTemplates(ctx *context.Context, docker config.Docker) ([]st
 }
 
 func dockerPush(ctx *context.Context, image *artifact.Artifact) error {
-	log.WithField("image", image.Name).Info("pushing docker image")
+	log.WithField("image", image.Name).Info("pushing")
 	docker := image.Extra[dockerConfigExtra].(config.Docker)
 	if err := imagers[docker.Use].Push(ctx, image.Name, docker.PushFlags); err != nil {
 		return err

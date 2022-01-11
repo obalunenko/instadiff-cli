@@ -194,7 +194,10 @@ type BuildHooks struct { // renamed on pro
 
 // IgnoredBuild represents a build ignored by the user.
 type IgnoredBuild struct {
-	Goos, Goarch, Goarm, Gomips string
+	Goos   string `yaml:"goos,omitempty"`
+	Goarch string `yaml:"goarch,omitempty"`
+	Goarm  string `yaml:"goarm,omitempty"`
+	Gomips string `yaml:"gomips,omitempty"`
 }
 
 // StringArray is a wrapper for an array of strings.
@@ -288,8 +291,8 @@ type Build struct {
 }
 
 type BuildHookConfig struct {
-	Pre  Hooks `yaml:",omitempty"`
-	Post Hooks `yaml:",omitempty"`
+	Pre  Hooks `yaml:"pre,omitempty"`
+	Post Hooks `yaml:"post,omitempty"`
 }
 
 type Hooks []Hook
@@ -431,9 +434,10 @@ func (f File) JSONSchemaType() *jsonschema.Type {
 
 // UniversalBinary setups macos universal binaries.
 type UniversalBinary struct {
-	ID           string `yaml:"id,omitempty"`
-	NameTemplate string `yaml:"name_template,omitempty"`
-	Replace      bool   `yaml:"replace,omitempty"`
+	ID           string          `yaml:"id,omitempty"`
+	NameTemplate string          `yaml:"name_template,omitempty"`
+	Replace      bool            `yaml:"replace,omitempty"`
+	Hooks        BuildHookConfig `yaml:"hooks,omitempty"`
 }
 
 // Archive config used for the archive.
@@ -449,6 +453,15 @@ type Archive struct {
 	AllowDifferentBinaryCount bool              `yaml:"allow_different_binary_count,omitempty"`
 }
 
+type ReleaseNotesMode string
+
+const (
+	ReleaseNotesModeKeepExisting ReleaseNotesMode = "keep-existing"
+	ReleaseNotesModeAppend       ReleaseNotesMode = "append"
+	ReleaseNotesModeReplace      ReleaseNotesMode = "replace"
+	ReleaseNotesModePrepend      ReleaseNotesMode = "prepend"
+)
+
 // Release config used for the GitHub/GitLab release.
 type Release struct {
 	GitHub                 Repo        `yaml:"github,omitempty"`
@@ -463,6 +476,8 @@ type Release struct {
 	DiscussionCategoryName string      `yaml:"discussion_category_name,omitempty"`
 	Header                 string      `yaml:"header,omitempty"`
 	Footer                 string      `yaml:"footer,omitempty"`
+
+	ReleaseNotesMode ReleaseNotesMode `yaml:"mode,omitempty" jsonschema:"enum=keep-existing,enum=append,enum=prepend,enum=replace,default=keep-existing"`
 }
 
 // Milestone config used for VCS milestone.
@@ -475,7 +490,8 @@ type Milestone struct {
 
 // ExtraFile on a release.
 type ExtraFile struct {
-	Glob string `yaml:"glob,omitempty"`
+	Glob         string `yaml:"glob,omitempty"`
+	NameTemplate string `yaml:"name_template,omitempty"`
 }
 
 // NFPM config.
@@ -603,6 +619,17 @@ type NFPMOverridables struct {
 	APK              NFPMAPK           `yaml:"apk,omitempty"`
 }
 
+// SBOM config.
+type SBOM struct {
+	ID        string   `yaml:"id,omitempty"`
+	Cmd       string   `yaml:"cmd,omitempty"`
+	Env       []string `yaml:"env,omitempty"`
+	Args      []string `yaml:"args,omitempty"`
+	Documents []string `yaml:"documents,omitempty"`
+	Artifacts string   `yaml:"artifacts,omitempty"`
+	IDs       []string `yaml:"ids,omitempty"`
+}
+
 // Sign config.
 type Sign struct {
 	ID          string   `yaml:"id,omitempty"`
@@ -615,6 +642,7 @@ type Sign struct {
 	StdinFile   string   `yaml:"stdin_file,omitempty"`
 	Env         []string `yaml:"env,omitempty"`
 	Certificate string   `yaml:"certificate,omitempty"`
+	Output      bool     `yaml:"output,omitempty"`
 }
 
 // SnapcraftAppMetadata for the binaries that will be in the snap package.
@@ -652,7 +680,7 @@ type Snapcraft struct {
 	Confinement      string                             `yaml:"confinement,omitempty"`
 	Layout           map[string]SnapcraftLayoutMetadata `yaml:"layout,omitempty"`
 	Apps             map[string]SnapcraftAppMetadata    `yaml:"apps,omitempty"`
-	Plugs            map[string]interface{}             `yaml:",omitempty"`
+	Plugs            map[string]interface{}             `yaml:"plugs,omitempty"`
 
 	Files []SnapcraftExtraFiles `yaml:"extra_files,omitempty"`
 }
@@ -713,10 +741,18 @@ type Filters struct {
 
 // Changelog Config.
 type Changelog struct {
-	Filters Filters `yaml:"filters,omitempty"`
-	Sort    string  `yaml:"sort,omitempty"`
-	Skip    bool    `yaml:"skip,omitempty"` // TODO(caarlos0): rename to Disable to match other pipes
-	Use     string  `yaml:"use,omitempty"`
+	Filters Filters          `yaml:"filters,omitempty"`
+	Sort    string           `yaml:"sort,omitempty"`
+	Skip    bool             `yaml:"skip,omitempty"` // TODO(caarlos0): rename to Disable to match other pipes
+	Use     string           `yaml:"use,omitempty" jsonschema:"enum=git,enum=github,enum=github-native,enum=gitlab,default=git"`
+	Groups  []ChangeLogGroup `yaml:"groups,omitempty"`
+}
+
+// ChangeLogGroup holds the grouping criteria for the changelog.
+type ChangeLogGroup struct {
+	Title  string `yaml:"title,omitempty"`
+	Regexp string `yaml:"regexp,omitempty"`
+	Order  int    `yaml:"order,omitempty"`
 }
 
 // EnvFiles holds paths to files that contains environment variables
@@ -737,7 +773,7 @@ type Blob struct {
 	Bucket     string      `yaml:"bucket,omitempty"`
 	Provider   string      `yaml:"provider,omitempty"`
 	Region     string      `yaml:"region,omitempty"`
-	DisableSSL bool        `yaml:"disableSSL,omitempty"`
+	DisableSSL bool        `yaml:"disableSSL,omitempty"` // nolint:tagliatelle // TODO(caarlos0): rename to disable_ssl
 	Folder     string      `yaml:"folder,omitempty"`
 	KMSKey     string      `yaml:"kmskey,omitempty"`
 	IDs        []string    `yaml:"ids,omitempty"`
@@ -811,6 +847,7 @@ type Project struct {
 	Source          Source           `yaml:"source,omitempty"`
 	GoMod           GoMod            `yaml:"gomod,omitempty"`
 	Announce        Announce         `yaml:"announce,omitempty"`
+	SBOMs           []SBOM           `yaml:"sboms,omitempty"`
 
 	UniversalBinaries []UniversalBinary `yaml:"universal_binaries,omitempty"`
 

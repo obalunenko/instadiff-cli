@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/goreleaser/fileglob"
 	"github.com/goreleaser/nfpm/v2/internal/glob"
 )
 
@@ -143,11 +142,6 @@ func (c *Content) Sys() interface{} {
 
 // ExpandContentGlobs gathers all of the real files to be copied into the package.
 func ExpandContentGlobs(contents Contents, disableGlobbing bool) (files Contents, err error) {
-	options := []fileglob.OptFunc{fileglob.MatchDirectoryIncludesContents}
-	if disableGlobbing {
-		options = append(options, fileglob.QuoteMeta)
-	}
-
 	for _, f := range contents {
 		var globbed map[string]string
 
@@ -157,7 +151,7 @@ func ExpandContentGlobs(contents Contents, disableGlobbing bool) (files Contents
 			// them because they do not really exist
 			files = append(files, f.WithFileInfoDefaults())
 		default:
-			globbed, err = glob.Glob(f.Source, f.Destination, options...)
+			globbed, err = glob.Glob(f.Source, f.Destination, disableGlobbing)
 			if err != nil {
 				return nil, err
 			}
@@ -205,8 +199,13 @@ func checkNoCollisions(contents Contents) error {
 	for _, elem := range contents {
 		present, ok := alreadyPresent[elem.Destination]
 		if ok && (present.Packager == "" || elem.Packager == "" || present.Packager == elem.Packager) {
+			if elem.Type == "dir" {
+				return fmt.Errorf("cannot add directory %q because it is already present: %w",
+					elem.Destination, ErrContentCollision)
+			}
+
 			return fmt.Errorf(
-				"cannot add %s because %s is already present at the same destination (%s): %w",
+				"cannot add %q because %q is already present at the same destination (%s): %w",
 				elem.Source, present.Source, present.Destination, ErrContentCollision)
 		}
 

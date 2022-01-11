@@ -14,11 +14,14 @@ import (
 	"github.com/goreleaser/goreleaser/internal/client"
 	"github.com/goreleaser/goreleaser/internal/git"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
+	"github.com/goreleaser/goreleaser/pkg/config"
 	"github.com/goreleaser/goreleaser/pkg/context"
 )
 
 // ErrInvalidSortDirection happens when the sort order is invalid.
 var ErrInvalidSortDirection = errors.New("invalid sort direction")
+
+const li = "* "
 
 // Pipe for checksums.
 type Pipe struct{}
@@ -67,8 +70,44 @@ func (Pipe) Run(ctx *context.Context) error {
 
 	changelogElements := []string{
 		"## Changelog",
-		strings.Join(entries, changelogStringJoiner),
 	}
+
+	if shouldGroup(ctx.Config.Changelog) {
+		log.Debug("grouping entries")
+		groups := ctx.Config.Changelog.Groups
+
+		sort.Slice(groups, func(i, j int) bool { return groups[i].Order < groups[j].Order })
+		for _, group := range groups {
+			items := make([]string, 0)
+			if group.Regexp == "" {
+				// If no regexp is provided, we purge all strikethrough entries and add remaining entries to the list
+				items = getAllNonEmpty(entries)
+				// clear array
+				entries = nil
+			} else {
+				regex, err := regexp.Compile(group.Regexp)
+				if err != nil {
+					return fmt.Errorf("failed to group into %q: %w", group.Title, err)
+				}
+				for i, entry := range entries {
+					match := regex.MatchString(entry)
+					if match {
+						items = append(items, li+entry)
+						// Striking out the matched entry
+						entries[i] = ""
+					}
+				}
+			}
+			if len(items) > 0 {
+				changelogElements = append(changelogElements, fmt.Sprintf("### %s", group.Title))
+				changelogElements = append(changelogElements, strings.Join(items, changelogStringJoiner))
+			}
+		}
+	} else {
+		log.Debug("not grouping entries")
+		changelogElements = append(changelogElements, strings.Join(getAllNonEmpty(entries), changelogStringJoiner))
+	}
+
 	if header != "" {
 		changelogElements = append([]string{header}, changelogElements...)
 	}
@@ -84,6 +123,20 @@ func (Pipe) Run(ctx *context.Context) error {
 	path := filepath.Join(ctx.Config.Dist, "CHANGELOG.md")
 	log.WithField("changelog", path).Info("writing")
 	return os.WriteFile(path, []byte(ctx.ReleaseNotes), 0o644) //nolint: gosec
+}
+
+func shouldGroup(cfg config.Changelog) bool {
+	return len(cfg.Groups) > 0 && cfg.Use != "github-native"
+}
+
+func getAllNonEmpty(ss []string) []string {
+	var r []string
+	for _, s := range ss {
+		if s != "" {
+			r = append(r, li+s)
+		}
+	}
+	return r
 }
 
 func loadFromFile(file string) (string, error) {
@@ -166,9 +219,14 @@ func extractCommitInfo(line string) string {
 }
 
 func getChangelog(ctx *context.Context, tag string) (string, error) {
-	prev, err := previous(tag)
-	if err != nil {
-		return "", err
+	prev := ctx.Git.PreviousTag
+	if prev == "" {
+		// get first commit
+		result, err := git.Clean(git.Run("rev-list", "--max-parents=0", "HEAD"))
+		if err != nil {
+			return "", err
+		}
+		prev = result
 	}
 	return doGetChangelog(ctx, prev, tag)
 }
@@ -234,18 +292,6 @@ func newSCMChangeloger(ctx *context.Context) (changeloger, error) {
 	}, nil
 }
 
-func previous(tag string) (result string, err error) {
-	if tag := os.Getenv("GORELEASER_PREVIOUS_TAG"); tag != "" {
-		return tag, nil
-	}
-
-	result, err = git.Clean(git.Run("describe", "--tags", "--abbrev=0", fmt.Sprintf("tags/%s^", tag)))
-	if err != nil {
-		result, err = git.Clean(git.Run("rev-list", "--max-parents=0", "HEAD"))
-	}
-	return
-}
-
 func loadContent(ctx *context.Context, fileName, tmplName string) (string, error) {
 	if tmplName != "" {
 		log.Debugf("loading template %s", tmplName)
@@ -272,7 +318,7 @@ type gitChangeloger struct{}
 
 var validSHA1 = regexp.MustCompile(`^[a-fA-F0-9]{40}$`)
 
-func (g gitChangeloger) Log(ctx *context.Context, prev, current string) (string, error) {
+func (g gitChangeloger) Log(_ *context.Context, prev, current string) (string, error) {
 	args := []string{"log", "--pretty=oneline", "--abbrev-commit", "--no-decorate", "--no-color"}
 	if validSHA1.MatchString(prev) {
 		args = append(args, prev, current)
