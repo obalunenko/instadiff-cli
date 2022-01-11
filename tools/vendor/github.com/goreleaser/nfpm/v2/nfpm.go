@@ -154,6 +154,9 @@ func (c *Config) expandEnvVars() {
 	c.Info.Prerelease = os.Expand(c.Info.Prerelease, c.envMappingFunc)
 	c.Info.Arch = os.Expand(c.Info.Arch, c.envMappingFunc)
 
+	// Vendor field
+	c.Info.Vendor = os.Expand(c.Info.Vendor, c.envMappingFunc)
+
 	// Package signing related fields
 	c.Info.Deb.Signature.KeyFile = os.Expand(c.Deb.Signature.KeyFile, c.envMappingFunc)
 	c.Info.RPM.Signature.KeyFile = os.Expand(c.RPM.Signature.KeyFile, c.envMappingFunc)
@@ -182,6 +185,9 @@ func (c *Config) expandEnvVars() {
 	if apkPassphrase != "" {
 		c.Info.APK.Signature.KeyPassphrase = apkPassphrase
 	}
+
+	// RPM specific
+	c.Info.RPM.Packager = os.Expand(c.RPM.Packager, c.envMappingFunc)
 }
 
 // Info contains information about a single package.
@@ -270,6 +276,7 @@ type RPM struct {
 	Summary     string       `yaml:"summary,omitempty" jsonschema:"title=package summary"`
 	Compression string       `yaml:"compression,omitempty" jsonschema:"title=compression algorithm to be used,enum=gzip,enum=lzma,enum=xz,default=gzip"`
 	Signature   RPMSignature `yaml:"signature,omitempty" jsonschema:"title=rpm signature"`
+	Packager    string       `yaml:"packager,omitempty" jsonschema:"title=organization that actually packaged the software"`
 }
 
 // RPMScripts represents scripts only available on RPM packages.
