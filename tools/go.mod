@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/axw/gocov v1.0.0
-	github.com/golangci/golangci-lint v1.44.1
+	github.com/golangci/golangci-lint v1.44.2
 	github.com/goreleaser/goreleaser v1.2.5
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
@@ -92,7 +92,7 @@ require (
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211216145620-d92e9ce0af51 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/daixiang0/gci v0.3.0 // indirect
+	github.com/daixiang0/gci v0.3.1-0.20220208004058-76d765e3ab48 // indirect
 	github.com/dave/dst v0.26.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingajkin/go-header v0.4.2 // indirect
@@ -249,7 +249,7 @@ require (
 	github.com/tommy-muehle/go-mnd/v2 v2.5.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ultraware/funlen v0.0.3 // indirect
-	github.com/ultraware/whitespace v0.0.4 // indirect
+	github.com/ultraware/whitespace v0.0.5 // indirect
 	github.com/uudashr/gocognit v1.0.5 // indirect
 	github.com/vartanbeno/go-reddit/v2 v2.0.1 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
