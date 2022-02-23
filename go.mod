@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/TheForgotten69/goinsta/v2 v2.7.0
-	github.com/magiconair/properties v1.8.5
+	github.com/magiconair/properties v1.8.6
 	github.com/obalunenko/version v1.1.0
 	github.com/schollz/progressbar/v2 v2.15.0
 	github.com/sirupsen/logrus v1.8.1
