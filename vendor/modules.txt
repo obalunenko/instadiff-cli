@@ -38,7 +38,7 @@ github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kr/pretty v0.2.0
 ## explicit; go 1.12
-# github.com/magiconair/properties v1.8.5
+# github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
 github.com/magiconair/properties/assert
