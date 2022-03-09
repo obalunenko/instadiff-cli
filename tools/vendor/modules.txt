@@ -1076,7 +1076,7 @@ github.com/sanposhiho/wastedassign/v2
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/cwe
 github.com/securego/gosec/v2/rules
-# github.com/segmentio/golines v0.7.0
+# github.com/segmentio/golines v0.8.0
 ## explicit; go 1.17
 github.com/segmentio/golines
 # github.com/sergi/go-diff v1.2.0
