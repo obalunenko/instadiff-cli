@@ -1073,7 +1073,7 @@ github.com/sanposhiho/wastedassign/v2
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/cwe
 github.com/securego/gosec/v2/rules
-# github.com/segmentio/golines v0.8.0
+# github.com/segmentio/golines v0.9.0
 ## explicit; go 1.17
 github.com/segmentio/golines
 # github.com/sergi/go-diff v1.2.0
@@ -1310,7 +1310,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20220209214540-3681064d5158
+# golang.org/x/sys v0.0.0-20220318055525-2edf467146b5
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
