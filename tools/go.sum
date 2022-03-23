@@ -962,8 +962,8 @@ github.com/nishanths/predeclared v0.2.1/go.mod h1:HvkGJcA3naj4lOwnFXFDkFxVtSqQMB
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
-github.com/obalunenko/coverbadger v1.1.0 h1:y21X4KlAkSbtstt3KwcuGk3aFUujzS3AGUb2Hg4ACG8=
-github.com/obalunenko/coverbadger v1.1.0/go.mod h1:fsBJ8JdiRxKDO0Hus3oeNX1rh47X+pV4LTw5xIqyZv8=
+github.com/obalunenko/coverbadger v1.2.0 h1:MI69h8POfZrnSpiC8BUS8f3fHYiznngCVbIpNAgVpCI=
+github.com/obalunenko/coverbadger v1.2.0/go.mod h1:wzzMrsejYp8/+MpRPDzELQo1YUYvCrqx4ze2d+91bpE=
 github.com/obalunenko/version v1.1.0 h1:yVua7OHnK3+MJpendeMmAlfzVmq7R1h8MO3Ufz7HEec=
 github.com/obalunenko/version v1.1.0/go.mod h1:Or267aCQxNcAtgOeWA7yOe/RqJS4XDaMfcFwk3ohbOg=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
