@@ -10,7 +10,7 @@ See [documentation](#documentation).
 ## Install
 
 Download a binary from [releases](https://github.com/gotestyourself/gotestsum/releases), or build from
-source with `go get gotest.tools/gotestsum`.
+source with `go install gotest.tools/gotestsum@latest`. With `go` version before 1.17, use `go get gotest.tools/gotestsum`.
 
 ## Demo
 A demonstration of three `--format` options.
@@ -152,6 +152,15 @@ example `notify` command only works on macOS with
 gotestsum --post-run-command notify
 ```
 
+**Example: command with flags**
+
+Possitional arguments or command line flags can be passed to the `--post-run-command` by
+quoting the whole command.
+
+```
+gotestsum --post-run-command "notify me --date"
+```
+
 ### Re-running failed tests
 
 When the `--rerun-fails` flag is set, `gotestsum` will re-run any failed tests.
@@ -225,12 +234,17 @@ stdout and stderr output:
 
 * The stdout produced by the script must only contain the `test2json` output, or
   `gotestsum` will fail. If it isn't possible to change the script to avoid
-  non-JSON output, you can use `--ignore-non-json-output-lines` to ignore
-  non-JSON lines and write them to `gotestsum`'s stderr instead.
+  non-JSON output, you can use `--ignore-non-json-output-lines` (added in version 1.7.0)
+  to ignore non-JSON lines and write them to `gotestsum`'s stderr instead.
 * Any stderr produced by the script will be considered an error (this behaviour
   is necessary because package build errors are only reported by writting to
   stderr, not the `test2json` stdout). Any stderr produced by tests is not
   considered an error (it will be in the `test2json` stdout).
+
+**Example: accept intput from stdin**
+```
+cat out.json | gotestsum --raw-command -- cat
+```
 
 **Example: run tests with profiling enabled**
 
@@ -334,15 +348,19 @@ directory will be watched. Use the `--packages` flag to specify a different list
 While in watch mode, pressing some keys will perform an action:
 
 * `r` will run tests for the previous event.
+  Added in version 1.6.1.
 * `d` will run tests for the previous event using `dlv test`, allowing you to 
   debug a test failure using [delve]. A breakpoint will automatically be added at
   the first line of any tests which failed in the previous run. Additional
   breakpoints can be added with [`runtime.Breakpoint`](https://golang.org/pkg/runtime/#Breakpoint)
   or by using the delve command prompt.
+  Added in version 1.6.1.
 * `a` will run tests for all packages, by using `./...` as the package selector.
+  Added in version 1.7.0.
 * `l` will scan the directory list again, and if there are any new directories
   which contain a file with a `.go` extension, they will be added to the watch
   list.
+  Added in version 1.7.0.
 
 Note that [delve] must be installed in order to use debug (`d`).
 
