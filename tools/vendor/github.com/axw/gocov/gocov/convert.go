@@ -26,16 +26,23 @@ import (
 	"go/build"
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
-
-	"golang.org/x/tools/cover"
+	"strings"
 
 	"github.com/axw/gocov"
 	"github.com/axw/gocov/gocovutil"
+	"golang.org/x/tools/cover"
 )
 
+type packagesCache map[string]*build.Package
+
 func convertProfiles(filenames ...string) error {
-	var ps gocovutil.Packages
+	var (
+		ps       gocovutil.Packages
+		packages = make(packagesCache)
+	)
+
 	for i := range filenames {
 		converter := converter{
 			packages: make(map[string]*gocov.Package),
@@ -45,7 +52,7 @@ func convertProfiles(filenames ...string) error {
 			return err
 		}
 		for _, p := range profiles {
-			if err := converter.convertProfile(p); err != nil {
+			if err := converter.convertProfile(packages, p); err != nil {
 				return err
 			}
 		}
@@ -54,11 +61,9 @@ func convertProfiles(filenames ...string) error {
 			ps.AddPackage(pkg)
 		}
 	}
-	bytes, err := marshalJson(ps)
-	if err != nil {
+	if err := marshalJson(os.Stdout, ps); err != nil {
 		return err
 	}
-	fmt.Println(string(bytes))
 	return nil
 }
 
@@ -72,8 +77,8 @@ type statement struct {
 	*StmtExtent
 }
 
-func (c *converter) convertProfile(p *cover.Profile) error {
-	file, pkgpath, err := findFile(p.FileName)
+func (c *converter) convertProfile(packages packagesCache, p *cover.Profile) error {
+	file, pkgpath, err := findFile(packages, p.FileName)
 	if err != nil {
 		return err
 	}
@@ -130,15 +135,20 @@ func (c *converter) convertProfile(p *cover.Profile) error {
 }
 
 // findFile finds the location of the named file in GOROOT, GOPATH etc.
-func findFile(file string) (filename string, pkgpath string, err error) {
+func findFile(packages packagesCache, file string) (filename, pkgpath string, err error) {
 	dir, file := filepath.Split(file)
 	if dir != "" {
-		dir = dir[:len(dir)-1] // drop trailing '/'
+		dir = strings.TrimSuffix(dir, "/")
 	}
-	pkg, err := build.Import(dir, ".", build.FindOnly)
-	if err != nil {
-		return "", "", fmt.Errorf("can't find %q: %v", file, err)
+	pkg, ok := packages[dir]
+	if !ok {
+		pkg, err = build.Import(dir, ".", build.FindOnly)
+		if err != nil {
+			return "", "", fmt.Errorf("can't find %q: %w", file, err)
+		}
+		packages[dir] = pkg
 	}
+
 	return filepath.Join(pkg.Dir, file), pkg.ImportPath, nil
 }
 
@@ -179,6 +189,30 @@ type FuncVisitor struct {
 	funcs []*FuncExtent
 }
 
+func functionName(f *ast.FuncDecl) string {
+	name := f.Name.Name
+	if f.Recv == nil {
+		return name
+	} else {
+		// Function name is prepended with "T." if there is a receiver, where
+		// T is the type of the receiver, dereferenced if it is a pointer.
+		return exprName(f.Recv.List[0].Type) + "." + name
+	}
+}
+
+func exprName(x ast.Expr) string {
+	switch y := x.(type) {
+	case *ast.StarExpr:
+		return exprName(y.X)
+	case *ast.IndexExpr:
+		return fmt.Sprintf("%s[%s]", exprName(y.X), exprName(y.Index))
+	case *ast.Ident:
+		return y.Name
+	default:
+		return ""
+	}
+}
+
 // Visit implements the ast.Visitor interface.
 func (v *FuncVisitor) Visit(node ast.Node) ast.Visitor {
 	var body *ast.BlockStmt
@@ -188,18 +222,7 @@ func (v *FuncVisitor) Visit(node ast.Node) ast.Visitor {
 		body = n.Body
 	case *ast.FuncDecl:
 		body = n.Body
-		name = n.Name.Name
-		// Function name is prepended with "T." if there is a receiver, where
-		// T is the type of the receiver, dereferenced if it is a pointer.
-		if n.Recv != nil {
-			field := n.Recv.List[0]
-			switch recv := field.Type.(type) {
-			case *ast.StarExpr:
-				name = recv.X.(*ast.Ident).Name + "." + name
-			case *ast.Ident:
-				name = recv.Name + "." + name
-			}
-		}
+		name = functionName(n)
 	}
 	if body != nil {
 		start := v.fset.Position(node.Pos())
