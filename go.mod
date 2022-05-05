@@ -11,7 +11,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/stretchr/testify v1.7.1
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
-	github.com/urfave/cli v1.22.8
+	github.com/urfave/cli v1.22.9
 	go.mongodb.org/mongo-driver v1.9.1
 )
 
