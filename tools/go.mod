@@ -13,7 +13,7 @@ require (
 	github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
-	gotest.tools/gotestsum v1.8.0
+	gotest.tools/gotestsum v1.8.1
 )
 
 require (
