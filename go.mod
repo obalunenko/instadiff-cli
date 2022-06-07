@@ -1,9 +1,9 @@
 module github.com/obalunenko/instadiff-cli
 
-go 1.17
+go 1.18
 
 require (
-	github.com/TheForgotten69/goinsta/v2 v2.7.0
+	github.com/Davincible/goinsta v0.0.0-20220425072628-96aad7267204
 	github.com/magiconair/properties v1.8.6
 	github.com/obalunenko/version v1.1.0
 	github.com/schollz/progressbar/v2 v2.15.0
@@ -16,13 +16,21 @@ require (
 )
 
 require (
+	github.com/chromedp/cdproto v0.0.0-20220217222649-d8c14a5c6edf // indirect
+	github.com/chromedp/chromedp v0.7.8 // indirect
+	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
+	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect

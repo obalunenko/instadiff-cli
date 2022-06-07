@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TheForgotten69/goinsta/v2"
+	"github.com/Davincible/goinsta"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/obalunenko/instadiff-cli/internal/config"
@@ -78,6 +78,10 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 	}
 
 	log.Printf("logged in as %s \n", cl.Account.Username)
+
+	if err = cl.OpenApp(); err != nil {
+		log.Errorf("Failed to refresh app info: %v", err)
+	}
 
 	dbc, err := db.Connect(db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
@@ -216,71 +220,10 @@ func (svc *Service) UnFollow(user models.User) error {
 	}
 
 	us := goinsta.User{
-		ID:                         user.ID,
-		Username:                   user.UserName,
-		FullName:                   "",
-		Biography:                  "",
-		ProfilePicURL:              "",
-		Email:                      "",
-		PhoneNumber:                "",
-		IsBusiness:                 false,
-		Gender:                     0,
-		ProfilePicID:               "",
-		HasAnonymousProfilePicture: false,
-		IsPrivate:                  false,
-		IsUnpublished:              false,
-		AllowedCommenterType:       "",
-		IsVerified:                 false,
-		MediaCount:                 0,
-		FollowerCount:              0,
-		FollowingCount:             0,
-		FollowingTagCount:          0,
-		MutualFollowersID:          nil,
-		ProfileContext:             "",
-		GeoMediaCount:              0,
-		ExternalURL:                "",
-		HasBiographyTranslation:    false,
-		ExternalLynxURL:            "",
-		BiographyWithEntities: struct {
-			RawText  string        `json:"raw_text"`
-			Entities []interface{} `json:"entities"`
-		}{},
-		UsertagsCount:                0,
-		HasChaining:                  false,
-		IsFavorite:                   false,
-		IsFavoriteForStories:         false,
-		IsFavoriteForHighlights:      false,
-		CanBeReportedAsFraud:         false,
-		ShowShoppableFeed:            false,
-		ShoppablePostsCount:          0,
-		ReelAutoArchive:              "",
-		HasHighlightReels:            false,
-		PublicEmail:                  "",
-		PublicPhoneNumber:            "",
-		PublicPhoneCountryCode:       "",
-		ContactPhoneNumber:           "",
-		CityID:                       0,
-		CityName:                     "",
-		AddressStreet:                "",
-		DirectMessaging:              "",
-		Latitude:                     0,
-		Longitude:                    0,
-		Category:                     "",
-		BusinessContactMethod:        "",
-		IncludeDirectBlacklistStatus: false,
-		HdProfilePicURLInfo:          goinsta.PicURLInfo{},
-		HdProfilePicVersions:         nil,
-		School:                       goinsta.School{},
-		Byline:                       "",
-		SocialContext:                "",
-		SearchSocialContext:          "",
-		MutualFollowersCount:         0,
-		LatestReelMedia:              0,
-		IsCallToActionEnabled:        false,
-		FbPageCallToActionID:         "",
-		Zip:                          "",
-		Friendship:                   goinsta.Friendship{},
+		ID:       user.ID,
+		Username: user.UserName,
 	}
+
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Unfollow(); err != nil {
@@ -299,71 +242,10 @@ func (svc *Service) Follow(user models.User) error {
 	}
 
 	us := goinsta.User{
-		ID:                         user.ID,
-		Username:                   user.UserName,
-		FullName:                   "",
-		Biography:                  "",
-		ProfilePicURL:              "",
-		Email:                      "",
-		PhoneNumber:                "",
-		IsBusiness:                 false,
-		Gender:                     0,
-		ProfilePicID:               "",
-		HasAnonymousProfilePicture: false,
-		IsPrivate:                  false,
-		IsUnpublished:              false,
-		AllowedCommenterType:       "",
-		IsVerified:                 false,
-		MediaCount:                 0,
-		FollowerCount:              0,
-		FollowingCount:             0,
-		FollowingTagCount:          0,
-		MutualFollowersID:          nil,
-		ProfileContext:             "",
-		GeoMediaCount:              0,
-		ExternalURL:                "",
-		HasBiographyTranslation:    false,
-		ExternalLynxURL:            "",
-		BiographyWithEntities: struct {
-			RawText  string        `json:"raw_text"`
-			Entities []interface{} `json:"entities"`
-		}{},
-		UsertagsCount:                0,
-		HasChaining:                  false,
-		IsFavorite:                   false,
-		IsFavoriteForStories:         false,
-		IsFavoriteForHighlights:      false,
-		CanBeReportedAsFraud:         false,
-		ShowShoppableFeed:            false,
-		ShoppablePostsCount:          0,
-		ReelAutoArchive:              "",
-		HasHighlightReels:            false,
-		PublicEmail:                  "",
-		PublicPhoneNumber:            "",
-		PublicPhoneCountryCode:       "",
-		ContactPhoneNumber:           "",
-		CityID:                       0,
-		CityName:                     "",
-		AddressStreet:                "",
-		DirectMessaging:              "",
-		Latitude:                     0,
-		Longitude:                    0,
-		Category:                     "",
-		BusinessContactMethod:        "",
-		IncludeDirectBlacklistStatus: false,
-		HdProfilePicURLInfo:          goinsta.PicURLInfo{},
-		HdProfilePicVersions:         nil,
-		School:                       goinsta.School{},
-		Byline:                       "",
-		SocialContext:                "",
-		SearchSocialContext:          "",
-		MutualFollowersCount:         0,
-		LatestReelMedia:              0,
-		IsCallToActionEnabled:        false,
-		FbPageCallToActionID:         "",
-		Zip:                          "",
-		Friendship:                   goinsta.Friendship{},
+		ID:       user.ID,
+		Username: user.UserName,
 	}
+
 	us.SetInstagram(svc.instagram.client)
 
 	if err := us.Follow(); err != nil {
@@ -486,7 +368,7 @@ LOOP:
 				continue
 			}
 
-			if err := u.Block(); err != nil {
+			if err := u.Block(false); err != nil {
 				log.Errorf("failed to block follower [%s]: %v", u.Username, err)
 				errsNum++
 
@@ -623,7 +505,7 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, err
 
 	for svc.instagram.client.Account.Followers().Next() {
 		for i := range svc.instagram.client.Account.Followers().Users {
-			svc.processUser(ctx, &processWG, &svc.instagram.client.Account.Followers().Users[i], processResultChan)
+			svc.processUser(ctx, &processWG, svc.instagram.client.Account.Followers().Users[i], processResultChan)
 		}
 	}
 
