@@ -99,13 +99,13 @@ func twoFactorCode() (string, error) {
 	return getPrompt(ask, key)
 }
 
-func getPrompt(ask string, key string) (string, error) {
+func getPrompt(ask, key string) (string, error) {
 	ui := &input.UI{
 		Writer: os.Stdout,
 		Reader: os.Stdin,
 	}
 
-	input, err := ui.Ask(ask,
+	in, err := ui.Ask(ask,
 		&input.Options{
 			Default:     "",
 			Loop:        true,
@@ -129,7 +129,7 @@ func getPrompt(ask string, key string) (string, error) {
 		return "", fmt.Errorf("%s input: %w", key, err)
 	}
 
-	return input, nil
+	return in, nil
 }
 
 func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
