@@ -36,15 +36,30 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 		return nil, fmt.Errorf("password: %w", err)
 	}
 
-	cl = goinsta.New(uname, pwd)
+	cl, err = login(uname, pwd)
+	if err != nil {
+		return nil, fmt.Errorf("failed to login: %w", err)
+	}
 
-	if err = cl.Login(); err != nil {
+	if cfg.StoreSession() {
+		if err = cl.Export(sessFile); err != nil {
+			log.Errorf("save session: %v", err)
+		}
+	}
+
+	return cl, nil
+}
+
+func login(uname, pwd string) (*goinsta.Instagram, error) {
+	cl := goinsta.New(uname, pwd)
+
+	if err := cl.Login(); err != nil {
 		switch {
 		case errors.Is(err, goinsta.ErrChallengeRequired):
 			var chErr *goinsta.ChallengeError
 
 			if !errors.As(err, &chErr) {
-				return nil, fmt.Errorf("failed to login: %w", err)
+				return nil, fmt.Errorf("failed to get challenge details: %w", err)
 			}
 
 			cl, err = challenge(cl, chErr.Challenge.APIPath)
@@ -63,12 +78,6 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 			if err = cl.TwoFactorInfo.Login2FA(code); err != nil {
 				return nil, fmt.Errorf("login 2fa: %w", err)
 			}
-		}
-	}
-
-	if cfg.StoreSession() {
-		if err = cl.Export(sessFile); err != nil {
-			log.Errorf("save session: %v", err)
 		}
 	}
 
