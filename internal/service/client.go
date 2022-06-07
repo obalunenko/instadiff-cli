@@ -28,7 +28,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	if cl, err = goinsta.Import(sessFile); err == nil {
 		log.Infof("session imported from file: %s", sessFile)
 
-		return cl, cl.OpenApp()
+		return cl, nil
 	}
 
 	pwd, err := password()
@@ -53,13 +53,14 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 			}
 
 		case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
-			code, err := twoFactorCode()
+			var code string
+
+			code, err = twoFactorCode()
 			if err != nil {
 				return nil, fmt.Errorf("2fa ocde: %w", err)
 			}
 
-			err2FA := cl.TwoFactorInfo.Login2FA(code)
-			if err2FA != nil {
+			if err = cl.TwoFactorInfo.Login2FA(code); err != nil {
 				return nil, fmt.Errorf("login 2fa: %w", err)
 			}
 		}
@@ -78,78 +79,33 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 var ErrEmptyInput = errors.New("should not be empty")
 
 func username() (string, error) {
-	ui := &input.UI{
-		Writer: os.Stdout,
-		Reader: os.Stdin,
-	}
+	ask := "What is your username?"
+	key := "username"
 
-	name, err := ui.Ask("What is your username?",
-		&input.Options{
-			Default:     "",
-			Loop:        true,
-			Required:    true,
-			HideDefault: false,
-			HideOrder:   false,
-			Hide:        false,
-			Mask:        false,
-			MaskDefault: false,
-			MaskVal:     "",
-			ValidateFunc: func(s string) error {
-				s = strings.TrimSpace(s)
-				if s == "" {
-					return ErrEmptyInput
-				}
-
-				return nil
-			},
-		})
-	if err != nil {
-		return "", fmt.Errorf("username input: %w", err)
-	}
-
-	return name, nil
+	return getPrompt(ask, key)
 }
 
 func password() (string, error) {
-	ui := &input.UI{
-		Writer: os.Stdout,
-		Reader: os.Stdin,
-	}
+	ask := "What is your password?"
+	key := "password"
 
-	pwd, err := ui.Ask("What is your password?",
-		&input.Options{
-			Default:     "",
-			Loop:        true,
-			Required:    true,
-			HideDefault: false,
-			HideOrder:   false,
-			Hide:        false,
-			Mask:        false,
-			MaskDefault: false,
-			MaskVal:     "",
-			ValidateFunc: func(s string) error {
-				s = strings.TrimSpace(s)
-				if s == "" {
-					return ErrEmptyInput
-				}
-
-				return nil
-			},
-		})
-	if err != nil {
-		return "", fmt.Errorf("password input: %w", err)
-	}
-
-	return pwd, nil
+	return getPrompt(ask, key)
 }
 
 func twoFactorCode() (string, error) {
+	ask := "What is your two factor code?"
+	key := "2fa code"
+
+	return getPrompt(ask, key)
+}
+
+func getPrompt(ask string, key string) (string, error) {
 	ui := &input.UI{
 		Writer: os.Stdout,
 		Reader: os.Stdin,
 	}
 
-	code, err := ui.Ask("What is your two factor code?",
+	input, err := ui.Ask(ask,
 		&input.Options{
 			Default:     "",
 			Loop:        true,
@@ -170,10 +126,10 @@ func twoFactorCode() (string, error) {
 			},
 		})
 	if err != nil {
-		return "", fmt.Errorf("two factor code input: %w", err)
+		return "", fmt.Errorf("%s input: %w", key, err)
 	}
 
-	return code, nil
+	return input, nil
 }
 
 func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
