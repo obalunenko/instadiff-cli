@@ -9,7 +9,7 @@ require (
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
 	github.com/obalunenko/coverbadger v1.2.0
-	github.com/segmentio/golines v0.9.0
+	github.com/segmentio/golines v0.10.0
 	github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
@@ -93,7 +93,7 @@ require (
 	github.com/chavacava/garif v0.0.0-20220316182200-5cad0b5181d4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/daixiang0/gci v0.3.3 // indirect
-	github.com/dave/dst v0.26.2 // indirect
+	github.com/dave/dst v0.27.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
 	github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb // indirect
@@ -262,7 +262,7 @@ require (
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	gocloud.dev v0.24.0 // indirect
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect

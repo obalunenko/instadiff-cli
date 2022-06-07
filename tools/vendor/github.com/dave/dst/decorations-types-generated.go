@@ -242,6 +242,11 @@ type ForStmtDecorations struct {
 // 	} /*End*/
 //
 // 	/*Start*/
+// 	func /*Func*/ TP /*Name*/ [P any] /*TypeParams*/ (a int) /*Params*/ (b P) /*Results*/ {
+// 		return b
+// 	} /*End*/
+//
+// 	/*Start*/
 // 	func /*Func*/ (a *A) /*Recv*/ e /*Name*/ (d, e int) /*Params*/ {
 // 		return
 // 	} /*End*/
@@ -253,11 +258,12 @@ type ForStmtDecorations struct {
 //
 type FuncDeclDecorations struct {
 	NodeDecs
-	Func    Decorations
-	Recv    Decorations
-	Name    Decorations
-	Params  Decorations
-	Results Decorations
+	Func       Decorations
+	Recv       Decorations
+	Name       Decorations
+	TypeParams Decorations
+	Params     Decorations
+	Results    Decorations
 }
 
 // FuncLitDecorations holds decorations for FuncLit:
@@ -275,8 +281,9 @@ type FuncLitDecorations struct {
 //
 type FuncTypeDecorations struct {
 	NodeDecs
-	Func   Decorations
-	Params Decorations
+	Func       Decorations
+	TypeParams Decorations
+	Params     Decorations
 }
 
 // GenDeclDecorations holds decorations for GenDecl:
@@ -366,6 +373,17 @@ type IndexExprDecorations struct {
 	X      Decorations
 	Lbrack Decorations
 	Index  Decorations
+}
+
+// IndexListExprDecorations holds decorations for IndexListExpr:
+//
+// 	var T4 /*Start*/ T3 /*X*/ [ /*Lbrack*/ int, string /*Indices*/] /*End*/
+//
+type IndexListExprDecorations struct {
+	NodeDecs
+	X       Decorations
+	Lbrack  Decorations
+	Indices Decorations
 }
 
 // InterfaceTypeDecorations holds decorations for InterfaceType:
@@ -577,9 +595,14 @@ type TypeAssertExprDecorations struct {
 // 		/*Start*/ T2 = /*Name*/ T1 /*End*/
 // 	)
 //
+// 	type (
+// 		/*Start*/ T3 /*Name*/ [P any, Q any] /*TypeParams*/ []P /*End*/
+// 	)
+//
 type TypeSpecDecorations struct {
 	NodeDecs
-	Name Decorations
+	Name       Decorations
+	TypeParams Decorations
 }
 
 // TypeSwitchStmtDecorations holds decorations for TypeSwitchStmt:

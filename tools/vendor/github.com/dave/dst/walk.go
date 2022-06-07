@@ -99,6 +99,10 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.X)
 		Walk(v, n.Index)
 
+	case *IndexListExpr:
+		Walk(v, n.X)
+		walkExprList(v, n.Indices)
+
 	case *SliceExpr:
 		Walk(v, n.X)
 		if n.Low != nil {
@@ -146,6 +150,9 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.Fields)
 
 	case *FuncType:
+		if n.TypeParams != nil {
+			Walk(v, n.TypeParams)
+		}
 		if n.Params != nil {
 			Walk(v, n.Params)
 		}
@@ -285,6 +292,9 @@ func Walk(v Visitor, node Node) {
 
 	case *TypeSpec:
 		Walk(v, n.Name)
+		if n.TypeParams != nil {
+			Walk(v, n.TypeParams)
+		}
 		Walk(v, n.Type)
 
 	case *BadDecl:

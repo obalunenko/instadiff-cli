@@ -364,8 +364,8 @@ github.com/daixiang0/gci/pkg/gci/imports
 github.com/daixiang0/gci/pkg/gci/sections
 github.com/daixiang0/gci/pkg/gci/specificity
 github.com/daixiang0/gci/pkg/io
-# github.com/dave/dst v0.26.2
-## explicit; go 1.14
+# github.com/dave/dst v0.27.0
+## explicit; go 1.18
 github.com/dave/dst
 github.com/dave/dst/decorator
 github.com/dave/dst/decorator/resolver
@@ -1026,8 +1026,8 @@ github.com/sanposhiho/wastedassign/v2
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/cwe
 github.com/securego/gosec/v2/rules
-# github.com/segmentio/golines v0.9.0
-## explicit; go 1.17
+# github.com/segmentio/golines v0.10.0
+## explicit; go 1.18
 github.com/segmentio/golines
 # github.com/sergi/go-diff v1.2.0
 ## explicit; go 1.12
@@ -1209,7 +1209,7 @@ gocloud.dev/secrets/awskms
 gocloud.dev/secrets/azurekeyvault
 gocloud.dev/secrets/driver
 gocloud.dev/secrets/gcpkms
-# golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+# golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
 ## explicit; go 1.17
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/cast5

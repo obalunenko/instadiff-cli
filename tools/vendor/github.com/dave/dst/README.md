@@ -696,3 +696,11 @@ This package is well tested and used in many projects. The API should be conside
 
 Feel free to create an [issue](https://github.com/dave/dst/issues) or chat in the 
 [#dst](https://gophers.slack.com/messages/CCVL24MTQ) Gophers Slack channel.
+
+## Contributing
+
+For further developing or contributing to `dst`, check out [these notes](https://github.com/dave/dst/blob/master/contributing.md).
+
+## Special thanks
+
+Thanks very much to [hawkinsw](https://github.com/hawkinsw) for taking on the task of adding generics compatibility to `dst`.
