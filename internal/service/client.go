@@ -53,32 +53,35 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 func login(uname, pwd string) (*goinsta.Instagram, error) {
 	cl := goinsta.New(uname, pwd)
 
-	if err := cl.Login(); err != nil {
-		switch {
-		case errors.Is(err, goinsta.ErrChallengeRequired):
-			var chErr *goinsta.ChallengeError
+	err := cl.Login()
 
-			if !errors.As(err, &chErr) {
-				return nil, fmt.Errorf("failed to get challenge details: %w", err)
-			}
+	switch {
+	case errors.Is(err, nil):
+		return cl, nil
+	case errors.Is(err, goinsta.ErrChallengeRequired):
+		var chErr *goinsta.ChallengeError
 
-			cl, err = challenge(cl, chErr.Challenge.APIPath)
-			if err != nil {
-				return nil, fmt.Errorf("challenge: %w", err)
-			}
-
-		case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
-			var code string
-
-			code, err = twoFactorCode()
-			if err != nil {
-				return nil, fmt.Errorf("2fa ocde: %w", err)
-			}
-
-			if err = cl.TwoFactorInfo.Login2FA(code); err != nil {
-				return nil, fmt.Errorf("login 2fa: %w", err)
-			}
+		if !errors.As(err, &chErr) {
+			return nil, fmt.Errorf("failed to get challenge details: %w", err)
 		}
+
+		cl, err = challenge(cl, chErr.Challenge.APIPath)
+		if err != nil {
+			return nil, fmt.Errorf("challenge: %w", err)
+		}
+	case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
+		var code string
+
+		code, err = twoFactorCode()
+		if err != nil {
+			return nil, fmt.Errorf("2fa ocde: %w", err)
+		}
+
+		if err = cl.TwoFactorInfo.Login2FA(code); err != nil {
+			return nil, fmt.Errorf("login 2fa: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("unexpected: %w", err)
 	}
 
 	return cl, nil
@@ -146,33 +149,12 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 		return nil, fmt.Errorf("process challenge: %w", err)
 	}
 
-	ui := &input.UI{
-		Writer: os.Stdout,
-		Reader: os.Stdin,
-	}
+	ask := "What is SMS code for instagram?"
+	key := "SMS code"
 
-	code, err := ui.Ask("What is SMS code for instagram?",
-		&input.Options{
-			Default:     "",
-			Loop:        true,
-			Required:    true,
-			HideDefault: false,
-			HideOrder:   false,
-			Hide:        false,
-			Mask:        false,
-			MaskDefault: false,
-			MaskVal:     "",
-			ValidateFunc: func(s string) error {
-				s = strings.TrimSpace(s)
-				if s == "" {
-					return ErrEmptyInput
-				}
-
-				return nil
-			},
-		})
+	code, err := getPrompt(ask, key)
 	if err != nil {
-		return nil, fmt.Errorf("process input: %w", err)
+		return nil, fmt.Errorf("get prompt: %w", err)
 	}
 
 	if err = cl.Challenge.SendSecurityCode(code); err != nil {
