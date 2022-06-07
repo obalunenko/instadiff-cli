@@ -79,6 +79,10 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 
 	log.Printf("logged in as %s \n", cl.Account.Username)
 
+	if err = cl.OpenApp(); err != nil {
+		log.Errorf("Failed to refresh app info: %v", err)
+	}
+
 	dbc, err := db.Connect(db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
 		MongoParams: db.MongoParams{
