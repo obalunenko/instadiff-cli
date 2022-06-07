@@ -27,7 +27,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: ["ubuntu-20.04"]
-        go: ["1.17"]
+        go: ["1.18"]
     runs-on: ${{ matrix.os }}
     name: Run Tests
     steps:
@@ -76,7 +76,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: ["ubuntu-20.04"]
-        go: ["1.17"]
+        go: ["1.18"]
     runs-on: ${{ matrix.os }}
     name: Run linters
     steps:
@@ -129,7 +129,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: ["ubuntu-20.04"]
-        go: ["1.17"]
+        go: ["1.18"]
     runs-on: ${{ matrix.os }}
     name: Quality reports
     steps:
@@ -199,7 +199,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: ["ubuntu-20.04"]
-        go: ["1.17"]
+        go: ["1.18"]
     runs-on: ${{ matrix.os }}
     name: Build
     steps:

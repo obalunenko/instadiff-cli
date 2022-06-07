@@ -1,6 +1,6 @@
 module github.com/obalunenko/instadiff-cli/tools
 
-go 1.17
+go 1.18
 
 require (
 	github.com/axw/gocov v1.1.0

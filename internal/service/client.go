@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TheForgotten69/goinsta/v2"
+	"github.com/Davincible/goinsta"
 	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
@@ -28,7 +28,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	if cl, err = goinsta.Import(sessFile); err == nil {
 		log.Infof("session imported from file: %s", sessFile)
 
-		return cl, nil
+		return cl, cl.OpenApp()
 	}
 
 	pwd, err := password()
@@ -39,15 +39,29 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	cl = goinsta.New(uname, pwd)
 
 	if err = cl.Login(); err != nil {
-		var chErr *goinsta.ChallengeError
+		switch {
+		case errors.Is(err, goinsta.ErrChallengeRequired):
+			var chErr *goinsta.ChallengeError
 
-		if !errors.As(err, &chErr) {
-			return nil, fmt.Errorf("failed to login: %w", err)
-		}
+			if !errors.As(err, &chErr) {
+				return nil, fmt.Errorf("failed to login: %w", err)
+			}
 
-		cl, err = challenge(cl, chErr.Challenge.APIPath)
-		if err != nil {
-			return nil, fmt.Errorf("challenge: %w", err)
+			cl, err = challenge(cl, chErr.Challenge.APIPath)
+			if err != nil {
+				return nil, fmt.Errorf("challenge: %w", err)
+			}
+
+		case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
+			code, err := twoFactorCode()
+			if err != nil {
+				return nil, fmt.Errorf("2fa ocde: %w", err)
+			}
+
+			err2FA := cl.TwoFactorInfo.Login2FA(code)
+			if err2FA != nil {
+				return nil, fmt.Errorf("login 2fa: %w", err)
+			}
 		}
 	}
 
@@ -129,8 +143,41 @@ func password() (string, error) {
 	return pwd, nil
 }
 
+func twoFactorCode() (string, error) {
+	ui := &input.UI{
+		Writer: os.Stdout,
+		Reader: os.Stdin,
+	}
+
+	code, err := ui.Ask("What is your two factor code?",
+		&input.Options{
+			Default:     "",
+			Loop:        true,
+			Required:    true,
+			HideDefault: false,
+			HideOrder:   false,
+			Hide:        false,
+			Mask:        false,
+			MaskDefault: false,
+			MaskVal:     "",
+			ValidateFunc: func(s string) error {
+				s = strings.TrimSpace(s)
+				if s == "" {
+					return ErrEmptyInput
+				}
+
+				return nil
+			},
+		})
+	if err != nil {
+		return "", fmt.Errorf("two factor code input: %w", err)
+	}
+
+	return code, nil
+}
+
 func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) {
-	if err := cl.Challenge.Process(chURL); err != nil {
+	if err := cl.Challenge.ProcessOld(chURL); err != nil {
 		return nil, fmt.Errorf("process challenge: %w", err)
 	}
 
