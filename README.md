@@ -131,3 +131,15 @@ Create a json file with configuration and pass the path to it via flag `--config
 ```shell script
 instadiff-cli --config_path ".config.json" [command]
 ```
+
+## Develop
+
+To start developing - create the fork of repository, make changes and open PR to the origin.
+
+### Build
+
+Run `make build` command in the root of repository to compile the binary and test locally changes.
+
+### Testing
+
+Run `make test` command in the root of repository to execute unit tests.
