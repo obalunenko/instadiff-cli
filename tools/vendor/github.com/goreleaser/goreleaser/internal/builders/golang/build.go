@@ -19,6 +19,7 @@ import (
 	api "github.com/goreleaser/goreleaser/pkg/build"
 	"github.com/goreleaser/goreleaser/pkg/config"
 	"github.com/goreleaser/goreleaser/pkg/context"
+	"github.com/imdario/mergo"
 )
 
 // Default builder instance.
@@ -37,6 +38,9 @@ type Builder struct{}
 func (*Builder) WithDefaults(build config.Build) (config.Build, error) {
 	if build.GoBinary == "" {
 		build.GoBinary = "go"
+	}
+	if build.Command == "" {
+		build.Command = "build"
 	}
 	if build.Dir == "" {
 		build.Dir = "."
@@ -60,45 +64,86 @@ func (*Builder) WithDefaults(build config.Build) (config.Build, error) {
 		if len(build.Gomips) == 0 {
 			build.Gomips = []string{"hardfloat"}
 		}
+		if len(build.Goamd64) == 0 {
+			build.Goamd64 = []string{"v1"}
+		}
 		targets, err := buildtarget.List(build)
-		build.Targets = targets
 		if err != nil {
 			return build, err
 		}
+		build.Targets = targets
+	} else {
+		targets := map[string]bool{}
+		for _, target := range build.Targets {
+			if target == go118FirstClassTargetsName ||
+				target == goStableFirstClassTargetsName {
+				for _, t := range go118FirstClassTargets {
+					targets[t] = true
+				}
+				continue
+			}
+			if strings.HasSuffix(target, "_amd64") {
+				targets[target+"_v1"] = true
+				continue
+			}
+			if strings.HasSuffix(target, "_arm") {
+				targets[target+"_6"] = true
+				continue
+			}
+			if strings.HasSuffix(target, "_mips") ||
+				strings.HasSuffix(target, "_mips64") ||
+				strings.HasSuffix(target, "_mipsle") ||
+				strings.HasSuffix(target, "_mips64le") {
+				targets[target+"_hardfloat"] = true
+				continue
+			}
+			targets[target] = true
+		}
+		build.Targets = keys(targets)
 	}
 	return build, nil
 }
 
+func keys(m map[string]bool) []string {
+	result := make([]string, 0, len(m))
+	for k := range m {
+		result = append(result, k)
+	}
+	return result
+}
+
+const (
+	go118FirstClassTargetsName    = "go_118_first_class"
+	goStableFirstClassTargetsName = "go_first_class"
+)
+
+// go tool dist list -json | jq -r '.[] | select(.FirstClass) | [.GOOS, .GOARCH] | @tsv'
+var go118FirstClassTargets = []string{
+	"darwin_amd64_v1",
+	"darwin_arm64",
+	"linux_386",
+	"linux_amd64_v1",
+	"linux_arm_6",
+	"linux_arm64",
+	"windows_386",
+	"windows_amd64_v1",
+}
+
 // Build builds a golang build.
 func (*Builder) Build(ctx *context.Context, build config.Build, options api.Options) error {
-	tpl := tmpl.New(ctx)
-	if build.Main != "" {
-		m, err := tpl.Apply(build.Main)
-		if err != nil {
-			return err
-		}
-		build.Main = m
-	}
-	if build.UnproxiedMain != "" {
-		m, err := tpl.Apply(build.UnproxiedMain)
-		if err != nil {
-			return err
-		}
-		build.UnproxiedMain = m
-	}
-
 	if err := checkMain(build); err != nil {
 		return err
 	}
 
 	artifact := &artifact.Artifact{
-		Type:   artifact.Binary,
-		Path:   options.Path,
-		Name:   options.Name,
-		Goos:   options.Goos,
-		Goarch: options.Goarch,
-		Goarm:  options.Goarm,
-		Gomips: options.Gomips,
+		Type:    artifact.Binary,
+		Path:    options.Path,
+		Name:    options.Name,
+		Goos:    options.Goos,
+		Goarch:  options.Goarch,
+		Goamd64: options.Goamd64,
+		Goarm:   options.Goarm,
+		Gomips:  options.Gomips,
 		Extra: map[string]interface{}{
 			artifact.ExtraBinary: strings.TrimSuffix(filepath.Base(options.Path), options.Ext),
 			artifact.ExtraExt:    options.Ext,
@@ -114,6 +159,7 @@ func (*Builder) Build(ctx *context.Context, build config.Build, options api.Opti
 		"GOARM="+options.Goarm,
 		"GOMIPS="+options.Gomips,
 		"GOMIPS64="+options.Gomips,
+		"GOAMD64="+options.Goamd64,
 	)
 
 	cmd, err := buildGoBuildLine(ctx, build, options, artifact, env)
@@ -145,29 +191,60 @@ func (*Builder) Build(ctx *context.Context, build config.Build, options api.Opti
 	return nil
 }
 
+func withOverrides(ctx *context.Context, build config.Build, options api.Options) (config.BuildDetails, error) {
+	optsTarget := options.Goos + options.Goarch + options.Goarm + options.Gomips + options.Goamd64
+	for _, o := range build.BuildDetailsOverrides {
+		overrideTarget, err := tmpl.New(ctx).Apply(o.Goos + o.Goarch + o.Gomips + o.Goarm + o.Goamd64)
+		if err != nil {
+			return build.BuildDetails, err
+		}
+
+		if optsTarget == overrideTarget {
+			dets := config.BuildDetails{
+				Ldflags:  build.BuildDetails.Ldflags,
+				Tags:     build.BuildDetails.Tags,
+				Flags:    build.BuildDetails.Flags,
+				Asmflags: build.BuildDetails.Asmflags,
+				Gcflags:  build.BuildDetails.Gcflags,
+			}
+			if err := mergo.Merge(&dets, o.BuildDetails, mergo.WithOverride); err != nil {
+				return build.BuildDetails, err
+			}
+			log.WithField("dets", dets).Info("will use")
+			return dets, nil
+		}
+	}
+	return build.BuildDetails, nil
+}
+
 func buildGoBuildLine(ctx *context.Context, build config.Build, options api.Options, artifact *artifact.Artifact, env []string) ([]string, error) {
-	cmd := []string{build.GoBinary, "build"}
-	flags, err := processFlags(ctx, artifact, env, build.Flags, "")
+	cmd := []string{build.GoBinary, build.Command}
+
+	details, err := withOverrides(ctx, build, options)
+	if err != nil {
+		return cmd, err
+	}
+	flags, err := processFlags(ctx, artifact, env, details.Flags, "")
 	if err != nil {
 		return cmd, err
 	}
 	cmd = append(cmd, flags...)
 
-	asmflags, err := processFlags(ctx, artifact, env, build.Asmflags, "-asmflags=")
+	asmflags, err := processFlags(ctx, artifact, env, details.Asmflags, "-asmflags=")
 	if err != nil {
 		return cmd, err
 	}
 	cmd = append(cmd, asmflags...)
 
-	gcflags, err := processFlags(ctx, artifact, env, build.Gcflags, "-gcflags=")
+	gcflags, err := processFlags(ctx, artifact, env, details.Gcflags, "-gcflags=")
 	if err != nil {
 		return cmd, err
 	}
 	cmd = append(cmd, gcflags...)
 
 	// tags is not a repeatable flag
-	if len(build.Tags) > 0 {
-		tags, err := processFlags(ctx, artifact, env, build.Tags, "")
+	if len(details.Tags) > 0 {
+		tags, err := processFlags(ctx, artifact, env, details.Tags, "")
 		if err != nil {
 			return cmd, err
 		}
@@ -175,9 +252,9 @@ func buildGoBuildLine(ctx *context.Context, build config.Build, options api.Opti
 	}
 
 	// ldflags is not a repeatable flag
-	if len(build.Ldflags) > 0 {
+	if len(details.Ldflags) > 0 {
 		// flag prefix is skipped because ldflags need to output a single string
-		ldflags, err := processFlags(ctx, artifact, env, build.Ldflags, "")
+		ldflags, err := processFlags(ctx, artifact, env, details.Ldflags, "")
 		if err != nil {
 			return cmd, err
 		}
@@ -219,6 +296,9 @@ func run(ctx *context.Context, command, env []string, dir string) error {
 }
 
 func checkMain(build config.Build) error {
+	if build.NoMainCheck {
+		return nil
+	}
 	main := build.Main
 	if build.UnproxiedMain != "" {
 		main = build.UnproxiedMain

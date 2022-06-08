@@ -72,7 +72,7 @@ func newReleaseCmd() *releaseCmd {
 	}
 
 	cmd.Flags().StringVarP(&root.opts.config, "config", "f", "", "Load configuration from file")
-	cmd.Flags().StringVar(&root.opts.releaseNotesFile, "release-notes", "", "Load custom release notes from a markdown file")
+	cmd.Flags().StringVar(&root.opts.releaseNotesFile, "release-notes", "", "Load custom release notes from a markdown file (will skip GoReleaser changelog generation)")
 	cmd.Flags().StringVar(&root.opts.releaseHeaderFile, "release-header", "", "Load custom release notes header from a markdown file")
 	cmd.Flags().StringVar(&root.opts.releaseFooterFile, "release-footer", "", "Load custom release notes footer from a markdown file")
 	cmd.Flags().StringVar(&root.opts.releaseNotesTmpl, "release-notes-tmpl", "", "Load custom release notes from a templated markdown file (overrides --release-notes)")
@@ -133,7 +133,7 @@ func setupReleaseContext(ctx *context.Context, options releaseOpts) *context.Con
 	ctx.ReleaseFooterFile = options.releaseFooterFile
 	ctx.ReleaseFooterTmpl = options.releaseFooterTmpl
 	ctx.Snapshot = options.snapshot
-	if options.autoSnapshot && git.CheckDirty() != nil {
+	if options.autoSnapshot && git.CheckDirty(ctx) != nil {
 		log.Info("git repo is dirty and --auto-snapshot is set, implying --snapshot")
 		ctx.Snapshot = true
 	}

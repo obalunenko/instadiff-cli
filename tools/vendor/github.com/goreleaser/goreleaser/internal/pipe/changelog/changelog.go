@@ -14,7 +14,6 @@ import (
 	"github.com/goreleaser/goreleaser/internal/client"
 	"github.com/goreleaser/goreleaser/internal/git"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
-	"github.com/goreleaser/goreleaser/pkg/config"
 	"github.com/goreleaser/goreleaser/pkg/context"
 )
 
@@ -22,6 +21,19 @@ import (
 var ErrInvalidSortDirection = errors.New("invalid sort direction")
 
 const li = "* "
+
+type useChangelog string
+
+func (u useChangelog) formatable() bool {
+	return u != "github-native"
+}
+
+const (
+	useGit          = "git"
+	useGitHub       = "github"
+	useGitLab       = "gitlab"
+	useGitHubNative = "github-native"
+)
 
 // Pipe for checksums.
 type Pipe struct{}
@@ -37,7 +49,7 @@ func (Pipe) Run(ctx *context.Context) error {
 	}
 	ctx.ReleaseNotes = notes
 
-	if ctx.ReleaseNotes != "" {
+	if ctx.ReleaseNotesFile != "" || ctx.ReleaseNotesTmpl != "" {
 		return nil
 	}
 
@@ -60,53 +72,11 @@ func (Pipe) Run(ctx *context.Context) error {
 		return err
 	}
 
-	changelogStringJoiner := "\n"
-	if ctx.TokenType == context.TokenTypeGitLab || ctx.TokenType == context.TokenTypeGitea {
-		// We need two or more whitespace to let markdown interpret
-		// it as newline. See https://docs.gitlab.com/ee/user/markdown.html#newlines for details
-		log.Debug("is gitlab or gitea changelog")
-		changelogStringJoiner = "   \n"
+	changes, err := formatChangelog(ctx, entries)
+	if err != nil {
+		return err
 	}
-
-	changelogElements := []string{
-		"## Changelog",
-	}
-
-	if shouldGroup(ctx.Config.Changelog) {
-		log.Debug("grouping entries")
-		groups := ctx.Config.Changelog.Groups
-
-		sort.Slice(groups, func(i, j int) bool { return groups[i].Order < groups[j].Order })
-		for _, group := range groups {
-			items := make([]string, 0)
-			if group.Regexp == "" {
-				// If no regexp is provided, we purge all strikethrough entries and add remaining entries to the list
-				items = getAllNonEmpty(entries)
-				// clear array
-				entries = nil
-			} else {
-				regex, err := regexp.Compile(group.Regexp)
-				if err != nil {
-					return fmt.Errorf("failed to group into %q: %w", group.Title, err)
-				}
-				for i, entry := range entries {
-					match := regex.MatchString(entry)
-					if match {
-						items = append(items, li+entry)
-						// Striking out the matched entry
-						entries[i] = ""
-					}
-				}
-			}
-			if len(items) > 0 {
-				changelogElements = append(changelogElements, fmt.Sprintf("### %s", group.Title))
-				changelogElements = append(changelogElements, strings.Join(items, changelogStringJoiner))
-			}
-		}
-	} else {
-		log.Debug("not grouping entries")
-		changelogElements = append(changelogElements, strings.Join(getAllNonEmpty(entries), changelogStringJoiner))
-	}
+	changelogElements := []string{changes}
 
 	if header != "" {
 		changelogElements = append([]string{header}, changelogElements...)
@@ -125,11 +95,60 @@ func (Pipe) Run(ctx *context.Context) error {
 	return os.WriteFile(path, []byte(ctx.ReleaseNotes), 0o644) //nolint: gosec
 }
 
-func shouldGroup(cfg config.Changelog) bool {
-	return len(cfg.Groups) > 0 && cfg.Use != "github-native"
+func formatChangelog(ctx *context.Context, entries []string) (string, error) {
+	newLine := "\n"
+	if ctx.TokenType == context.TokenTypeGitLab || ctx.TokenType == context.TokenTypeGitea {
+		// We need two or more whitespace to let markdown interpret
+		// it as newline. See https://docs.gitlab.com/ee/user/markdown.html#newlines for details
+		log.Debug("is gitlab or gitea changelog")
+		newLine = "   \n"
+	}
+
+	if !useChangelog(ctx.Config.Changelog.Use).formatable() {
+		return strings.Join(entries, newLine), nil
+	}
+
+	result := []string{"## Changelog"}
+	if len(ctx.Config.Changelog.Groups) == 0 {
+		log.Debug("not grouping entries")
+		return strings.Join(append(result, filterAndPrefixItems(entries)...), newLine), nil
+	}
+
+	log.Debug("grouping entries")
+	groups := ctx.Config.Changelog.Groups
+
+	sort.Slice(groups, func(i, j int) bool { return groups[i].Order < groups[j].Order })
+	for _, group := range groups {
+		items := make([]string, 0)
+		if group.Regexp == "" {
+			// If no regexp is provided, we purge all strikethrough entries and add remaining entries to the list
+			items = filterAndPrefixItems(entries)
+			// clear array
+			entries = nil
+		} else {
+			regex, err := regexp.Compile(group.Regexp)
+			if err != nil {
+				return "", fmt.Errorf("failed to group into %q: %w", group.Title, err)
+			}
+			for i, entry := range entries {
+				match := regex.MatchString(entry)
+				if match {
+					items = append(items, li+entry)
+					// Striking out the matched entry
+					entries[i] = ""
+				}
+			}
+		}
+		if len(items) > 0 {
+			result = append(result, fmt.Sprintf("### %s", group.Title))
+			result = append(result, items...)
+		}
+	}
+
+	return strings.Join(result, newLine), nil
 }
 
-func getAllNonEmpty(ss []string) []string {
+func filterAndPrefixItems(ss []string) []string {
 	var r []string
 	for _, s := range ss {
 		if s != "" {
@@ -168,6 +187,9 @@ func buildChangelog(ctx *context.Context) ([]string, error) {
 	entries := strings.Split(log, "\n")
 	if lastLine := entries[len(entries)-1]; strings.TrimSpace(lastLine) == "" {
 		entries = entries[0 : len(entries)-1]
+	}
+	if !useChangelog(ctx.Config.Changelog.Use).formatable() {
+		return entries, nil
 	}
 	entries, err = filterEntries(ctx, entries)
 	if err != nil {
@@ -222,7 +244,7 @@ func getChangelog(ctx *context.Context, tag string) (string, error) {
 	prev := ctx.Git.PreviousTag
 	if prev == "" {
 		// get first commit
-		result, err := git.Clean(git.Run("rev-list", "--max-parents=0", "HEAD"))
+		result, err := git.Clean(git.Run(ctx, "rev-list", "--max-parents=0", "HEAD"))
 		if err != nil {
 			return "", err
 		}
@@ -241,15 +263,15 @@ func doGetChangelog(ctx *context.Context, prev, tag string) (string, error) {
 
 func getChangeloger(ctx *context.Context) (changeloger, error) {
 	switch ctx.Config.Changelog.Use {
-	case "git":
+	case useGit:
 		fallthrough
 	case "":
 		return gitChangeloger{}, nil
-	case "github":
+	case useGitHub:
 		fallthrough
-	case "gitlab":
+	case useGitLab:
 		return newSCMChangeloger(ctx)
-	case "github-native":
+	case useGitHubNative:
 		return newGithubChangeloger(ctx)
 	default:
 		return nil, fmt.Errorf("invalid changelog.use: %q", ctx.Config.Changelog.Use)
@@ -261,8 +283,11 @@ func newGithubChangeloger(ctx *context.Context) (changeloger, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := git.ExtractRepoFromConfig()
+	repo, err := git.ExtractRepoFromConfig(ctx)
 	if err != nil {
+		return nil, err
+	}
+	if err := repo.CheckSCM(); err != nil {
 		return nil, err
 	}
 	return &githubNativeChangeloger{
@@ -279,8 +304,11 @@ func newSCMChangeloger(ctx *context.Context) (changeloger, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo, err := git.ExtractRepoFromConfig()
+	repo, err := git.ExtractRepoFromConfig(ctx)
 	if err != nil {
+		return nil, err
+	}
+	if err := repo.CheckSCM(); err != nil {
 		return nil, err
 	}
 	return &scmChangeloger{
@@ -294,17 +322,25 @@ func newSCMChangeloger(ctx *context.Context) (changeloger, error) {
 
 func loadContent(ctx *context.Context, fileName, tmplName string) (string, error) {
 	if tmplName != "" {
-		log.Debugf("loading template %s", tmplName)
+		log.Debugf("loading template %q", tmplName)
 		content, err := loadFromFile(tmplName)
 		if err != nil {
 			return "", err
 		}
-		return tmpl.New(ctx).Apply(content)
+		content, err = tmpl.New(ctx).Apply(content)
+		if strings.TrimSpace(content) == "" && err == nil {
+			log.Warnf("loaded %q, but it evaluates to an empty string", tmplName)
+		}
+		return content, err
 	}
 
 	if fileName != "" {
-		log.Debugf("loading file %s", fileName)
-		return loadFromFile(fileName)
+		log.Debugf("loading file %q", fileName)
+		content, err := loadFromFile(fileName)
+		if strings.TrimSpace(content) == "" && err == nil {
+			log.Warnf("loaded %q, but it is empty", fileName)
+		}
+		return content, err
 	}
 
 	return "", nil
@@ -318,14 +354,14 @@ type gitChangeloger struct{}
 
 var validSHA1 = regexp.MustCompile(`^[a-fA-F0-9]{40}$`)
 
-func (g gitChangeloger) Log(_ *context.Context, prev, current string) (string, error) {
+func (g gitChangeloger) Log(ctx *context.Context, prev, current string) (string, error) {
 	args := []string{"log", "--pretty=oneline", "--abbrev-commit", "--no-decorate", "--no-color"}
 	if validSHA1.MatchString(prev) {
 		args = append(args, prev, current)
 	} else {
 		args = append(args, fmt.Sprintf("tags/%s..tags/%s", prev, current))
 	}
-	return git.Run(args...)
+	return git.Run(ctx, args...)
 }
 
 type scmChangeloger struct {

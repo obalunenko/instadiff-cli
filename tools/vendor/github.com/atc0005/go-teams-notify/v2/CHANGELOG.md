@@ -26,6 +26,30 @@ The following types of changes will be recorded in this file:
 
 - placeholder
 
+## [v2.6.1] - 2022-02-25
+
+### Changed
+
+- Dependencies
+  - `actions/setup-node`
+    - `v2.2.0` to `v3`
+
+- Linting
+  - (GH-131) Expand linting GitHub Actions Workflow to include `oldstable`,
+    `unstable` container images
+  - (GH-132) Switch Docker image source from Docker Hub to GitHub Container
+    Registry (GHCR)
+
+### Fixed
+
+- (GH-137) Missing doc comment for
+  `teamsClient.AddWebhookURLValidationPatterns()`
+- (GH-138) Missing doc comment for `teamsClient.ValidateWebhook()`
+- (GH-141) send.go:306:15: nilness: tautological condition: non-nil != nil
+  (govet)
+- (GH-144) Incorrect field referenced in error message for
+  `MessageCardSection.AddFact()`
+
 ## [v2.6.0] - 2021-07-09
 
 ### Added
@@ -388,7 +412,8 @@ The following types of changes will be recorded in this file:
 
 - add initial functionality of sending messages to MS Teams channel
 
-[Unreleased]: https://github.com/atc0005/go-teams-notify/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/atc0005/go-teams-notify/compare/v2.6.1...HEAD
+[v2.6.1]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.6.1
 [v2.6.0]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.6.0
 [v2.5.0]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.5.0
 [v2.4.2]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.4.2

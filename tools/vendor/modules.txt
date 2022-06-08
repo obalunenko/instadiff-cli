@@ -23,7 +23,7 @@ cloud.google.com/go/kms/apiv1
 ## explicit; go 1.11
 cloud.google.com/go/storage
 cloud.google.com/go/storage/internal/apiv2
-# code.gitea.io/sdk/gitea v0.15.0
+# code.gitea.io/sdk/gitea v0.15.1
 ## explicit; go 1.13
 code.gitea.io/sdk/gitea
 # github.com/AlekSi/pointer v1.2.0
@@ -153,7 +153,7 @@ github.com/ashanbrown/forbidigo/forbidigo
 # github.com/ashanbrown/makezero v1.1.1
 ## explicit; go 1.12
 github.com/ashanbrown/makezero/makezero
-# github.com/atc0005/go-teams-notify/v2 v2.6.0
+# github.com/atc0005/go-teams-notify/v2 v2.6.1
 ## explicit; go 1.14
 github.com/atc0005/go-teams-notify/v2
 # github.com/aws/aws-sdk-go v1.42.24
@@ -323,9 +323,12 @@ github.com/butuzov/ireturn/types
 # github.com/caarlos0/ctrlc v1.0.0
 ## explicit
 github.com/caarlos0/ctrlc
-# github.com/caarlos0/env/v6 v6.8.0
+# github.com/caarlos0/env/v6 v6.9.2
 ## explicit; go 1.17
 github.com/caarlos0/env/v6
+# github.com/caarlos0/go-reddit/v3 v3.0.1
+## explicit; go 1.17
+github.com/caarlos0/go-reddit/v3/reddit
 # github.com/caarlos0/go-shellwords v1.0.12
 ## explicit; go 1.13
 github.com/caarlos0/go-shellwords
@@ -366,8 +369,8 @@ github.com/denis-tingaikin/go-header
 # github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb
 ## explicit; go 1.16
 github.com/dghubble/go-twitter/twitter
-# github.com/dghubble/oauth1 v0.7.0
-## explicit; go 1.12
+# github.com/dghubble/oauth1 v0.7.1
+## explicit; go 1.16
 github.com/dghubble/oauth1
 # github.com/dghubble/sling v1.4.0
 ## explicit; go 1.16
@@ -587,20 +590,20 @@ github.com/golangci/revgrep
 # github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4
 ## explicit
 github.com/golangci/unconvert
-# github.com/google/go-cmp v0.5.7
-## explicit; go 1.11
+# github.com/google/go-cmp v0.5.8
+## explicit; go 1.13
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/go-github/v39 v39.2.0
-## explicit; go 1.16
-github.com/google/go-github/v39/github
+# github.com/google/go-github/v44 v44.1.0
+## explicit; go 1.17
+github.com/google/go-github/v44/github
 # github.com/google/go-querystring v1.1.0
 ## explicit; go 1.10
 github.com/google/go-querystring/query
-# github.com/google/rpmpack v0.0.0-20211125064518-d0ed9b1b61b9
+# github.com/google/rpmpack v0.0.0-20220314092521-38642b5e571e
 ## explicit; go 1.12
 github.com/google/rpmpack
 # github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -623,17 +626,19 @@ github.com/gordonklaus/ineffassign/pkg/ineffassign
 # github.com/goreleaser/chglog v0.1.2
 ## explicit; go 1.14
 github.com/goreleaser/chglog
-# github.com/goreleaser/fileglob v1.2.0
+# github.com/goreleaser/fileglob v1.3.0
 ## explicit; go 1.16
 github.com/goreleaser/fileglob
-# github.com/goreleaser/goreleaser v1.2.5
-## explicit; go 1.17
+# github.com/goreleaser/goreleaser v1.9.2
+## explicit; go 1.18
 github.com/goreleaser/goreleaser
 github.com/goreleaser/goreleaser/cmd
+github.com/goreleaser/goreleaser/internal/archivefiles
 github.com/goreleaser/goreleaser/internal/artifact
 github.com/goreleaser/goreleaser/internal/builders/buildtarget
 github.com/goreleaser/goreleaser/internal/builders/golang
 github.com/goreleaser/goreleaser/internal/client
+github.com/goreleaser/goreleaser/internal/commitauthor
 github.com/goreleaser/goreleaser/internal/deprecate
 github.com/goreleaser/goreleaser/internal/exec
 github.com/goreleaser/goreleaser/internal/extrafiles
@@ -650,7 +655,7 @@ github.com/goreleaser/goreleaser/internal/pipe
 github.com/goreleaser/goreleaser/internal/pipe/announce
 github.com/goreleaser/goreleaser/internal/pipe/archive
 github.com/goreleaser/goreleaser/internal/pipe/artifactory
-github.com/goreleaser/goreleaser/internal/pipe/artifacts
+github.com/goreleaser/goreleaser/internal/pipe/aur
 github.com/goreleaser/goreleaser/internal/pipe/before
 github.com/goreleaser/goreleaser/internal/pipe/blob
 github.com/goreleaser/goreleaser/internal/pipe/brew
@@ -670,8 +675,10 @@ github.com/goreleaser/goreleaser/internal/pipe/gomod
 github.com/goreleaser/goreleaser/internal/pipe/krew
 github.com/goreleaser/goreleaser/internal/pipe/linkedin
 github.com/goreleaser/goreleaser/internal/pipe/mattermost
+github.com/goreleaser/goreleaser/internal/pipe/metadata
 github.com/goreleaser/goreleaser/internal/pipe/milestone
 github.com/goreleaser/goreleaser/internal/pipe/nfpm
+github.com/goreleaser/goreleaser/internal/pipe/prebuild
 github.com/goreleaser/goreleaser/internal/pipe/project
 github.com/goreleaser/goreleaser/internal/pipe/publish
 github.com/goreleaser/goreleaser/internal/pipe/reddit
@@ -690,11 +697,13 @@ github.com/goreleaser/goreleaser/internal/pipe/telegram
 github.com/goreleaser/goreleaser/internal/pipe/twitter
 github.com/goreleaser/goreleaser/internal/pipe/universalbinary
 github.com/goreleaser/goreleaser/internal/pipe/upload
+github.com/goreleaser/goreleaser/internal/pipe/webhook
 github.com/goreleaser/goreleaser/internal/pipeline
 github.com/goreleaser/goreleaser/internal/semerrgroup
 github.com/goreleaser/goreleaser/internal/shell
 github.com/goreleaser/goreleaser/internal/static
 github.com/goreleaser/goreleaser/internal/tmpl
+github.com/goreleaser/goreleaser/internal/yaml
 github.com/goreleaser/goreleaser/pkg/archive
 github.com/goreleaser/goreleaser/pkg/archive/gzip
 github.com/goreleaser/goreleaser/pkg/archive/tar
@@ -705,7 +714,7 @@ github.com/goreleaser/goreleaser/pkg/build
 github.com/goreleaser/goreleaser/pkg/config
 github.com/goreleaser/goreleaser/pkg/context
 github.com/goreleaser/goreleaser/pkg/defaults
-# github.com/goreleaser/nfpm/v2 v2.11.3
+# github.com/goreleaser/nfpm/v2 v2.15.1
 ## explicit; go 1.17
 github.com/goreleaser/nfpm/v2
 github.com/goreleaser/nfpm/v2/apk
@@ -809,11 +818,15 @@ github.com/kisielk/gotool/internal/load
 # github.com/klauspost/compress v1.13.6
 ## explicit; go 1.15
 github.com/klauspost/compress
+github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/klauspost/pgzip v1.2.5
+## explicit
+github.com/klauspost/pgzip
 # github.com/kulti/thelper v0.6.2
 ## explicit; go 1.18
 github.com/kulti/thelper/pkg/analyzer
@@ -897,6 +910,18 @@ github.com/mitchellh/reflectwalk
 github.com/moricho/tparallel
 github.com/moricho/tparallel/pkg/ssafunc
 github.com/moricho/tparallel/pkg/ssainstr
+# github.com/muesli/mango v0.1.0
+## explicit; go 1.17
+github.com/muesli/mango
+# github.com/muesli/mango-cobra v1.1.0
+## explicit; go 1.17
+github.com/muesli/mango-cobra
+# github.com/muesli/mango-pflag v0.1.0
+## explicit; go 1.17
+github.com/muesli/mango-pflag
+# github.com/muesli/roff v0.1.0
+## explicit; go 1.17
+github.com/muesli/roff
 # github.com/nakabonne/nestif v0.3.1
 ## explicit; go 1.15
 github.com/nakabonne/nestif
@@ -1023,7 +1048,7 @@ github.com/sivchari/containedctx
 # github.com/sivchari/tenv v1.5.0
 ## explicit; go 1.18
 github.com/sivchari/tenv
-# github.com/slack-go/slack v0.10.0
+# github.com/slack-go/slack v0.10.3
 ## explicit; go 1.16
 github.com/slack-go/slack
 github.com/slack-go/slack/internal/backoff
@@ -1121,11 +1146,8 @@ github.com/ultraware/whitespace
 # github.com/uudashr/gocognit v1.0.5
 ## explicit; go 1.16
 github.com/uudashr/gocognit
-# github.com/vartanbeno/go-reddit/v2 v2.0.1
-## explicit; go 1.15
-github.com/vartanbeno/go-reddit/v2/reddit
-# github.com/xanzy/go-gitlab v0.52.2
-## explicit; go 1.13
+# github.com/xanzy/go-gitlab v0.65.0
+## explicit; go 1.17
 github.com/xanzy/go-gitlab
 # github.com/xanzy/ssh-agent v0.3.1
 ## explicit; go 1.16
@@ -1497,7 +1519,7 @@ gopkg.in/warnings.v0
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2
-# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+# gopkg.in/yaml.v3 v3.0.0
 ## explicit
 gopkg.in/yaml.v3
 # gotest.tools/gotestsum v1.8.1

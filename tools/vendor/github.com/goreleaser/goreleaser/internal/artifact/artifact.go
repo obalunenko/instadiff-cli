@@ -57,6 +57,10 @@ const (
 	BrewTap
 	// GoFishRig is an uploadable Rigs rig food file.
 	GoFishRig
+	// PkgBuild is an Arch Linux AUR PKGBUILD file.
+	PkgBuild
+	// SrcInfo is an Arch Linux AUR .SRCINFO file.
+	SrcInfo
 	// KrewPluginManifest is a krew plugin manifest file.
 	KrewPluginManifest
 	// ScoopManifest is an uploadable scoop manifest file.
@@ -99,6 +103,10 @@ func (t Type) String() string {
 		return "Scoop Manifest"
 	case SBOM:
 		return "SBOM"
+	case PkgBuild:
+		return "PKGBUILD"
+	case SrcInfo:
+		return "SRCINFO"
 	default:
 		return "unknown"
 	}
@@ -138,14 +146,15 @@ func (e Extras) MarshalJSON() ([]byte, error) {
 
 // Artifact represents an artifact and its relevant info.
 type Artifact struct {
-	Name   string `json:"name,omitempty"`
-	Path   string `json:"path,omitempty"`
-	Goos   string `json:"goos,omitempty"`
-	Goarch string `json:"goarch,omitempty"`
-	Goarm  string `json:"goarm,omitempty"`
-	Gomips string `json:"gomips,omitempty"`
-	Type   Type   `json:"type,omitempty"`
-	Extra  Extras `json:"extra,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Path    string `json:"path,omitempty"`
+	Goos    string `json:"goos,omitempty"`
+	Goarch  string `json:"goarch,omitempty"`
+	Goarm   string `json:"goarm,omitempty"`
+	Gomips  string `json:"gomips,omitempty"`
+	Goamd64 string `json:"goamd64,omitempty"`
+	Type    Type   `json:"type,omitempty"`
+	Extra   Extras `json:"extra,omitempty"`
 }
 
 func (a Artifact) String() string {
@@ -244,11 +253,24 @@ func (artifacts Artifacts) List() []*Artifact {
 	return artifacts.items
 }
 
+// GroupByID groups the artifacts by their ID.
+func (artifacts Artifacts) GroupByID() map[string][]*Artifact {
+	result := map[string][]*Artifact{}
+	for _, a := range artifacts.items {
+		id := a.ID()
+		if id == "" {
+			continue
+		}
+		result[a.ID()] = append(result[a.ID()], a)
+	}
+	return result
+}
+
 // GroupByPlatform groups the artifacts by their platform.
 func (artifacts Artifacts) GroupByPlatform() map[string][]*Artifact {
 	result := map[string][]*Artifact{}
 	for _, a := range artifacts.items {
-		plat := a.Goos + a.Goarch + a.Goarm + a.Gomips
+		plat := a.Goos + a.Goarch + a.Goarm + a.Gomips + a.Goamd64
 		result[plat] = append(result[plat], a)
 	}
 	return result
@@ -324,6 +346,13 @@ func ByGoarm(s string) Filter {
 	}
 }
 
+// ByGoamd64 is a predefined filter that filters by the given goamd64.
+func ByGoamd64(s string) Filter {
+	return func(a *Artifact) bool {
+		return a.Goamd64 == s
+	}
+}
+
 // ByType is a predefined filter that filters by the given type.
 func ByType(t Type) Filter {
 	return func(a *Artifact) bool {
@@ -356,6 +385,52 @@ func ByIDs(ids ...string) Filter {
 		})
 	}
 	return Or(filters...)
+}
+
+// ByExt filter artifact by their 'Ext' extra field.
+func ByExt(exts ...string) Filter {
+	filters := make([]Filter, 0, len(exts))
+	for _, ext := range exts {
+		ext := ext
+		filters = append(filters, func(a *Artifact) bool {
+			return a.ExtraOr(ExtraExt, "") == ext
+		})
+	}
+	return Or(filters...)
+}
+
+// ByBinaryLikeArtifacts filter artifacts down to artifacts that are Binary, UploadableBinary, or UniversalBinary,
+// deduplicating artifacts by path (preferring UploadableBinary over all others). Note: this filter is unique in the
+// sense that it cannot act in isolation of the state of other artifacts; the filter requires the whole list of
+// artifacts in advance to perform deduplication.
+func ByBinaryLikeArtifacts(arts Artifacts) Filter {
+	// find all of the paths for any uploadable binary artifacts
+	uploadableBins := arts.Filter(ByType(UploadableBinary)).List()
+	uploadableBinPaths := map[string]struct{}{}
+	for _, a := range uploadableBins {
+		uploadableBinPaths[a.Path] = struct{}{}
+	}
+
+	// we want to keep any matching artifact that is not a binary that already has a path accounted for
+	// by another uploadable binary. We always prefer uploadable binary artifacts over binary artifacts.
+	deduplicateByPath := func(a *Artifact) bool {
+		if a.Type == UploadableBinary {
+			return true
+		}
+		_, ok := uploadableBinPaths[a.Path]
+		return !ok
+	}
+
+	return And(
+		// allow all of the binary-like artifacts as possible...
+		Or(
+			ByType(Binary),
+			ByType(UploadableBinary),
+			ByType(UniversalBinary),
+		),
+		// ... but remove any duplicates found
+		deduplicateByPath,
+	)
 }
 
 // Or performs an OR between all given filters.

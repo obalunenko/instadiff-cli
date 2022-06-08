@@ -29,7 +29,6 @@ import (
 	"archive/tar"
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
@@ -49,6 +48,7 @@ import (
 	"github.com/goreleaser/nfpm/v2"
 	"github.com/goreleaser/nfpm/v2/files"
 	"github.com/goreleaser/nfpm/v2/internal/sign"
+	gzip "github.com/klauspost/pgzip"
 )
 
 const packagerName = "apk"
@@ -84,7 +84,7 @@ func ensureValidArch(info *nfpm.Info) *nfpm.Info {
 // nolint: gochecknoglobals
 var Default = &Apk{}
 
-// Apk is a apk packager implementation.
+// Apk is an apk packager implementation.
 type Apk struct{}
 
 func (a *Apk) ConventionalFileName(info *nfpm.Info) string {

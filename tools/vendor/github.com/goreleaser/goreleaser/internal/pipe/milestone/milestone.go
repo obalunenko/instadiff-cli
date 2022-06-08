@@ -28,9 +28,11 @@ func (Pipe) Default(ctx *context.Context) error {
 		}
 
 		if milestone.Repo.Name == "" {
-			repo, err := git.ExtractRepoFromConfig()
-
+			repo, err := git.ExtractRepoFromConfig(ctx)
 			if err != nil && !ctx.Snapshot {
+				return err
+			}
+			if err := repo.CheckSCM(); err != nil && !ctx.Snapshot {
 				return err
 			}
 

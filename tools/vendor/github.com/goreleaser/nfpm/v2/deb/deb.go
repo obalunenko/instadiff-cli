@@ -4,7 +4,6 @@ package deb
 import (
 	"archive/tar"
 	"bytes"
-	"compress/gzip"
 	"crypto/md5" // nolint:gas
 	"errors"
 	"fmt"
@@ -22,6 +21,7 @@ import (
 	"github.com/goreleaser/nfpm/v2/deprecation"
 	"github.com/goreleaser/nfpm/v2/files"
 	"github.com/goreleaser/nfpm/v2/internal/sign"
+	gzip "github.com/klauspost/pgzip"
 	"github.com/ulikunitz/xz"
 )
 
@@ -197,7 +197,8 @@ type nopCloser struct {
 func (nopCloser) Close() error { return nil }
 
 func createDataTarball(info *nfpm.Info) (dataTarBall, md5sums []byte,
-	instSize int64, name string, err error) {
+	instSize int64, name string, err error,
+) {
 	var (
 		dataTarball            bytes.Buffer
 		dataTarballWriteCloser io.WriteCloser
@@ -267,7 +268,8 @@ func createSymlinkInsideTar(file *files.Content, out *tar.Writer) error {
 }
 
 func createFilesInsideDataTar(info *nfpm.Info, tw *tar.Writer,
-	created map[string]bool) (md5buf bytes.Buffer, instSize int64, err error) {
+	created map[string]bool,
+) (md5buf bytes.Buffer, instSize int64, err error) {
 	// create explicit directories first
 	for _, file := range info.Contents {
 		// at this point, we don't care about other types yet
@@ -382,7 +384,8 @@ func copyToTarAndDigest(file *files.Content, tw *tar.Writer, md5w io.Writer) (in
 }
 
 func createChangelogInsideDataTar(tarw *tar.Writer, md5w io.Writer,
-	created map[string]bool, info *nfpm.Info) (int64, error) {
+	created map[string]bool, info *nfpm.Info,
+) (int64, error) {
 	var buf bytes.Buffer
 	out := gzip.NewWriter(&buf)
 	// the writers are properly closed later, this is just in case that we have
@@ -688,9 +691,6 @@ Architecture: {{.Info.Arch}}
 {{- if .Info.Maintainer}}
 Maintainer: {{.Info.Maintainer}}
 {{- end }}
-{{- if .Info.Vendor}}
-Vendor: {{.Info.Vendor}}
-{{- end }}
 Installed-Size: {{.InstalledSize}}
 {{- with .Info.Replaces}}
 Replaces: {{join .}}
@@ -732,7 +732,7 @@ func writeControl(w io.Writer, data controlData) error {
 			return strings.Trim(strings.Join(strs, ", "), " ")
 		},
 		"multiline": func(strs string) string {
-			ret := strings.ReplaceAll(strs, "\n", "\n  ")
+			ret := strings.ReplaceAll(strs, "\n", "\n ")
 			return strings.Trim(ret, " \n")
 		},
 	})

@@ -9,6 +9,7 @@ Here's a running list of some organizations using GoReleaser[^1]:
 1. [Charm](https://charm.sh)
 1. [Comcast](https://comcast.github.io)
 1. [Compose Generator](https://www.compose-generator.com)
+1. [Conduit](https://www.conduit.io/)
 1. [CrowdStrike](https://www.crowdstrike.com)
 1. [DeepSource](https://deepsource.io)
 1. [EVCC](https://evcc.io)
@@ -29,12 +30,14 @@ Here's a running list of some organizations using GoReleaser[^1]:
 1. [Numary](https://numary.com)
 1. [Planetscale](https://planetscale.com)
 1. [Pulumi](https://pulumi.com)
+1. [prestd](https://prestd.com)
 1. [Schwarz IT](https://jobs.schwarz)
 1. [SemaphoreCI](https://semaphoreci.com)
 1. [Sigstore](https://sigstore.dev)
 1. [Splunk](http://dev.splunk.com)
 1. [Sysdig](https://sysdig.com)
 1. [TOTVS Labs](https://totvslabs.com)
+1. [Trybe](https://betrybe.com)
 
 Feel free to [add yours](https://github.com/goreleaser/goreleaser/edit/main/USERS.md)!
 
