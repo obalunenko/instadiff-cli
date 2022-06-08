@@ -8,8 +8,9 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/obalunenko/logger"
 	"github.com/schollz/progressbar/v3"
+
+	log "github.com/obalunenko/logger"
 )
 
 // BType represents kind of progress bar.

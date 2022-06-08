@@ -9,10 +9,11 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/service"
 	log "github.com/obalunenko/logger"
-	"github.com/urfave/cli/v2"
 )
 
 const (

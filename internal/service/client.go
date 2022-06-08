@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/Davincible/goinsta"
-	"github.com/obalunenko/instadiff-cli/pkg/spinner"
-	log "github.com/obalunenko/logger"
 	"github.com/tcnksm/go-input"
 
 	"github.com/obalunenko/instadiff-cli/internal/config"
+	"github.com/obalunenko/instadiff-cli/pkg/spinner"
+	log "github.com/obalunenko/logger"
 )
 
 func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {

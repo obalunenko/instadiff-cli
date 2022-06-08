@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/Davincible/goinsta"
-	"github.com/obalunenko/instadiff-cli/pkg/spinner"
-	log "github.com/obalunenko/logger"
 
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/pkg/bar"
+	"github.com/obalunenko/instadiff-cli/pkg/spinner"
+	log "github.com/obalunenko/logger"
 )
 
 var (

@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/obalunenko/logger"
 	"github.com/spf13/viper"
+
+	log "github.com/obalunenko/logger"
 )
 
 // Config represents config for InstaDiff service.

@@ -7,10 +7,11 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/internal/service"
 	log "github.com/obalunenko/logger"
-	"github.com/urfave/cli/v2"
 )
 
 func notFound(ctx context.Context) cli.CommandNotFoundFunc {
