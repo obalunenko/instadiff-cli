@@ -26,7 +26,6 @@ jobs:
       - name: Set up go
         uses: actions/setup-go@v3
         with:
-          stable: "true"
           go-version: ${{ matrix.go }}
 
       - run: |
