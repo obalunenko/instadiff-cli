@@ -3,7 +3,7 @@ release:
     owner: obalunenko
     name: instadiff-cli
   footer: |
-    **Full Changelog**: https://github.com/obalunenko/advent-of-code/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/obalunenko/instadiff-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 gomod:
   proxy: true
