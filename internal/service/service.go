@@ -120,6 +120,10 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 
 // GetFollowers returns list of followers for logged-in user.
 func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	stop := spinner.Set("Fetching followers", "", "yellow")
 	defer stop()
 
@@ -136,6 +140,10 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 
 // GetFollowings returns list of followings for logged-in user.
 func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	stop := spinner.Set("Fetching followings", "", "yellow")
 	defer stop()
 
@@ -181,6 +189,10 @@ func makeUsersList(users *goinsta.Users) []models.User {
 
 // GetNotMutualFollowers returns list of users that not following back.
 func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	followers, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get followers: %w", err)
@@ -221,6 +233,10 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 // UnFollow removes user from followings.
 func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	log.WithField(ctx, "username", user.UserName).Debug("Unfollow user")
 
 	if svc.debug {
@@ -243,6 +259,10 @@ func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
 
 // Follow adds user to followings.
 func (svc *Service) Follow(ctx context.Context, user models.User) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	log.WithField(ctx, "username", user.UserName).Debug("Follow user")
 
 	if svc.debug {
@@ -276,6 +296,10 @@ func getBarType(ctx context.Context) bar.BType {
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (int, error) {
+	if ctx.Err() != nil {
+		return 0, ctx.Err()
+	}
+
 	notMutual, err := svc.GetNotMutualFollowers(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("get not mutual followers: %w", err)
@@ -416,6 +440,10 @@ LOOP:
 }
 
 func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []models.User) (int, error) {
+	if ctx.Err() != nil {
+		return 0, ctx.Err()
+	}
+
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -427,27 +455,32 @@ func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []mod
 
 	whitelist := svc.instagram.Whitelist()
 
+	f := func(u models.User) error {
+		if _, exist := whitelist[u.UserName]; exist {
+			return nil
+		}
+
+		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+			return nil
+		}
+
+		if err := svc.UnFollow(ctx, u); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 LOOP:
-	for _, u := range users {
+	for i, u := range users {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
 		}
 
-		select {
-		case <-ctx.Done():
-			break LOOP
-		case <-ticker.C:
-			if _, exist := whitelist[u.UserName]; exist {
-				continue
-			}
-
-			if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-				continue
-			}
-
+		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.UnFollow(ctx, u); err != nil {
+			if err := f(u); err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -455,10 +488,26 @@ LOOP:
 			}
 
 			count++
+		}
 
-			if count >= svc.instagram.limits.unFollow {
-				return count, ErrLimitExceed
+		select {
+		case <-ctx.Done():
+			break LOOP
+		case <-ticker.C:
+			pBar.Progress() <- struct{}{}
+
+			if err := f(u); err != nil {
+				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
+				errsNum++
+
+				continue
 			}
+
+			count++
+		}
+
+		if count >= svc.instagram.limits.unFollow {
+			return count, ErrLimitExceed
 		}
 	}
 
@@ -488,6 +537,10 @@ type isBotResult struct {
 // GetBusinessAccountsOrBotsFromFollowers ranges all followers and tried to detect bots or business accounts.
 // These accounts could be blocked as they are not useful for statistic.
 func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	users, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, err
@@ -591,8 +644,11 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 
 // GetDiffFollowers returns batches with lost and new followers.
 func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, error) {
-	ctx, cancel := context.WithCancel(ctx)
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	var noPreviousData bool

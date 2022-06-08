@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/urfave/cli/v2"
 
@@ -61,13 +62,21 @@ func serviceSetUp(c *cli.Context) (*service.Service, service.StopFunc, error) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
-	cancelCtx, cancelFunc := context.WithCancel(context.Background())
+	cancelCtx, cancelFunc := context.WithCancel(c.Context)
+
+	c.Context = cancelCtx
 
 	go func() {
 		sig := <-sigChan
 		// empty line for clear output.
 		log.WithField(c.Context, "signal", sig.String()).Info("Signal received")
 		cancelFunc()
+
+		time.Sleep(1 * time.Second)
+
+		log.Info(cancelCtx, "Exit")
+
+		os.Exit(1)
 	}()
 
 	cfg.SetDebug(c.Bool(debug))
