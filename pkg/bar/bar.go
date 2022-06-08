@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/schollz/progressbar/v2"
-	log "github.com/sirupsen/logrus"
+	log "github.com/obalunenko/logger"
+	"github.com/schollz/progressbar/v3"
 )
 
 // BType represents kind of progress bar.
@@ -148,7 +148,7 @@ func (b *realBar) Run(ctx context.Context) {
 
 	defer func() {
 		if err := b.bar.Finish(); err != nil {
-			log.Errorf("error when finish bar: %v", err)
+			log.WithError(ctx, err).Error("Failed to finish bar")
 		}
 
 		_, _ = fmt.Fprintln(os.Stdout)
@@ -168,12 +168,12 @@ func (b *realBar) Run(ctx context.Context) {
 			}
 
 			if err := b.bar.Add(progressInc); err != nil {
-				log.Errorf("error when add to bar: %v", err)
+				log.WithError(ctx, err).Error("Failed to add to bar")
 			}
 
 			time.Sleep(sleep)
 		case <-ctx.Done():
-			log.Errorf("canceled context: %v", ctx.Err())
+			log.WithError(ctx, ctx.Err()).Error("Canceled context")
 
 			return
 		}

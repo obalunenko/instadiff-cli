@@ -97,14 +97,14 @@ sync-vendor:
 ## Docker compose up
 docker-up:
 	${call colored, docker is running...}
-	docker-compose -f ./docker-compose.yml up
+	docker-compose -f ./docker-compose.yml up -d
 
 .PHONY: docker-up
 
 ## Docker compose down
 docker-down:
 	${call colored, docker is running...}
-	docker-compose -f ./docker-compose.yml down --volumes
+	docker-compose -f ./docker-compose.yml down
 
 .PHONY: docker-down
 

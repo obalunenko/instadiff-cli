@@ -5,11 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/Davincible/goinsta"
-	log "github.com/sirupsen/logrus"
+	"github.com/obalunenko/instadiff-cli/pkg/spinner"
+	log "github.com/obalunenko/logger"
 
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
@@ -26,7 +28,6 @@ var (
 
 // Service represents service for operating instagram account.
 type Service struct {
-	ctx       context.Context
 	instagram instagram
 	storage   db.DB
 	debug     bool
@@ -60,7 +61,7 @@ type limits struct {
 }
 
 // StopFunc closure func that will stop service.
-type StopFunc func()
+type StopFunc func() error
 
 // New creates new instance of Service instance and returns closure func that will stop service.
 //
@@ -72,15 +73,15 @@ type StopFunc func()
 // defer stop().
 //
 func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, StopFunc, error) {
-	cl, err := makeClient(cfg, cfgPath)
+	cl, err := makeClient(ctx, cfg, cfgPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("make client: %w", err)
 	}
 
-	log.Printf("logged in as %s \n", cl.Account.Username)
+	log.WithField(ctx, "username", cl.Account.Username).Info("Logged-in")
 
 	if err = cl.OpenApp(); err != nil {
-		log.Errorf("Failed to refresh app info: %v", err)
+		log.WithError(ctx, err).Error("Failed to refresh app info")
 	}
 
 	dbc, err := db.Connect(db.Params{
@@ -96,7 +97,6 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 	}
 
 	svc := Service{
-		ctx: ctx,
 		instagram: instagram{
 			client:    cl,
 			whitelist: cfg.Whitelist(),
@@ -109,51 +109,59 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		debug:   cfg.Debug(),
 	}
 
-	stopFunc := func() {
-		svc.stop()
-	}
+	stopFunc := StopFunc(func() error {
+		return svc.stop()
+	})
 
 	return &svc, stopFunc, nil
 }
 
-// GetFollowers returns list of followers for logged in user.
-func (svc *Service) GetFollowers() ([]models.User, error) {
+// GetFollowers returns list of followers for logged-in user.
+func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
+	stop := spinner.Set("Fetching followers", "", "yellow")
+	defer stop()
+
 	followers := makeUsersList(svc.instagram.client.Account.Followers())
 
-	if len(followers) == 0 {
-		return nil, makeNoUsersError(models.UsersBatchTypeFollowers)
-	}
+	bt := models.UsersBatchTypeFollowers
 
-	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
+	return svc.storeUsers(ctx, models.UsersBatch{
 		Users:     followers,
-		Type:      models.UsersBatchTypeFollowers,
+		Type:      bt,
 		CreatedAt: time.Now(),
 	})
-	if err != nil {
-		log.Errorf("failed to insert %s to db: %v", models.UsersBatchTypeFollowers, err)
-	}
-
-	return followers, nil
 }
 
-// GetFollowings returns list of followings for logged in user.
-func (svc *Service) GetFollowings() ([]models.User, error) {
+// GetFollowings returns list of followings for logged-in user.
+func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
+	stop := spinner.Set("Fetching followings", "", "yellow")
+	defer stop()
+
 	followings := makeUsersList(svc.instagram.client.Account.Following())
 
-	if len(followings) == 0 {
-		return nil, makeNoUsersError(models.UsersBatchTypeFollowings)
-	}
+	bt := models.UsersBatchTypeFollowings
 
-	err := svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
+	return svc.storeUsers(ctx, models.UsersBatch{
 		Users:     followings,
-		Type:      models.UsersBatchTypeFollowings,
+		Type:      bt,
 		CreatedAt: time.Now(),
 	})
-	if err != nil {
-		log.Errorf("failed to insert %s to db: %v", models.UsersBatchTypeFollowings, err)
+}
+
+func (svc *Service) storeUsers(ctx context.Context, batch models.UsersBatch) ([]models.User, error) {
+	if len(batch.Users) == 0 {
+		return nil, makeNoUsersError(batch.Type)
 	}
 
-	return followings, nil
+	err := svc.storage.InsertUsersBatch(ctx, batch)
+	if err != nil {
+		log.WithFields(ctx, log.Fields{
+			"error":      err,
+			"batch_type": batch.Type.String(),
+		}).Error("Failed to insert batch to db")
+	}
+
+	return batch.Users, nil
 }
 
 func makeUsersList(users *goinsta.Users) []models.User {
@@ -170,20 +178,23 @@ func makeUsersList(users *goinsta.Users) []models.User {
 }
 
 // GetNotMutualFollowers returns list of users that not following back.
-func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
-	followers, err := svc.GetFollowers()
+func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, error) {
+	followers, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get followers: %w", err)
 	}
 
-	log.Infof("Total followers: %d", len(followers))
+	log.WithField(ctx, "count", len(followers)).Info("Total followers")
 
-	followings, err := svc.GetFollowings()
+	followings, err := svc.GetFollowings(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get followings: %w", err)
 	}
 
-	log.Infof("Total followings: %d", len(followings))
+	log.WithField(ctx, "count", len(followings)).Info("Total followings")
+
+	stop := spinner.Set("Detecting not mutual followers", "", "yellow")
+	defer stop()
 
 	followersMap := make(map[int64]struct{}, len(followers))
 
@@ -199,21 +210,16 @@ func (svc *Service) GetNotMutualFollowers() ([]models.User, error) {
 		}
 	}
 
-	err = svc.storage.InsertUsersBatch(svc.ctx, models.UsersBatch{
+	return svc.storeUsers(ctx, models.UsersBatch{
 		Users:     notmutual,
 		Type:      models.UsersBatchTypeNotMutual,
 		CreatedAt: time.Now(),
 	})
-	if err != nil {
-		log.Errorf("Failed to insert %s in storage: %v", models.UsersBatchTypeNotMutual, err)
-	}
-
-	return notmutual, nil
 }
 
 // UnFollow removes user from followings.
-func (svc *Service) UnFollow(user models.User) error {
-	log.Debugf("Unfollow user %s", user.UserName)
+func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
+	log.WithField(ctx, "username", user.UserName).Debug("Unfollow user")
 
 	if svc.debug {
 		return nil
@@ -234,8 +240,8 @@ func (svc *Service) UnFollow(user models.User) error {
 }
 
 // Follow adds user to followings.
-func (svc *Service) Follow(user models.User) error {
-	log.Debugf("Follow user %s", user.UserName)
+func (svc *Service) Follow(ctx context.Context, user models.User) error {
+	log.WithField(ctx, "username", user.UserName).Debug("Follow user")
 
 	if svc.debug {
 		return nil
@@ -255,9 +261,10 @@ func (svc *Service) Follow(user models.User) error {
 	return nil
 }
 
-func getBarType() bar.BType {
+func getBarType(ctx context.Context) bar.BType {
 	bType := bar.BTypeRendered
-	if log.GetLevel() != log.InfoLevel {
+
+	if log.FromContext(ctx).LogLevel().IsDebug() {
 		bType = bar.BTypeVoid
 	}
 
@@ -266,8 +273,8 @@ func getBarType() bar.BType {
 
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
-func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
-	notMutual, err := svc.GetNotMutualFollowers()
+func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (int, error) {
+	notMutual, err := svc.GetNotMutualFollowers(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("get not mutual followers: %w", err)
 	}
@@ -276,8 +283,10 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		return 0, nil
 	}
 
-	log.Infof("Not mutual followers: %d", len(notMutual))
-	log.Infof("Whitelisted: %d", len(svc.instagram.Whitelist()))
+	log.WithFields(ctx, log.Fields{
+		"count":       len(notMutual),
+		"whitelisted": len(svc.instagram.Whitelist()),
+	}).Info("Not mutual followers")
 
 	diff := svc.whitelistNotMutual(notMutual)
 
@@ -285,15 +294,15 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted() (int, error) {
 		return 0, nil
 	}
 
-	pBar := bar.New(len(diff), getBarType())
+	pBar := bar.New(len(diff), getBarType(ctx))
 
-	go pBar.Run(svc.ctx)
+	go pBar.Run(ctx)
 
 	defer func() {
 		pBar.Finish()
 	}()
 
-	return svc.unfollowUsers(pBar, notMutual)
+	return svc.unfollowUsers(ctx, pBar, notMutual)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
@@ -313,7 +322,11 @@ func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
 }
 
 func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, error) {
-	users := make([]*goinsta.User, 0)
+	stop := spinner.Set("Fetching users by names", "", "yellow")
+	defer stop()
+
+	users := make([]*goinsta.User, 0, len(usernames))
+
 	for _, un := range usernames {
 		u, err := svc.instagram.client.Profiles.ByName(un)
 		if err != nil {
@@ -327,19 +340,19 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 }
 
 // RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
-func (svc *Service) RemoveFollowersByUsername(usernames []string) (int, error) {
-	pBar := bar.New(len(usernames), getBarType())
+func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []string) (int, error) {
+	pBar := bar.New(len(usernames), getBarType(ctx))
 
-	go pBar.Run(svc.ctx)
+	go pBar.Run(ctx)
 
 	defer func() {
 		pBar.Finish()
 	}()
 
-	return svc.removeFollowers(pBar, usernames)
+	return svc.removeFollowers(ctx, pBar, usernames)
 }
 
-func (svc *Service) removeFollowers(pBar bar.Bar, users []string) (int, error) {
+func (svc *Service) removeFollowers(ctx context.Context, pBar bar.Bar, users []string) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -356,26 +369,32 @@ LOOP:
 		}
 
 		select {
-		case <-svc.ctx.Done():
+		case <-ctx.Done():
 			break LOOP
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
 			u, err := svc.instagram.client.Profiles.ByName(un)
 			if err != nil {
-				log.Errorf("user lookup failed [%s]: %v", un, err)
+				log.WithError(ctx, err).WithField("username", un).Error("User lookup failed")
+
 				errsNum++
 				continue
 			}
 
-			if err := u.Block(false); err != nil {
-				log.Errorf("failed to block follower [%s]: %v", u.Username, err)
+			u.SetInstagram(svc.instagram.client)
+
+			if err = u.Block(false); err != nil {
+				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to block follower")
+
 				errsNum++
 
 				continue
 			}
-			if err := u.Unblock(); err != nil {
-				log.Errorf("failed to unblock follower [%s]: %v", u.Username, err)
+
+			if err = u.Unblock(); err != nil {
+				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to unblock follower")
+
 				errsNum++
 
 				continue
@@ -394,7 +413,7 @@ LOOP:
 	return count, nil
 }
 
-func (svc *Service) unfollowUsers(pBar bar.Bar, users []models.User) (int, error) {
+func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []models.User) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -413,17 +432,21 @@ LOOP:
 		}
 
 		select {
-		case <-svc.ctx.Done():
+		case <-ctx.Done():
 			break LOOP
 		case <-ticker.C:
 			if _, exist := whitelist[u.UserName]; exist {
 				continue
 			}
 
+			if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+				continue
+			}
+
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.UnFollow(u); err != nil {
-				log.Errorf("failed to unfollow [%s]: %v", u.UserName, err)
+			if err := svc.UnFollow(ctx, u); err != nil {
+				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
 				continue
@@ -442,10 +465,12 @@ LOOP:
 
 // stop logs out from instagram and clean sessions.
 // Should be called in defer after creating new instance from New().
-func (svc *Service) stop() {
+func (svc *Service) stop() error {
 	if err := svc.instagram.client.Logout(); err != nil {
-		log.Errorf("logout: %v", err)
+		return fmt.Errorf("logout: %w", err)
 	}
+
+	return nil
 }
 
 type isBotResult struct {
@@ -455,19 +480,16 @@ type isBotResult struct {
 
 // GetBusinessAccountsOrBotsFromFollowers ranges all followers and tried to detect bots or business accounts.
 // These accounts could be blocked as they are not useful for statistic.
-func (svc *Service) GetBusinessAccountsOrBotsFromFollowers() ([]models.User, error) {
-	users, err := svc.GetFollowers()
+func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) ([]models.User, error) {
+	users, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithCancel(svc.ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	bType := bar.BTypeRendered
-	if log.GetLevel() != log.InfoLevel {
-		bType = bar.BTypeVoid
-	}
+	bType := getBarType(ctx)
 
 	pBar := bar.New(len(users), bType)
 
@@ -525,18 +547,18 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 	}()
 
 	if ctx.Err() != nil {
-		log.Errorf("canceled context: %v", ctx.Err())
+		log.WithError(ctx, ctx.Err()).Error("Context canceled")
 
 		return
 	}
 
 	resultChan <- isBotResult{
 		user:  models.MakeUser(u.ID, u.Username, u.FullName),
-		isBot: svc.isBotOrBusiness(u),
+		isBot: svc.isBotOrBusiness(ctx, u),
 	}
 }
 
-func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
+func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) bool {
 	user.SetInstagram(svc.instagram.client)
 
 	const businessMarkNumFollowers = 500
@@ -548,26 +570,21 @@ func (svc *Service) isBotOrBusiness(user *goinsta.User) bool {
 		flwsNum += len(flws.Users)
 	}
 
-	if flwsNum >= businessMarkNumFollowers {
-		return true
-	}
+	log.WithFields(ctx, log.Fields{
+		"username":   user.Username,
+		"followings": flwsNum,
+	}).Debug("Processing user")
 
-	log.Debugf("processig[%s]: following[%d] \n", user.Username, flwsNum)
-
-	if user.CanBeReportedAsFraud {
-		return true
-	}
-
-	if user.HasAnonymousProfilePicture {
-		return true
-	}
-
-	return false
+	return flwsNum >= businessMarkNumFollowers ||
+		user.CanBeReportedAsFraud ||
+		user.HasAnonymousProfilePicture ||
+		user.HasAffiliateShop ||
+		user.HasPlacedOrders
 }
 
 // GetDiffFollowers returns batches with lost and new followers.
-func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
-	ctx, cancel := context.WithCancel(svc.ctx)
+func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, error) {
+	ctx, cancel := context.WithCancel(ctx)
 
 	defer func() {
 		cancel()
@@ -586,12 +603,10 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 		}
 	}
 
-	newList, err := svc.GetFollowers()
+	newList, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get followers: %w", err)
 	}
-
-	now := time.Now()
 
 	if noPreviousData {
 		oldBatch.Users = newList
@@ -601,22 +616,24 @@ func (svc *Service) GetDiffFollowers() ([]models.UsersBatch, error) {
 	lostBatch := models.UsersBatch{
 		Users:     lostFlw,
 		Type:      models.UsersBatchTypeLostFollowers,
-		CreatedAt: now,
+		CreatedAt: time.Now(),
 	}
 
-	if err := svc.storage.InsertUsersBatch(ctx, lostBatch); err != nil {
-		log.Errorf("Failed to insert [%s]: %v", lostBatch.Type.String(), err)
+	_, err = svc.storeUsers(ctx, lostBatch)
+	if err != nil && !errors.Is(err, ErrNoUsers) {
+		log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
 	}
 
 	newFlw := getNewFollowers(oldBatch.Users, newList)
 	newBatch := models.UsersBatch{
 		Users:     newFlw,
 		Type:      models.UsersBatchTypeNewFollowers,
-		CreatedAt: now,
+		CreatedAt: time.Now(),
 	}
 
-	if err := svc.storage.InsertUsersBatch(ctx, newBatch); err != nil {
-		log.Errorf("Failed to insert [%s]: %v", newBatch.Type.String(), err)
+	_, err = svc.storeUsers(ctx, newBatch)
+	if err != nil && !errors.Is(err, ErrNoUsers) {
+		log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
 	}
 
 	return []models.UsersBatch{lostBatch, newBatch}, nil
