@@ -24,6 +24,16 @@ instadiff-cli help
 ```
 
 ```text
+
+
+██╗███╗   ██╗███████╗████████╗ █████╗ ██████╗ ██╗███████╗███████╗     ██████╗██╗     ██╗
+██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██║██╔════╝██╔════╝    ██╔════╝██║     ██║
+██║██╔██╗ ██║███████╗   ██║   ███████║██║  ██║██║█████╗  █████╗█████╗██║     ██║     ██║
+██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║  ██║██║██╔══╝  ██╔══╝╚════╝██║     ██║     ██║
+██║██║ ╚████║███████║   ██║   ██║  ██║██████╔╝██║██║     ██║         ╚██████╗███████╗██║
+╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝     ╚═╝          ╚═════╝╚══════╝╚═╝
+
+
 NAME:
    instadiff-cli - a command line tool for managing instagram account followers and followings
 
@@ -31,27 +41,39 @@ USAGE:
    instadiff-cli [global options] command [command options] [arguments...]
 
 VERSION:
-   GO-go1.14.2: 0.5.0-cd8bd9f-2020-04-26T23:44:35Z
+
+| app_name:     instadiff-cli                            |
+| version:      v0.16.0-local                            |
+| go_version:   go1.18.3                                 |
+| commit:       140a8740352fb5e437e7e747391c4073a726ed78 |
+| short_commit: 140a8740                                 |
+| build_date:   2022-06-08T19:10:31Z                     |
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
 
 
 AUTHOR:
-   Oleg Balunenko
+   Oleg Balunenko <oleg.balunenko@gmail.com>
 
 COMMANDS:
-   followers               List your followers
-   followings              List your followings
-   clean-followers, clean  Un follow not mutual followings, except of whitelisted
-   unmutual                List all not mutual followings
-   bots                    List all bots or business accounts (alpha)
-   diff                    List diff followers (lost and new)
-   help, h                 Shows a list of commands or help for one command
+   followers                     List your followers
+   followings                    List your followings
+   clean-followers, clean        Un follow not mutual followings, except of whitelisted
+   remove-followers, rm, remove  Remove a list of followers, by username.
+   unmutual                      List all not mutual followings
+   bots                          List all bots or business accounts (alpha)
+   diff                          List diff followers (lost and new)
+   help, h                       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
-   --log_level value    Level of output logs (default: "info")
-   --debug              Debug mode, where actions has no real effect
-   --help, -h           show help
-   --version, -v        print the version
+   --debug              Debug mode, where actions has no real effect (default: false)
+   --help, -h           show help (default: false)
+   --log_level value    Level of output logs (default: "INFO")
+   --version, -v        print the version (default: false)
 ```
 
 To get help for any supported command:
@@ -88,13 +110,14 @@ Example of config file:
 }
 ```
 
-* instagram: it is an config for instagram
-	* save: sets if session should be stored locally.
-	* whitelist: list of followings that will be not unfollowed even if they are unmutual.
-	* limits: limits per one run.
-		* unfollow: number of users that could be unfollowed in one run (be careful will big numbers - account could be bunned)
-* debug: if true, all opereattions will be influendce on account (e.g. unfollow will just list users and not really unfollow users)
-* storage: its a config for database storage. 
+* instagram: it is a config for instagram
+    * save: sets if session should be stored locally.
+    * whitelist: list of followings that will be not unfollowed even if they are not mutual (usernames and ID's supported both).
+    * limits: limits per one run.
+        * unfollow: number of users that could be unfollowed in one run (be careful with big number - account could be banned)
+    * sleep: sleep interval in seconds between each unfollow request to prevent account ban for ddos reason.
+* debug: if true, all operations will be influence on account (e.g. unfollow will just list users and not really unfollow users)
+* storage: it's a config for database storage. 
 	* local: if true, memory cache will be used and connection to mongo will be not set.
 	* mongo: is a config for mongo database
 	  - url: url of mongo DB to connect
