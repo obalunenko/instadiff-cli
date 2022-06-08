@@ -453,24 +453,6 @@ func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []mod
 
 	var errsNum int
 
-	whitelist := svc.instagram.Whitelist()
-
-	f := func(u models.User) error {
-		if _, exist := whitelist[u.UserName]; exist {
-			return nil
-		}
-
-		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-			return nil
-		}
-
-		if err := svc.UnFollow(ctx, u); err != nil {
-			return err
-		}
-
-		return nil
-	}
-
 LOOP:
 	for i, u := range users {
 		if errsNum >= errsLimit {
@@ -480,7 +462,7 @@ LOOP:
 		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			if err := f(u); err != nil {
+			if err := svc.unfollowWhitelist(ctx, u); err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -496,7 +478,7 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			if err := f(u); err != nil {
+			if err := svc.unfollowWhitelist(ctx, u); err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -512,6 +494,25 @@ LOOP:
 	}
 
 	return count, nil
+}
+
+func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error {
+	whitelist := svc.instagram.Whitelist()
+
+	if _, exist := whitelist[u.UserName]; exist {
+		return nil
+	}
+
+	if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+		return nil
+	}
+
+	if err := svc.UnFollow(ctx, u); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 // stop logs out from instagram and clean sessions.
