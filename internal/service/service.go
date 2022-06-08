@@ -86,7 +86,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		log.WithError(ctx, err).Error("Failed to refresh app info")
 	}
 
-	dbc, err := db.Connect(db.Params{
+	dbc, err := db.Connect(ctx, db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
 		MongoParams: db.MongoParams{
 			URL:        cfg.MongoConfigURL(),
@@ -123,7 +123,10 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followers", "", "yellow")
 	defer stop()
 
-	followers := makeUsersList(svc.instagram.client.Account.Followers())
+	followers, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
+	if err != nil {
+		return nil, fmt.Errorf("make users list: %w", err)
+	}
 
 	bt := models.UsersBatchTypeFollowers
 
@@ -139,7 +142,10 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followings", "", "yellow")
 	defer stop()
 
-	followings := makeUsersList(svc.instagram.client.Account.Following())
+	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Following())
+	if err != nil {
+		return nil, fmt.Errorf("make users list: %w", err)
+	}
 
 	bt := models.UsersBatchTypeFollowings
 
@@ -166,7 +172,11 @@ func (svc *Service) storeUsers(ctx context.Context, batch models.UsersBatch) ([]
 	return batch.Users, nil
 }
 
-func makeUsersList(users *goinsta.Users) []models.User {
+func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	usersList := make([]models.User, 0, len(users.Users))
 
 	for users.Next() {
@@ -176,7 +186,11 @@ func makeUsersList(users *goinsta.Users) []models.User {
 		}
 	}
 
-	return usersList
+	if err := users.Error(); err != nil {
+		return nil, fmt.Errorf("users iterate: %w", err)
+	}
+
+	return usersList, nil
 }
 
 // GetNotMutualFollowers returns list of users that not following back.
@@ -221,6 +235,10 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 // UnFollow removes user from followings.
 func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	log.WithField(ctx, "username", user.UserName).Debug("Unfollow user")
 
 	if svc.debug {
@@ -243,6 +261,10 @@ func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
 
 // Follow adds user to followings.
 func (svc *Service) Follow(ctx context.Context, user models.User) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
 	log.WithField(ctx, "username", user.UserName).Debug("Follow user")
 
 	if svc.debug {
@@ -416,6 +438,10 @@ LOOP:
 }
 
 func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []models.User) (int, error) {
+	if ctx.Err() != nil {
+		return 0, ctx.Err()
+	}
+
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -425,29 +451,16 @@ func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []mod
 
 	var errsNum int
 
-	whitelist := svc.instagram.Whitelist()
-
 LOOP:
-	for _, u := range users {
+	for i, u := range users {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
 		}
 
-		select {
-		case <-ctx.Done():
-			break LOOP
-		case <-ticker.C:
-			if _, exist := whitelist[u.UserName]; exist {
-				continue
-			}
-
-			if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-				continue
-			}
-
+		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.UnFollow(ctx, u); err != nil {
+			if err := svc.unfollowWhitelist(ctx, u); err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -455,14 +468,48 @@ LOOP:
 			}
 
 			count++
+		}
 
-			if count >= svc.instagram.limits.unFollow {
-				return count, ErrLimitExceed
+		select {
+		case <-ctx.Done():
+			break LOOP
+		case <-ticker.C:
+			pBar.Progress() <- struct{}{}
+
+			if err := svc.unfollowWhitelist(ctx, u); err != nil {
+				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
+				errsNum++
+
+				continue
 			}
+
+			count++
+		}
+
+		if count >= svc.instagram.limits.unFollow {
+			return count, ErrLimitExceed
 		}
 	}
 
 	return count, nil
+}
+
+func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error {
+	whitelist := svc.instagram.Whitelist()
+
+	if _, exist := whitelist[u.UserName]; exist {
+		return nil
+	}
+
+	if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+		return nil
+	}
+
+	if err := svc.UnFollow(ctx, u); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // stop logs out from instagram and clean sessions.
@@ -591,8 +638,11 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 
 // GetDiffFollowers returns batches with lost and new followers.
 func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, error) {
-	ctx, cancel := context.WithCancel(ctx)
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	var noPreviousData bool

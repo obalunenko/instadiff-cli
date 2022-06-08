@@ -28,10 +28,10 @@ type Params struct {
 // Connect returns specific database connection.
 // MongoDB if mongo is enabled.
 // LocalMemory in other case.
-func Connect(params Params) (DB, error) {
+func Connect(ctx context.Context, params Params) (DB, error) {
 	if params.LocalDB {
 		return newLocalDB(), nil
 	}
 
-	return newMongoDB(params.MongoParams)
+	return newMongoDB(ctx, params.MongoParams)
 }
