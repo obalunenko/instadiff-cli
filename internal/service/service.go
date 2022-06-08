@@ -86,7 +86,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		log.WithError(ctx, err).Error("Failed to refresh app info")
 	}
 
-	dbc, err := db.Connect(db.Params{
+	dbc, err := db.Connect(ctx, db.Params{
 		LocalDB: cfg.IsLocalDBEnabled(),
 		MongoParams: db.MongoParams{
 			URL:        cfg.MongoConfigURL(),
@@ -120,14 +120,13 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 
 // GetFollowers returns list of followers for logged-in user.
 func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-
 	stop := spinner.Set("Fetching followers", "", "yellow")
 	defer stop()
 
-	followers := makeUsersList(svc.instagram.client.Account.Followers())
+	followers, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
+	if err != nil {
+		return nil, fmt.Errorf("make users list: %w", err)
+	}
 
 	bt := models.UsersBatchTypeFollowers
 
@@ -140,14 +139,13 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 
 // GetFollowings returns list of followings for logged-in user.
 func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-
 	stop := spinner.Set("Fetching followings", "", "yellow")
 	defer stop()
 
-	followings := makeUsersList(svc.instagram.client.Account.Following())
+	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Following())
+	if err != nil {
+		return nil, fmt.Errorf("make users list: %w", err)
+	}
 
 	bt := models.UsersBatchTypeFollowings
 
@@ -174,7 +172,11 @@ func (svc *Service) storeUsers(ctx context.Context, batch models.UsersBatch) ([]
 	return batch.Users, nil
 }
 
-func makeUsersList(users *goinsta.Users) []models.User {
+func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
 	usersList := make([]models.User, 0, len(users.Users))
 
 	for users.Next() {
@@ -184,15 +186,15 @@ func makeUsersList(users *goinsta.Users) []models.User {
 		}
 	}
 
-	return usersList
+	if err := users.Error(); err != nil {
+		return nil, fmt.Errorf("users iterate: %w", err)
+	}
+
+	return usersList, nil
 }
 
 // GetNotMutualFollowers returns list of users that not following back.
 func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, error) {
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-
 	followers, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get followers: %w", err)
@@ -296,10 +298,6 @@ func getBarType(ctx context.Context) bar.BType {
 // UnFollowAllNotMutualExceptWhitelisted clean followings from users that not following back
 // except of whitelisted users.
 func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (int, error) {
-	if ctx.Err() != nil {
-		return 0, ctx.Err()
-	}
-
 	notMutual, err := svc.GetNotMutualFollowers(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("get not mutual followers: %w", err)
@@ -512,7 +510,6 @@ func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error 
 	}
 
 	return nil
-
 }
 
 // stop logs out from instagram and clean sessions.
@@ -538,10 +535,6 @@ type isBotResult struct {
 // GetBusinessAccountsOrBotsFromFollowers ranges all followers and tried to detect bots or business accounts.
 // These accounts could be blocked as they are not useful for statistic.
 func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) ([]models.User, error) {
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-
 	users, err := svc.GetFollowers(ctx)
 	if err != nil {
 		return nil, err

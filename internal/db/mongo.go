@@ -26,9 +26,7 @@ type mongoDB struct {
 	collection *mongo.Collection
 }
 
-func newMongoDB(params MongoParams) (*mongoDB, error) {
-	ctx := context.TODO()
-
+func newMongoDB(ctx context.Context, params MongoParams) (*mongoDB, error) {
 	cl, err := mongo.Connect(ctx, options.Client().ApplyURI(params.URL))
 	if err != nil {
 		return nil, fmt.Errorf("connect: %w", err)
