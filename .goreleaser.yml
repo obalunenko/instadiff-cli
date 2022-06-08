@@ -2,6 +2,8 @@ release:
   github:
     owner: obalunenko
     name: instadiff-cli
+  footer: |
+    **Full Changelog**: https://github.com/obalunenko/advent-of-code/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 gomod:
   proxy: true
@@ -28,7 +30,9 @@ builds:
       - darwin
       - windows
     goarch:
+      - 386
       - amd64
+      - arm
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
     env:
@@ -45,14 +49,14 @@ universal_binaries:
     #
     # Defaults to the project name.
     id: cli
-
+    
     # Universal binary name template.
     #
     # You will want to change this if you have multiple builds!
     #
     # Defaults to '{{ .ProjectName }}'
     name_template: 'instadiff-cli'
-
+    
     # Whether to remove the previous single-arch binaries from the artifact list.
     # If left as false, your end release might have both several macOS archives: amd64, arm64 and all.
     #
@@ -86,6 +90,7 @@ snapshot:
 
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
       - "^docs:"
@@ -100,3 +105,15 @@ changelog:
       - Rebase on master
       - "^Makefile"
       - "goreleaser"
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 10
+    - title: Other work
+      order: 999
+
+milestones:
+  - close: true
