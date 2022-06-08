@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -468,6 +469,11 @@ LOOP:
 // Should be called in defer after creating new instance from New().
 func (svc *Service) stop() error {
 	if err := svc.instagram.client.Logout(); err != nil {
+		// wierd error - just ignore it.
+		if strings.Contains(err.Error(), "405 Method Not Allowed") {
+			return nil
+		}
+
 		return fmt.Errorf("logout: %w", err)
 	}
 
