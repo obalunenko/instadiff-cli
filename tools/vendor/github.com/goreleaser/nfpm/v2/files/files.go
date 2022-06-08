@@ -177,15 +177,26 @@ func ExpandContentGlobs(contents Contents, disableGlobbing bool) (files Contents
 
 func appendGlobbedFiles(all Contents, globbed map[string]string, origFile *Content) (Contents, error) {
 	for src, dst := range globbed {
-		newFile := &Content{
+		// if the file has a FileInfo, we need to copy it but recalculate its size
+		newFileInfo := origFile.FileInfo
+		if newFileInfo != nil {
+			newFileInfoVal := *newFileInfo
+			newFileInfoVal.Size = 0
+			newFileInfo = &newFileInfoVal
+		}
+		newFile := (&Content{
 			Destination: ToNixPath(dst),
 			Source:      ToNixPath(src),
 			Type:        origFile.Type,
-			FileInfo:    origFile.FileInfo,
+			FileInfo:    newFileInfo,
 			Packager:    origFile.Packager,
+		}).WithFileInfoDefaults()
+		if dst, err := os.Readlink(src); err == nil {
+			newFile.Source = dst
+			newFile.Type = "symlink"
 		}
 
-		all = append(all, newFile.WithFileInfoDefaults())
+		all = append(all, newFile)
 	}
 
 	return all, nil

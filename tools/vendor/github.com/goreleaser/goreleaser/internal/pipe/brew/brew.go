@@ -15,6 +15,7 @@ import (
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/client"
+	"github.com/goreleaser/goreleaser/internal/commitauthor"
 	"github.com/goreleaser/goreleaser/internal/pipe"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
 	"github.com/goreleaser/goreleaser/pkg/config"
@@ -42,12 +43,8 @@ func (Pipe) Default(ctx *context.Context) error {
 	for i := range ctx.Config.Brews {
 		brew := &ctx.Config.Brews[i]
 
-		if brew.CommitAuthor.Name == "" {
-			brew.CommitAuthor.Name = "goreleaserbot"
-		}
-		if brew.CommitAuthor.Email == "" {
-			brew.CommitAuthor.Email = "goreleaser@carlosbecker.com"
-		}
+		brew.CommitAuthor = commitauthor.Default(brew.CommitAuthor)
+
 		if brew.CommitMessageTemplate == "" {
 			brew.CommitMessageTemplate = "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
 		}
@@ -56,6 +53,9 @@ func (Pipe) Default(ctx *context.Context) error {
 		}
 		if brew.Goarm == "" {
 			brew.Goarm = "6"
+		}
+		if brew.Goamd64 == "" {
+			brew.Goamd64 = "v1"
 		}
 	}
 
@@ -135,12 +135,17 @@ func doPublish(ctx *context.Context, formula *artifact.Artifact, cl client.Clien
 		return err
 	}
 
+	author, err := commitauthor.Get(ctx, brew.CommitAuthor)
+	if err != nil {
+		return err
+	}
+
 	content, err := os.ReadFile(formula.Path)
 	if err != nil {
 		return err
 	}
 
-	return cl.CreateFile(ctx, brew.CommitAuthor, repo, content, gpath, msg)
+	return cl.CreateFile(ctx, author, repo, content, gpath, msg)
 }
 
 func doRun(ctx *context.Context, brew config.Homebrew, cl client.Client) error {
@@ -148,14 +153,16 @@ func doRun(ctx *context.Context, brew config.Homebrew, cl client.Client) error {
 		return pipe.Skip("brew tap name is not set")
 	}
 
-	// TODO: properly cover this with tests
 	filters := []artifact.Filter{
 		artifact.Or(
 			artifact.ByGoos("darwin"),
 			artifact.ByGoos("linux"),
 		),
 		artifact.Or(
-			artifact.ByGoarch("amd64"),
+			artifact.And(
+				artifact.ByGoarch("amd64"),
+				artifact.ByGoamd64(brew.Goamd64),
+			),
 			artifact.ByGoarch("arm64"),
 			artifact.ByGoarch("all"),
 			artifact.And(
@@ -321,7 +328,8 @@ func dataFor(ctx *context.Context, cfg config.Homebrew, cl client.Client, artifa
 		Dependencies:  cfg.Dependencies,
 		Conflicts:     cfg.Conflicts,
 		Plist:         cfg.Plist,
-		PostInstall:   cfg.PostInstall,
+		Service:       split(cfg.Service),
+		PostInstall:   split(cfg.PostInstall),
 		Tests:         split(cfg.Test),
 		CustomRequire: cfg.CustomRequire,
 		CustomBlock:   split(cfg.CustomBlock),
@@ -372,6 +380,10 @@ func dataFor(ctx *context.Context, cfg config.Homebrew, cl client.Client, artifa
 		}
 	}
 
+	if len(result.MacOSPackages) == 1 && result.MacOSPackages[0].Arch == "amd64" {
+		result.HasOnlyAmd64MacOsPkg = true
+	}
+
 	sort.Slice(result.LinuxPackages, lessFnFor(result.LinuxPackages))
 	sort.Slice(result.MacOSPackages, lessFnFor(result.MacOSPackages))
 	return result, nil
@@ -396,7 +408,7 @@ func split(s string) []string {
 func formulaNameFor(name string) string {
 	name = strings.ReplaceAll(name, "-", " ")
 	name = strings.ReplaceAll(name, "_", " ")
-	name = strings.ReplaceAll(name, ".", "_")
+	name = strings.ReplaceAll(name, ".", "")
 	name = strings.ReplaceAll(name, "@", "AT")
-	return strings.ReplaceAll(strings.Title(name), " ", "")
+	return strings.ReplaceAll(strings.Title(name), " ", "") // nolint:staticcheck
 }

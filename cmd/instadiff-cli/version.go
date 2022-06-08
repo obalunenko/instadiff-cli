@@ -3,16 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
+	"strings"
 	"text/tabwriter"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 
+	log "github.com/obalunenko/logger"
 	"github.com/obalunenko/version"
 )
 
-func printVersion(_ context.Context) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.TabIndent)
+func printVersion(ctx context.Context) string {
+	var buf strings.Builder
+
+	w := tabwriter.NewWriter(&buf, 0, 0, 1, ' ', tabwriter.TabIndent)
 
 	_, err := fmt.Fprintf(w, `
 | app_name:	%s	|
@@ -35,10 +38,46 @@ func printVersion(_ context.Context) {
 		version.GetBuildDate(),
 	)
 	if err != nil {
-		log.WithError(err).Error("print version")
+		log.WithError(ctx, err).Error("print version")
 	}
+
+	if err := w.Flush(); err != nil {
+		log.WithError(ctx, err).Fatal("flush")
+	}
+
+	return buf.String()
 }
 
-func versionInfo() string {
-	return fmt.Sprintf("%s-%s-%s \n", version.GetVersion(), version.GetCommit(), version.GetBuildDate())
+func printHeader(_ context.Context) cli.BeforeFunc {
+	const (
+		padding  int  = 1
+		minWidth int  = 0
+		tabWidth int  = 0
+		padChar  byte = ' '
+	)
+
+	return func(c *cli.Context) error {
+		w := tabwriter.NewWriter(c.App.Writer, minWidth, tabWidth, padding, padChar, tabwriter.TabIndent)
+
+		_, err := fmt.Fprintf(w, `
+
+██╗███╗   ██╗███████╗████████╗ █████╗ ██████╗ ██╗███████╗███████╗     ██████╗██╗     ██╗
+██║████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██║██╔════╝██╔════╝    ██╔════╝██║     ██║
+██║██╔██╗ ██║███████╗   ██║   ███████║██║  ██║██║█████╗  █████╗█████╗██║     ██║     ██║
+██║██║╚██╗██║╚════██║   ██║   ██╔══██║██║  ██║██║██╔══╝  ██╔══╝╚════╝██║     ██║     ██║
+██║██║ ╚████║███████║   ██║   ██║  ██║██████╔╝██║██║     ██║         ╚██████╗███████╗██║
+╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝╚═╝     ╚═╝          ╚═════╝╚══════╝╚═╝
+                                                                                        
+
+`)
+		if err != nil {
+			return fmt.Errorf("print header: %w", err)
+		}
+
+		if err = w.Flush(); err != nil {
+			return fmt.Errorf("flush wirter: %w", err)
+		}
+
+		return nil
+	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/goreleaser/goreleaser/internal/pipe/archive"
 	"github.com/goreleaser/goreleaser/internal/pipe/artifactory"
+	"github.com/goreleaser/goreleaser/internal/pipe/aur"
 	"github.com/goreleaser/goreleaser/internal/pipe/blob"
 	"github.com/goreleaser/goreleaser/internal/pipe/brew"
 	"github.com/goreleaser/goreleaser/internal/pipe/build"
@@ -35,6 +36,7 @@ import (
 	"github.com/goreleaser/goreleaser/internal/pipe/telegram"
 	"github.com/goreleaser/goreleaser/internal/pipe/twitter"
 	"github.com/goreleaser/goreleaser/internal/pipe/universalbinary"
+	"github.com/goreleaser/goreleaser/internal/pipe/webhook"
 	"github.com/goreleaser/goreleaser/pkg/context"
 )
 
@@ -68,6 +70,7 @@ var Defaulters = []Defaulter{
 	docker.ManifestPipe{},
 	artifactory.Pipe{},
 	blob.Pipe{},
+	aur.Pipe{},
 	brew.Pipe{},
 	krew.Pipe{},
 	gofish.Pipe{},
@@ -82,4 +85,5 @@ var Defaulters = []Defaulter{
 	milestone.Pipe{},
 	linkedin.Pipe{},
 	telegram.Pipe{},
+	webhook.Pipe{},
 }

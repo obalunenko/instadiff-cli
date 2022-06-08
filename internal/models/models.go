@@ -67,7 +67,7 @@ func (i UsersBatchType) Valid() bool {
 }
 
 // MakeUser creates User with passed values.
-func MakeUser(id int64, username string, fullname string) User {
+func MakeUser(id int64, username, fullname string) User {
 	return User{ID: id, UserName: username, FullName: fullname}
 }
 

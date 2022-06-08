@@ -8,8 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/schollz/progressbar/v2"
-	log "github.com/sirupsen/logrus"
+	"github.com/schollz/progressbar/v3"
+
+	log "github.com/obalunenko/logger"
 )
 
 // BType represents kind of progress bar.
@@ -60,7 +61,7 @@ type Bar interface {
 // }.
 //
 func New(max int, barType BType) Bar {
-	switch barType { //nolint:exhaustive
+	switch barType { //nolint:exhaustive // this is expected behavior.
 	case BTypeRendered:
 		b := realBar{
 			bar:   progressbar.New(max),
@@ -148,7 +149,7 @@ func (b *realBar) Run(ctx context.Context) {
 
 	defer func() {
 		if err := b.bar.Finish(); err != nil {
-			log.Errorf("error when finish bar: %v", err)
+			log.WithError(ctx, err).Error("Failed to finish bar")
 		}
 
 		_, _ = fmt.Fprintln(os.Stdout)
@@ -168,12 +169,12 @@ func (b *realBar) Run(ctx context.Context) {
 			}
 
 			if err := b.bar.Add(progressInc); err != nil {
-				log.Errorf("error when add to bar: %v", err)
+				log.WithError(ctx, err).Error("Failed to add to bar")
 			}
 
 			time.Sleep(sleep)
 		case <-ctx.Done():
-			log.Errorf("canceled context: %v", ctx.Err())
+			log.WithError(ctx, ctx.Err()).Error("Canceled context")
 
 			return
 		}

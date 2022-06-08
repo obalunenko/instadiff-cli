@@ -1,0 +1,150 @@
+linters:
+  enable-all: true
+  disable:
+    - gochecknoglobals
+    - paralleltest
+
+linters-settings:
+  errcheck:
+    # report about not checking of errors in type assetions: `a := b.(MyStruct)`;
+    # default is false: such cases aren't reported by default.
+    check-type-assertions: true
+
+    # report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`;
+    # default is false: such cases aren't reported by default.
+    check-blank: true
+
+  funlen:
+    lines: 60
+    statements: 40
+
+  gofmt:
+    simplify: true
+  govet:
+    check-shadowing: true
+    enable-all: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 10
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  gomnd:
+    settings:
+      mnd:
+        # the list of enabled checks, see https://github.com/tommy-muehle/go-mnd/#checks for description.
+        checks: argument,case,condition,operation,return
+  lll:
+    # max line length, lines longer will be reported. Default is 120.
+    # '\t' is counted as 1 character by default, and can be changed with the tab-width option
+    line-length: 120
+    # tab width in spaces. Default to 1.
+    tab-width: 1
+  nakedret:
+    # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
+    max-func-lines: 30
+  goimports:
+    local-prefixes: github.com/obalunenko/logger/
+  unparam:
+    algo: cha
+    check-exported: false
+  prealloc:
+    simple: true
+    range-loops: true # Report preallocation suggestions on range loops, true by default
+    for-loops: false # Report preallocation suggestions on for loops, false by default
+  godox:
+    # report any comments starting with keywords, this is useful for TODO or FIXME comments that
+    # might be left in the code accidentally and should be resolved before merging
+    keywords: # default keywords are TODO, BUG, and FIXME, these can be overwritten by this setting
+      - NOTE
+      - OPTIMIZE # marks code that should be optimized before merging
+      - HACK # marks hack-arounds that should be removed before merging
+      - TODO
+      - BUG
+      - FIXME
+    dogsled:
+      # checks assignments with too many blank identifiers; default is 2
+      max-blank-identifiers: 2
+
+    whitespace:
+      multi-if: false   # Enforces newlines (or comments) after every multi-line if statement
+      multi-func: false # Enforces newlines (or comments) after every multi-line function signature
+    wsl:
+      # If true append is only allowed to be cuddled if appending value is
+      # matching variables, fields or types on line above. Default is true.
+      strict-append: true
+      # Allow calls and assignments to be cuddled as long as the lines have any
+      # matching variables, fields or types. Default is true.
+      allow-assign-and-call: true
+      # Allow multiline assignments to be cuddled. Default is true.
+      allow-multiline-assign: true
+      # Allow declarations (var) to be cuddled.
+      allow-cuddle-declarations: false
+      # Allow trailing comments in ending of blocks
+      allow-trailing-comment: false
+      # Force newlines in end of case at this limit (0 = never).
+      force-case-trailing-whitespace: 0
+  gocritic:
+    enabled-checks:
+      - docStub
+      - rangeValCopy
+      - yodaStyleExpr
+      - appendAssign
+      - appendCombine
+      - caseOrder
+      - badCond
+      - commentedOutCode
+      - commentFormatting
+      - commentedOutImport
+      - dupArg
+      - dupBranchBody
+      - elseif
+      - emptyStringTest
+      - indexAlloc
+      - initClause
+      - captlocal
+      - weakCond
+      - deprecatedComment
+      - flagDeref
+      - flagName
+      - hugeParam
+      - ifElseChain
+      - nilValReturn
+      - rangeExprCopy
+      - ptrToRefParam
+      - underef
+      - unnecessaryBlock
+      - valSwap
+    settings: # settings passed to gocritic
+      captLocal: # must be valid enabled check name
+        paramsOnly: true
+      rangeValCopy:
+        sizeThreshold: 320
+      hugeParam:
+        sizeThreshold: 500
+      rangeExprCopy:
+        skipTestFuncs: true
+      underef:
+        skipRecvDeref: true
+
+run:
+  issues-exit-code: 0
+  tests: true
+  skip-dirs:
+    - vendor/
+  skip-files:
+    - \.pb\.go$
+
+issues:
+  exclude-use-default: false
+  exclude:
+    # for "public interface + private struct implementation" cases only!
+    - exported func * returns unexported type *, which can be annoying to use
+

@@ -24,7 +24,7 @@ const (
 
 	useBuildx     = "buildx"
 	useDocker     = "docker"
-	useBuildPacks = "buildpacks"
+	useBuildPacks = "buildpacks" // deprecated: should not be used anymore
 )
 
 // Pipe for docker.
@@ -48,14 +48,14 @@ func (Pipe) Default(ctx *context.Context) error {
 		if docker.Goarch == "" {
 			docker.Goarch = "amd64"
 		}
+		if docker.Goamd64 == "" {
+			docker.Goamd64 = "v1"
+		}
 		if docker.Dockerfile == "" {
 			docker.Dockerfile = "Dockerfile"
 		}
-		if docker.Buildx {
-			deprecate.Notice(ctx, "docker.use_buildx")
-			if docker.Use == "" {
-				docker.Use = useBuildx
-			}
+		if docker.Use == useBuildPacks {
+			deprecate.Notice(ctx, "dockers.use: buildpacks")
 		}
 		if docker.Use == "" {
 			docker.Use = useDocker
@@ -107,11 +107,17 @@ func (Pipe) Run(ctx *context.Context) error {
 			filters := []artifact.Filter{
 				artifact.ByGoos(docker.Goos),
 				artifact.ByGoarch(docker.Goarch),
-				artifact.ByGoarm(docker.Goarm),
 				artifact.Or(
 					artifact.ByType(artifact.Binary),
 					artifact.ByType(artifact.LinuxPackage),
 				),
+			}
+			// TODO: properly test this
+			switch docker.Goarch {
+			case "amd64":
+				filters = append(filters, artifact.ByGoamd64(docker.Goamd64))
+			case "arm":
+				filters = append(filters, artifact.ByGoarm(docker.Goarm))
 			}
 			if len(docker.IDs) > 0 {
 				filters = append(filters, artifact.ByIDs(docker.IDs...))
@@ -121,7 +127,13 @@ func (Pipe) Run(ctx *context.Context) error {
 			return process(ctx, docker, artifacts.List())
 		})
 	}
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		if pipe.IsSkip(err) {
+			return err
+		}
+		return fmt.Errorf("docker build failed: %w\nLearn more at https://goreleaser.com/errors/docker-build\n", err) // nolint:revive
+	}
+	return nil
 }
 
 func process(ctx *context.Context, docker config.Docker, artifacts []*artifact.Artifact) error {
@@ -143,7 +155,11 @@ func process(ctx *context.Context, docker config.Docker, artifacts []*artifact.A
 	log.Debug("tempdir: " + tmp)
 
 	if docker.Use != useBuildPacks {
-		if err := gio.Copy(docker.Dockerfile, filepath.Join(tmp, "Dockerfile")); err != nil {
+		dockerfile, err := tmpl.New(ctx).Apply(docker.Dockerfile)
+		if err != nil {
+			return err
+		}
+		if err := gio.Copy(dockerfile, filepath.Join(tmp, "Dockerfile")); err != nil {
 			return fmt.Errorf("failed to copy dockerfile: %w", err)
 		}
 	}

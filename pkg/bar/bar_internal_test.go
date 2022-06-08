@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/schollz/progressbar/v2"
+	"github.com/schollz/progressbar/v3"
 	"github.com/stretchr/testify/assert"
 )
 

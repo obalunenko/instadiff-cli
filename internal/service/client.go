@@ -2,6 +2,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,13 +10,15 @@ import (
 	"strings"
 
 	"github.com/Davincible/goinsta"
-	log "github.com/sirupsen/logrus"
 	"github.com/tcnksm/go-input"
 
+	log "github.com/obalunenko/logger"
+
 	"github.com/obalunenko/instadiff-cli/internal/config"
+	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 )
 
-func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
+func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 	var cl *goinsta.Instagram
 
 	uname, err := username()
@@ -25,8 +28,14 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 
 	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
 
-	if cl, err = goinsta.Import(sessFile); err == nil {
-		log.Infof("session imported from file: %s", sessFile)
+	stop := spinner.Set("Trying to import previous session..", "", "yellow")
+
+	cl, err = goinsta.Import(sessFile)
+
+	stop()
+
+	if err == nil {
+		log.WithField(ctx, "session_file", sessFile).Info("Session imported")
 
 		return cl, nil
 	}
@@ -43,7 +52,7 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 
 	if cfg.StoreSession() {
 		if err = cl.Export(sessFile); err != nil {
-			log.Errorf("save session: %v", err)
+			log.WithError(ctx, err).Error("Failed to save session")
 		}
 	}
 
@@ -53,7 +62,11 @@ func makeClient(cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
 func login(uname, pwd string) (*goinsta.Instagram, error) {
 	cl := goinsta.New(uname, pwd)
 
+	stop := spinner.Set("Sending log in request..", "", "yellow")
+
 	err := cl.Login()
+
+	stop()
 
 	switch {
 	case errors.Is(err, nil):
@@ -76,6 +89,9 @@ func login(uname, pwd string) (*goinsta.Instagram, error) {
 		if err != nil {
 			return nil, fmt.Errorf("2fa ocde: %w", err)
 		}
+
+		stop = spinner.Set("Sending 2fa code..", "", "yellow")
+		defer stop()
 
 		if err = cl.TwoFactorInfo.Login2FA(code); err != nil {
 			return nil, fmt.Errorf("login 2fa: %w", err)
@@ -156,6 +172,9 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 	if err != nil {
 		return nil, fmt.Errorf("get prompt: %w", err)
 	}
+
+	stop := spinner.Set("Sending security code..", "", "yellow")
+	defer stop()
 
 	if err = cl.Challenge.SendSecurityCode(code); err != nil {
 		return nil, fmt.Errorf("send security code: %w", err)

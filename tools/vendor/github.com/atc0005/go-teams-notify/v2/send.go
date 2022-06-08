@@ -133,6 +133,8 @@ func NewClient() API {
 	return &client
 }
 
+// AddWebhookURLValidationPatterns collects given patterns for validation of
+// the webhook URL.
 func (c *teamsClient) AddWebhookURLValidationPatterns(patterns ...string) API {
 	c.webhookURLValidationPatterns = append(c.webhookURLValidationPatterns, patterns...)
 	return c
@@ -154,42 +156,21 @@ func (c teamsClient) Send(webhookURL string, webhookMessage MessageCard) error {
 func (c teamsClient) SendWithContext(ctx context.Context, webhookURL string, webhookMessage MessageCard) error {
 	logger.Printf("SendWithContext: Webhook message received: %#v\n", webhookMessage)
 
-	// optionally skip webhook validation
-	if c.skipWebhookURLValidation {
-		logger.Printf("SendWithContext: Webhook URL will not be validated: %#v\n", webhookURL)
-	}
-
-	// Validate input data
-	if err := c.validateInput(webhookMessage, webhookURL); err != nil {
+	webhookMessageBuffer, err := c.prepareMessageCard(webhookURL, webhookMessage)
+	if err != nil {
 		return err
 	}
 
-	// prepare message
-	webhookMessageByte, _ := json.Marshal(webhookMessage)
-	webhookMessageBuffer := bytes.NewBuffer(webhookMessageByte)
-
-	// Basic, unformatted JSON
-	// logger.Printf("SendWithContext: %+v\n", string(webhookMessageByte))
-
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, webhookMessageByte, "", "\t"); err != nil {
+	req, err := c.prepareRequest(ctx, webhookURL, webhookMessageBuffer)
+	if err != nil {
 		return err
 	}
-	logger.Printf("SendWithContext: Payload for Microsoft Teams: \n\n%v\n\n", prettyJSON.String())
 
-	// prepare request (error not possible)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, webhookMessageBuffer)
-	req.Header.Add("Content-Type", "application/json;charset=utf-8")
-
-	// do the request
+	// Submit message to endpoint.
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		logger.Println(err)
 		return err
-	}
-
-	if ctx.Err() != nil {
-		logger.Println("SendWithContext: Context has expired after Do(req):", time.Now().Format("15:04:05"))
 	}
 
 	// Make sure that we close the response body once we're done with it
@@ -199,53 +180,14 @@ func (c teamsClient) SendWithContext(ctx context.Context, webhookURL string, web
 		}
 	}()
 
-	// Get the response body, then convert to string for use with extended
-	// error messages
-	responseData, err := ioutil.ReadAll(res.Body)
+	responseText, err := processResponse(res)
 	if err != nil {
-		logger.Println(err)
 		return err
 	}
-	responseString := string(responseData)
 
-	switch {
-	// 400 Bad Response is likely an indicator that we failed to provide a
-	// required field in our JSON payload. For example, when leaving out the
-	// top level MessageCard Summary or Text field, the remote API returns
-	// "Summary or Text is required." as a text string. We include that
-	// response text in the error message that we return to the caller.
-	case res.StatusCode >= 299:
-		err = fmt.Errorf("error on notification: %v, %q", res.Status, responseString)
-		logger.Println(err)
-		return err
+	logger.Printf("SendWithContext: Response string from Microsoft Teams API: %v\n", responseText)
 
-	// Microsoft Teams developers have indicated that a 200 status code is
-	// insufficient to confirm that a message was successfully submitted.
-	// Instead, clients should ensure that a specific response string was also
-	// returned along with a 200 status code to confirm that a message was
-	// sent successfully. Because there is a chance that unintentional
-	// whitespace could be included, we explicitly strip it out.
-	//
-	// See atc0005/go-teams-notify#59 for more information.
-	case responseString != strings.TrimSpace(ExpectedWebhookURLResponseText):
-
-		err = fmt.Errorf(
-			"got %q, expected %q: %w",
-			responseString,
-			ExpectedWebhookURLResponseText,
-			ErrInvalidWebhookURLResponseText,
-		)
-
-		logger.Println(err)
-		return err
-
-	default:
-
-		// log the response string
-		logger.Printf("SendWithContext: Response string from Microsoft Teams API: %v\n", responseString)
-
-		return nil
-	}
+	return nil
 }
 
 // SendWithRetry is a wrapper function around the SendWithContext method in
@@ -265,38 +207,7 @@ func (c teamsClient) SendWithRetry(ctx context.Context, webhookURL string, webho
 		result = c.SendWithContext(ctx, webhookURL, webhookMessage)
 
 		switch {
-		case result == nil:
-
-			logger.Printf(
-				"SendWithRetry: successfully sent message after %d of %d attempts\n",
-				attempt,
-				attemptsAllowed,
-			)
-
-			// No further retries needed
-			return nil
-
-		// While the context is passed to mstClient.SendWithContext and it
-		// should ensure that it is respected, we check here explicitly in
-		// order to return early in an effort to prevent undesired message
-		// attempts
-		case ctx.Err() != nil && result != nil:
-
-			errMsg := fmt.Errorf(
-				"SendWithRetry: context cancelled or expired: %v; "+
-					"aborting message submission after %d of %d attempts: %w",
-				ctx.Err().Error(),
-				attempt,
-				attemptsAllowed,
-				result,
-			)
-
-			logger.Println(errMsg)
-			return errMsg
-
 		case result != nil:
-
-			ourRetryDelay := time.Duration(retriesDelay) * time.Second
 
 			logger.Printf(
 				"SendWithRetry: Attempt %d of %d to send message failed: %v",
@@ -305,14 +216,38 @@ func (c teamsClient) SendWithRetry(ctx context.Context, webhookURL string, webho
 				result,
 			)
 
-			// apply retry delay since our context hasn't been cancelled yet,
-			// otherwise continue with the loop to allow context cancellation
-			// handling logic to be applied
+			if ctx.Err() != nil {
+				errMsg := fmt.Errorf(
+					"SendWithRetry: context cancelled or expired: %v; "+
+						"aborting message submission after %d of %d attempts: %w",
+					ctx.Err().Error(),
+					attempt,
+					attemptsAllowed,
+					result,
+				)
+
+				logger.Println(errMsg)
+
+				return errMsg
+			}
+
+			ourRetryDelay := time.Duration(retriesDelay) * time.Second
+
 			logger.Printf(
 				"SendWithRetry: Context not cancelled yet, applying retry delay of %v",
 				ourRetryDelay,
 			)
 			time.Sleep(ourRetryDelay)
+
+		default:
+			logger.Printf(
+				"SendWithRetry: successfully sent message after %d of %d attempts\n",
+				attempt,
+				attemptsAllowed,
+			)
+
+			// No further retries needed
+			return nil
 		}
 	}
 
@@ -337,6 +272,102 @@ func (c teamsClient) validateInput(webhookMessage MessageCard, webhookURL string
 	return webhookMessage.Validate()
 }
 
+// prepareMessageCard is a helper method to handle tasks needed to prepare a
+// given webhook MessageCard for delivery to an endpoint.
+func (c teamsClient) prepareMessageCard(webhookURL string, webhookMessage MessageCard) (*bytes.Buffer, error) {
+	if c.skipWebhookURLValidation {
+		logger.Printf("prepareMessageCard: Webhook URL will not be validated: %#v\n", webhookURL)
+	}
+
+	if err := c.validateInput(webhookMessage, webhookURL); err != nil {
+		return nil, err
+	}
+
+	webhookMessageByte, err := json.Marshal(webhookMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	webhookMessageBuffer := bytes.NewBuffer(webhookMessageByte)
+
+	// Basic, unformatted JSON
+	// logger.Printf("prepareMessageCard: %+v\n", string(webhookMessageByte))
+
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, webhookMessageByte, "", "\t"); err != nil {
+		return nil, err
+	}
+	logger.Printf("prepareMessageCard: Payload for Microsoft Teams: \n\n%v\n\n", prettyJSON.String())
+
+	return webhookMessageBuffer, nil
+}
+
+// prepareRequest is a helper method response for preparing a http.Request
+// (including all desired headers) in order to submit a given prepared message
+// to an endpoint.
+func (c teamsClient) prepareRequest(ctx context.Context, webhookURL string, preparedMessage *bytes.Buffer) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, preparedMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	return req, nil
+}
+
+// processResponse is a helper function responsible for validating a response
+// from an endpoint after submitting a message.
+func processResponse(response *http.Response) (string, error) {
+	// Get the response body, then convert to string for use with extended
+	// error messages
+	responseData, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		logger.Println(err)
+
+		return "", err
+	}
+	responseString := string(responseData)
+
+	switch {
+	// 400 Bad Response is likely an indicator that we failed to provide a
+	// required field in our JSON payload. For example, when leaving out the
+	// top level MessageCard Summary or Text field, the remote API returns
+	// "Summary or Text is required." as a text string. We include that
+	// response text in the error message that we return to the caller.
+	case response.StatusCode >= 299:
+		err = fmt.Errorf("error on notification: %v, %q", response.Status, responseString)
+
+		logger.Println(err)
+
+		return "", err
+
+	// Microsoft Teams developers have indicated that a 200 status code is
+	// insufficient to confirm that a message was successfully submitted.
+	// Instead, clients should ensure that a specific response string was also
+	// returned along with a 200 status code to confirm that a message was
+	// sent successfully. Because there is a chance that unintentional
+	// whitespace could be included, we explicitly strip it out.
+	//
+	// See atc0005/go-teams-notify#59 for more information.
+	case responseString != strings.TrimSpace(ExpectedWebhookURLResponseText):
+		err = fmt.Errorf(
+			"got %q, expected %q: %w",
+			responseString,
+			ExpectedWebhookURLResponseText,
+			ErrInvalidWebhookURLResponseText,
+		)
+
+		logger.Println(err)
+
+		return "", err
+
+	default:
+		return responseString, nil
+	}
+}
+
+// ValidateWebhook applies webhook URL validation unless explicitly disabled.
 func (c teamsClient) ValidateWebhook(webhookURL string) error {
 	if c.skipWebhookURLValidation || webhookURL == DisableWebhookURLValidation {
 		return nil

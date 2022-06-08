@@ -14,6 +14,8 @@ import (
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/client"
+	"github.com/goreleaser/goreleaser/internal/commitauthor"
+	"github.com/goreleaser/goreleaser/internal/deprecate"
 	"github.com/goreleaser/goreleaser/internal/pipe"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
 	"github.com/goreleaser/goreleaser/pkg/config"
@@ -34,15 +36,13 @@ func (Pipe) String() string                 { return "gofish fish food cookbook"
 func (Pipe) Skip(ctx *context.Context) bool { return len(ctx.Config.Rigs) == 0 }
 
 func (Pipe) Default(ctx *context.Context) error {
+	if len(ctx.Config.Rigs) > 0 {
+		deprecate.Notice(ctx, "rigs")
+	}
 	for i := range ctx.Config.Rigs {
 		goFish := &ctx.Config.Rigs[i]
 
-		if goFish.CommitAuthor.Name == "" {
-			goFish.CommitAuthor.Name = "goreleaserbot"
-		}
-		if goFish.CommitAuthor.Email == "" {
-			goFish.CommitAuthor.Email = "goreleaser@carlosbecker.com"
-		}
+		goFish.CommitAuthor = commitauthor.Default(goFish.CommitAuthor)
 		if goFish.CommitMessageTemplate == "" {
 			goFish.CommitMessageTemplate = "GoFish fish food update for {{ .ProjectName }} version {{ .Tag }}"
 		}
@@ -88,7 +88,10 @@ func doRun(ctx *context.Context, goFish config.GoFish, cl client.Client) error {
 			artifact.ByGoos("windows"),
 		),
 		artifact.Or(
-			artifact.ByGoarch("amd64"),
+			artifact.And(
+				artifact.ByGoarch("amd64"),
+				artifact.ByGoamd64("v1"),
+			),
 			artifact.ByGoarch("arm64"),
 			artifact.ByGoarch("all"),
 			artifact.And(
@@ -297,12 +300,17 @@ func doPublish(ctx *context.Context, food *artifact.Artifact, cl client.Client) 
 		return err
 	}
 
+	author, err := commitauthor.Get(ctx, rig.CommitAuthor)
+	if err != nil {
+		return err
+	}
+
 	content, err := os.ReadFile(food.Path)
 	if err != nil {
 		return err
 	}
 
-	return cl.CreateFile(ctx, rig.CommitAuthor, repo, content, gpath, msg)
+	return cl.CreateFile(ctx, author, repo, content, gpath, msg)
 }
 
 func buildFoodPath(folder, filename string) string {

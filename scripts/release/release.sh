@@ -13,7 +13,7 @@ echo "${SCRIPT_NAME} is running... "
 
 checkInstalled 'goreleaser'
 
-APP=aoc-cli
+APP=instadiff-cli
 
 # Get new tags from the remote
 git fetch --tags -f

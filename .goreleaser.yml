@@ -2,6 +2,8 @@ release:
   github:
     owner: obalunenko
     name: instadiff-cli
+  footer: |
+    **Full Changelog**: https://github.com/obalunenko/instadiff-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 gomod:
   proxy: true
@@ -28,7 +30,9 @@ builds:
       - darwin
       - windows
     goarch:
+      - 386
       - amd64
+      - arm
       - arm64
     mod_timestamp: '{{ .CommitTimestamp }}'
     env:
@@ -77,6 +81,7 @@ archives:
     files:
       - LICENSE
       - README.md
+      - config-example.json
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 
@@ -85,6 +90,7 @@ snapshot:
 
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
       - "^docs:"
@@ -99,3 +105,15 @@ changelog:
       - Rebase on master
       - "^Makefile"
       - "goreleaser"
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 10
+    - title: Other work
+      order: 999
+
+milestones:
+  - close: true

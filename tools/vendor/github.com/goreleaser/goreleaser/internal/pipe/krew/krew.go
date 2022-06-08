@@ -16,11 +16,12 @@ import (
 	"github.com/apex/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/client"
+	"github.com/goreleaser/goreleaser/internal/commitauthor"
 	"github.com/goreleaser/goreleaser/internal/pipe"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
+	"github.com/goreleaser/goreleaser/internal/yaml"
 	"github.com/goreleaser/goreleaser/pkg/config"
 	"github.com/goreleaser/goreleaser/pkg/context"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -42,17 +43,15 @@ func (Pipe) Default(ctx *context.Context) error {
 	for i := range ctx.Config.Krews {
 		krew := &ctx.Config.Krews[i]
 
-		if krew.CommitAuthor.Name == "" {
-			krew.CommitAuthor.Name = "goreleaserbot"
-		}
-		if krew.CommitAuthor.Email == "" {
-			krew.CommitAuthor.Email = "goreleaser@carlosbecker.com"
-		}
+		krew.CommitAuthor = commitauthor.Default(krew.CommitAuthor)
 		if krew.CommitMessageTemplate == "" {
 			krew.CommitMessageTemplate = "Krew manifest update for {{ .ProjectName }} version {{ .Tag }}"
 		}
 		if krew.Name == "" {
 			krew.Name = ctx.Config.ProjectName
+		}
+		if krew.Goamd64 == "" {
+			krew.Goamd64 = "v1"
 		}
 	}
 
@@ -96,7 +95,10 @@ func doRun(ctx *context.Context, krew config.Krew, cl client.Client) error {
 			artifact.ByGoos("windows"),
 		),
 		artifact.Or(
-			artifact.ByGoarch("amd64"),
+			artifact.And(
+				artifact.ByGoarch("amd64"),
+				artifact.ByGoamd64(krew.Goamd64),
+			),
 			artifact.ByGoarch("arm64"),
 			artifact.ByGoarch("all"),
 			artifact.And(
@@ -308,12 +310,17 @@ func doPublish(ctx *context.Context, manifest *artifact.Artifact, cl client.Clie
 		return err
 	}
 
+	author, err := commitauthor.Get(ctx, cfg.CommitAuthor)
+	if err != nil {
+		return err
+	}
+
 	content, err := os.ReadFile(manifest.Path)
 	if err != nil {
 		return err
 	}
 
-	return cl.CreateFile(ctx, cfg.CommitAuthor, repo, content, gpath, msg)
+	return cl.CreateFile(ctx, author, repo, content, gpath, msg)
 }
 
 func buildManifestPath(folder, filename string) string {

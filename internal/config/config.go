@@ -2,13 +2,15 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	log "github.com/obalunenko/logger"
 )
 
 // Config represents config for InstaDiff service.
@@ -71,10 +73,6 @@ func (c *Config) Debug() bool {
 
 // SetDebug updates debug status.
 func (c *Config) SetDebug(debug bool) {
-	if debug {
-		log.Println("debug mode set")
-	}
-
 	c.debug = debug
 }
 
@@ -107,7 +105,7 @@ func (c Config) StoreSession() bool {
 var ErrEmptyPath = errors.New("config path is empty")
 
 // Load loads config from passed filepath.
-func Load(path string) (Config, error) {
+func Load(ctx context.Context, path string) (Config, error) {
 	var cfg Config
 
 	if path == "" {
@@ -122,9 +120,7 @@ func Load(path string) (Config, error) {
 	}
 
 	// Reset viper to free memory.
-	defer func() {
-		viper.Reset()
-	}()
+	defer viper.Reset()
 
 	viper.SetEnvPrefix("instadiff")
 
@@ -134,7 +130,7 @@ func Load(path string) (Config, error) {
 	viper.AutomaticEnv()
 
 	// Confirms which config file is used.
-	log.Infof("Using config: %s\n\n", viper.ConfigFileUsed())
+	log.WithField(ctx, "config_path", viper.ConfigFileUsed()).Info("Using config file")
 
 	cfg = Config{
 		storage: storage{

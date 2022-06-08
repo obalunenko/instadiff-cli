@@ -7,13 +7,12 @@ SCRIPT_DIR="$(dirname "$0")"
 REPO_ROOT="$(cd "${SCRIPT_DIR}" && git rev-parse --show-toplevel)"
 SCRIPTS_DIR="${REPO_ROOT}/scripts"
 
-echo "${SCRIPT_NAME} is running... "
-
 source "${SCRIPTS_DIR}/helpers-source.sh"
 
-checkInstalled 'gogroup'
+echo "${SCRIPT_NAME} is running... "
 
-gogroup -order std,other,prefix=github.com/obalunenko/ -rewrite $(find . -type f -name "*.go" | grep -v "vendor/" | grep -v ".git")
+checkInstalled 'goimports'
 
+goimports -local=github.com/obalunenko/instadiff-cli -w $(find . -type f -name "*.go" | grep -v "vendor/" | grep -v ".git")
 
 echo "${SCRIPT_NAME} done."

@@ -72,8 +72,10 @@ var (
 			return float32(f), err
 		},
 	}
+)
 
-	defaultTypeParsers = map[reflect.Type]ParserFunc{
+func defaultTypeParsers() map[reflect.Type]ParserFunc {
+	return map[reflect.Type]ParserFunc{
 		reflect.TypeOf(url.URL{}): func(v string) (interface{}, error) {
 			u, err := url.Parse(v)
 			if err != nil {
@@ -89,7 +91,7 @@ var (
 			return s, err
 		},
 	}
-)
+}
 
 // ParserFunc defines the signature of a function that can be used within `CustomParsers`.
 type ParserFunc func(v string) (interface{}, error)
@@ -187,7 +189,7 @@ func ParseWithFuncs(v interface{}, funcMap map[reflect.Type]ParserFunc, opts ...
 	if ref.Kind() != reflect.Struct {
 		return ErrNotAStructPtr
 	}
-	parsers := defaultTypeParsers
+	parsers := defaultTypeParsers()
 	for k, v := range funcMap {
 		parsers[k] = v
 	}
@@ -216,7 +218,7 @@ func doParse(ref reflect.Value, funcMap map[reflect.Type]ParserFunc, opts []Opti
 			continue
 		}
 		if reflect.Struct == refField.Kind() && refField.CanAddr() && refField.Type().Name() == "" {
-			if err := Parse(refField.Addr().Interface(), opts...); err != nil {
+			if err := Parse(refField.Addr().Interface(), optsWithPrefix(refType.Field(i), opts)...); err != nil {
 				return err
 			}
 			continue
@@ -453,9 +455,6 @@ func parseTextUnmarshalers(field reflect.Value, data []string, sf reflect.Struct
 }
 
 func newParseError(sf reflect.StructField, err error) error {
-	if err == nil {
-		return nil
-	}
 	return parseError{
 		sf:  sf,
 		err: err,

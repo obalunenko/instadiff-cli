@@ -3,6 +3,7 @@ package nfpm
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ import (
 )
 
 const (
-	defaultNameTemplate = "{{ .PackageName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+	defaultNameTemplate = `{{ .PackageName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
 	extraFiles          = "Files"
 )
 
@@ -46,7 +47,7 @@ func (Pipe) Default(ctx *context.Context) error {
 			fpm.ID = "default"
 		}
 		if fpm.Bindir == "" {
-			fpm.Bindir = "/usr/local/bin"
+			fpm.Bindir = "/usr/bin"
 		}
 		if fpm.PackageName == "" {
 			fpm.PackageName = ctx.Config.ProjectName
@@ -54,15 +55,16 @@ func (Pipe) Default(ctx *context.Context) error {
 		if fpm.FileNameTemplate == "" {
 			fpm.FileNameTemplate = defaultNameTemplate
 		}
-		if len(fpm.Builds) == 0 { // TODO: change this to empty by default and deal with it in the filtering code
-			for _, b := range ctx.Config.Builds {
-				fpm.Builds = append(fpm.Builds, b.ID)
-			}
+		if len(fpm.EmptyFolders) > 0 {
+			deprecate.Notice(ctx, "nfpms.empty_folders")
+		}
+		if fpm.Maintainer == "" {
+			deprecate.NoticeCustom(ctx, "nfpms.maintainer", "`{{ .Property }}` should always be set, check {{ .URL }} for more info")
 		}
 		ids.Inc(fpm.ID)
 	}
 
-	deprecation.Noticer = deprecate.NewWriter(ctx)
+	deprecation.Noticer = io.Discard
 	return ids.Validate()
 }
 
@@ -81,11 +83,16 @@ func (Pipe) Run(ctx *context.Context) error {
 }
 
 func doRun(ctx *context.Context, fpm config.NFPM) error {
-	linuxBinaries := ctx.Artifacts.Filter(artifact.And(
+	filters := []artifact.Filter{
 		artifact.ByType(artifact.Binary),
 		artifact.ByGoos("linux"),
-		artifact.ByIDs(fpm.Builds...),
-	)).GroupByPlatform()
+	}
+	if len(fpm.Builds) > 0 {
+		filters = append(filters, artifact.ByIDs(fpm.Builds...))
+	}
+	linuxBinaries := ctx.Artifacts.
+		Filter(artifact.And(filters...)).
+		GroupByPlatform()
 	if len(linuxBinaries) == 0 {
 		return fmt.Errorf("no linux binaries found for builds %v", fpm.Builds)
 	}
@@ -118,7 +125,9 @@ func mergeOverrides(fpm config.NFPM, format string) (*config.NFPMOverridables, e
 }
 
 func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*artifact.Artifact) error {
-	arch := binaries[0].Goarch + binaries[0].Goarm + binaries[0].Gomips
+	// TODO: improve mips handling on nfpm
+	infoArch := binaries[0].Goarch + binaries[0].Goarm + binaries[0].Gomips // key used for the ConventionalFileName et al
+	arch := infoArch + binaries[0].Goamd64                                  // unique arch key
 
 	overridden, err := mergeOverrides(fpm, format)
 	if err != nil {
@@ -143,6 +152,11 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 	}
 
 	description, err := t.Apply(fpm.Description)
+	if err != nil {
+		return err
+	}
+
+	maintainer, err := t.Apply(fpm.Maintainer)
 	if err != nil {
 		return err
 	}
@@ -181,6 +195,30 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 		})
 	}
 
+	if len(fpm.Deb.Lintian) > 0 {
+		lines := make([]string, 0, len(fpm.Deb.Lintian))
+		for _, ov := range fpm.Deb.Lintian {
+			lines = append(lines, fmt.Sprintf("%s: %s", fpm.PackageName, ov))
+		}
+		lintianPath := filepath.Join(ctx.Config.Dist, "deb", fpm.PackageName+"_"+arch, ".lintian")
+		if err := os.MkdirAll(filepath.Dir(lintianPath), 0o755); err != nil {
+			return fmt.Errorf("failed to write lintian file: %w", err)
+		}
+		if err := os.WriteFile(lintianPath, []byte(strings.Join(lines, "\n")), 0o644); err != nil {
+			return fmt.Errorf("failed to write lintian file: %w", err)
+		}
+
+		log.Debugf("creating %q", lintianPath)
+		contents = append(contents, &files.Content{
+			Source:      lintianPath,
+			Destination: filepath.Join("./usr/share/lintian/overrides", fpm.PackageName),
+			Packager:    "deb",
+			FileInfo: &files.ContentFileInfo{
+				Mode: 0o644,
+			},
+		})
+	}
+
 	log := log.WithField("package", fpm.PackageName).WithField("format", format).WithField("arch", arch)
 
 	// FPM meta package should not contain binaries at all
@@ -192,6 +230,9 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 			contents = append(contents, &files.Content{
 				Source:      filepath.ToSlash(src),
 				Destination: filepath.ToSlash(dst),
+				FileInfo: &files.ContentFileInfo{
+					Mode: 0o755,
+				},
 			})
 		}
 	}
@@ -199,7 +240,7 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 	log.WithField("files", destinations(contents)).Debug("all archive files")
 
 	info := &nfpm.Info{
-		Arch:            arch,
+		Arch:            infoArch,
 		Platform:        "linux",
 		Name:            fpm.PackageName,
 		Version:         ctx.Version,
@@ -209,7 +250,7 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 		Release:         fpm.Release,
 		Prerelease:      fpm.Prerelease,
 		VersionMetadata: fpm.VersionMetadata,
-		Maintainer:      fpm.Maintainer,
+		Maintainer:      maintainer,
 		Description:     description,
 		Vendor:          fpm.Vendor,
 		Homepage:        homepage,
@@ -287,10 +328,6 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 		info.Deb.Signature = nfpm.DebSignature{}
 	}
 
-	if err = nfpm.Validate(info); err != nil {
-		return fmt.Errorf("invalid nfpm config: %w", err)
-	}
-
 	packager, err := nfpm.Get(format)
 	if err != nil {
 		return err
@@ -314,6 +351,7 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 		return err
 	}
 	defer w.Close()
+
 	if err := packager.Package(info, w); err != nil {
 		return fmt.Errorf("nfpm failed: %w", err)
 	}
@@ -321,12 +359,14 @@ func create(ctx *context.Context, fpm config.NFPM, format string, binaries []*ar
 		return fmt.Errorf("could not close package file: %w", err)
 	}
 	ctx.Artifacts.Add(&artifact.Artifact{
-		Type:   artifact.LinuxPackage,
-		Name:   name,
-		Path:   path,
-		Goos:   binaries[0].Goos,
-		Goarch: binaries[0].Goarch,
-		Goarm:  binaries[0].Goarm,
+		Type:    artifact.LinuxPackage,
+		Name:    name,
+		Path:    path,
+		Goos:    binaries[0].Goos,
+		Goarch:  binaries[0].Goarch,
+		Goarm:   binaries[0].Goarm,
+		Gomips:  binaries[0].Gomips,
+		Goamd64: binaries[0].Goamd64,
 		Extra: map[string]interface{}{
 			artifact.ExtraBuilds: binaries,
 			artifact.ExtraID:     fpm.ID,
