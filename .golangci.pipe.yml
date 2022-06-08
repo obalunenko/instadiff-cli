@@ -13,7 +13,7 @@ linters-settings:
   gofmt:
     simplify: true
   goimports:
-    local-prefixes: github.com/obalunenko/instadiff-cli/
+    local-prefixes: github.com/obalunenko/instadiff-cli
   revive:
     # see https://github.com/mgechev/revive#available-rules for details.
     ignore-generated-header: true
@@ -70,29 +70,29 @@ issues:
       fix: false
 
   severity:
-      # Default value is empty string.
-      # Set the default severity for issues. If severity rules are defined and the issues
-      # do not match or no severity is provided to the rule this will be the default
-      # severity applied. Severities should match the supported severity names of the
-      # selected out format.
-      # - Code climate: https://docs.codeclimate.com/docs/issues#issue-severity
-      # -   Checkstyle: https://checkstyle.sourceforge.io/property_types.html#severity
-      # -       GitHub: https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-error-message
-      default-severity: error
+    # Default value is empty string.
+    # Set the default severity for issues. If severity rules are defined and the issues
+    # do not match or no severity is provided to the rule this will be the default
+    # severity applied. Severities should match the supported severity names of the
+    # selected out format.
+    # - Code climate: https://docs.codeclimate.com/docs/issues#issue-severity
+    # -   Checkstyle: https://checkstyle.sourceforge.io/property_types.html#severity
+    # -       GitHub: https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-error-message
+    default-severity: error
 
-      # The default value is false.
-      # If set to true severity-rules regular expressions become case sensitive.
-      case-sensitive: false
+    # The default value is false.
+    # If set to true severity-rules regular expressions become case sensitive.
+    case-sensitive: false
 
-      # Default value is empty list.
-      # When a list of severity rules are provided, severity information will be added to lint
-      # issues. Severity rules have the same filtering capability as exclude rules except you
-      # are allowed to specify one matcher per severity rule.
-      # Only affects out formats that support setting severity information.
-      rules:
-        - linters:
-            - dupl
-          severity: warning
+    # Default value is empty list.
+    # When a list of severity rules are provided, severity information will be added to lint
+    # issues. Severity rules have the same filtering capability as exclude rules except you
+    # are allowed to specify one matcher per severity rule.
+    # Only affects out formats that support setting severity information.
+    rules:
+      - linters:
+          - dupl
+        severity: warning
 
 run:
   issues-exit-code: 1
@@ -122,5 +122,3 @@ output:
 
   # sorts results by: filepath, line and column
   sort-results: true
-
-

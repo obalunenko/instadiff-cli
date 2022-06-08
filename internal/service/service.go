@@ -11,12 +11,13 @@ import (
 
 	"github.com/Davincible/goinsta"
 
+	log "github.com/obalunenko/logger"
+
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/pkg/bar"
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
-	log "github.com/obalunenko/logger"
 )
 
 var (
@@ -109,9 +110,9 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		debug:   cfg.Debug(),
 	}
 
-	stopFunc := StopFunc(func() error {
+	stopFunc := func() error {
 		return svc.stop()
-	})
+	}
 
 	return &svc, stopFunc, nil
 }
@@ -586,9 +587,7 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	defer func() {
-		cancel()
-	}()
+	defer cancel()
 
 	var noPreviousData bool
 
@@ -639,7 +638,7 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 	return []models.UsersBatch{lostBatch, newBatch}, nil
 }
 
-func getLostFollowers(oldlist []models.User, newlist []models.User) []models.User {
+func getLostFollowers(oldlist, newlist []models.User) []models.User {
 	var diff []models.User
 
 	for _, oU := range oldlist {
@@ -661,7 +660,7 @@ func getLostFollowers(oldlist []models.User, newlist []models.User) []models.Use
 	return diff
 }
 
-func getNewFollowers(oldlist []models.User, newlist []models.User) []models.User {
+func getNewFollowers(oldlist, newlist []models.User) []models.User {
 	var diff []models.User
 
 	for _, nU := range newlist {

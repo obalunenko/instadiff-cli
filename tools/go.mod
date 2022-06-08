@@ -9,9 +9,6 @@ require (
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
 	github.com/obalunenko/coverbadger v1.2.0
-	github.com/segmentio/golines v0.10.0
-	github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
 	gotest.tools/gotestsum v1.8.1
 )
@@ -55,8 +52,6 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20211112122917-428f8eabeeb3 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/alecthomas/jsonschema v0.0.0-20211209230136-e2b41affa5c1 // indirect
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/apex/log v1.9.0 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
@@ -93,7 +88,6 @@ require (
 	github.com/chavacava/garif v0.0.0-20220316182200-5cad0b5181d4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/daixiang0/gci v0.3.3 // indirect
-	github.com/dave/dst v0.27.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
 	github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb // indirect
@@ -192,7 +186,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.1 // indirect
-	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -254,7 +247,6 @@ require (
 	github.com/ultraware/whitespace v0.0.5 // indirect
 	github.com/uudashr/gocognit v1.0.5 // indirect
 	github.com/vartanbeno/go-reddit/v2 v2.0.1 // indirect
-	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	github.com/xanzy/go-gitlab v0.52.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
@@ -278,7 +270,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect

@@ -49,14 +49,14 @@ universal_binaries:
     #
     # Defaults to the project name.
     id: cli
-    
+
     # Universal binary name template.
     #
     # You will want to change this if you have multiple builds!
     #
     # Defaults to '{{ .ProjectName }}'
     name_template: 'instadiff-cli'
-    
+
     # Whether to remove the previous single-arch binaries from the artifact list.
     # If left as false, your end release might have both several macOS archives: amd64, arm64 and all.
     #

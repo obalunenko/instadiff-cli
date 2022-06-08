@@ -120,9 +120,7 @@ func Load(ctx context.Context, path string) (Config, error) {
 	}
 
 	// Reset viper to free memory.
-	defer func() {
-		viper.Reset()
-	}()
+	defer viper.Reset()
 
 	viper.SetEnvPrefix("instadiff")
 

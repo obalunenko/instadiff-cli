@@ -1,3 +1,4 @@
+// Package spinner provides functionality for spinner rendering.
 package spinner
 
 import (
@@ -8,7 +9,7 @@ import (
 )
 
 // Set runs the displaying of spinner to handle long time operations. Returns stop func.
-func Set(pfx string, after string, color string) func() {
+func Set(pfx, after, color string) func() {
 	const delayMs = 100
 
 	s := spinner.New(

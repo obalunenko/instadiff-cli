@@ -12,9 +12,10 @@ import (
 	"github.com/Davincible/goinsta"
 	"github.com/tcnksm/go-input"
 
+	log "github.com/obalunenko/logger"
+
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
-	log "github.com/obalunenko/logger"
 )
 
 func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
@@ -28,8 +29,11 @@ func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinst
 	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
 
 	stop := spinner.Set("Trying to import previous session..", "", "yellow")
+
 	cl, err = goinsta.Import(sessFile)
+
 	stop()
+
 	if err == nil {
 		log.WithField(ctx, "session_file", sessFile).Info("Session imported")
 
@@ -59,7 +63,9 @@ func login(uname, pwd string) (*goinsta.Instagram, error) {
 	cl := goinsta.New(uname, pwd)
 
 	stop := spinner.Set("Sending log in request..", "", "yellow")
+
 	err := cl.Login()
+
 	stop()
 
 	switch {

@@ -9,9 +9,10 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	log "github.com/obalunenko/logger"
+
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/internal/service"
-	log "github.com/obalunenko/logger"
 )
 
 func notFound(ctx context.Context) cli.CommandNotFoundFunc {
@@ -46,7 +47,9 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 		}
 
 		defer func() {
-			_ = stop()
+			if err = stop(); err != nil {
+				log.WithError(ctx, err).Warn("Error occurred during the service stop")
+			}
 		}()
 
 		return f(c, svc)

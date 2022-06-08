@@ -140,13 +140,6 @@ github.com/acomagu/bufpipe
 # github.com/alecthomas/jsonschema v0.0.0-20211209230136-e2b41affa5c1
 ## explicit; go 1.12
 github.com/alecthomas/jsonschema
-# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-## explicit
-github.com/alecthomas/template
-github.com/alecthomas/template/parse
-# github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
-## explicit
-github.com/alecthomas/units
 # github.com/alexkohler/prealloc v1.0.0
 ## explicit; go 1.15
 github.com/alexkohler/prealloc/pkg
@@ -364,14 +357,6 @@ github.com/daixiang0/gci/pkg/gci/imports
 github.com/daixiang0/gci/pkg/gci/sections
 github.com/daixiang0/gci/pkg/gci/specificity
 github.com/daixiang0/gci/pkg/io
-# github.com/dave/dst v0.27.0
-## explicit; go 1.18
-github.com/dave/dst
-github.com/dave/dst/decorator
-github.com/dave/dst/decorator/resolver
-github.com/dave/dst/decorator/resolver/gopackages
-github.com/dave/dst/decorator/resolver/gotypes
-github.com/dave/dst/dstutil
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -895,9 +880,6 @@ github.com/mgechev/revive/config
 github.com/mgechev/revive/formatter
 github.com/mgechev/revive/lint
 github.com/mgechev/revive/rule
-# github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
-## explicit
-github.com/mgutz/ansi
 # github.com/mitchellh/copystructure v1.2.0
 ## explicit; go 1.15
 github.com/mitchellh/copystructure
@@ -1026,9 +1008,6 @@ github.com/sanposhiho/wastedassign/v2
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/cwe
 github.com/securego/gosec/v2/rules
-# github.com/segmentio/golines v0.10.0
-## explicit; go 1.18
-github.com/segmentio/golines
 # github.com/sergi/go-diff v1.2.0
 ## explicit; go 1.12
 github.com/sergi/go-diff/diffmatchpatch
@@ -1145,13 +1124,6 @@ github.com/uudashr/gocognit
 # github.com/vartanbeno/go-reddit/v2 v2.0.1
 ## explicit; go 1.15
 github.com/vartanbeno/go-reddit/v2/reddit
-# github.com/vasi-stripe/gogroup v0.0.0-20200806161525-b5d7f67a97b5
-## explicit; go 1.12
-github.com/vasi-stripe/gogroup
-github.com/vasi-stripe/gogroup/cmd/gogroup
-# github.com/x-cray/logrus-prefixed-formatter v0.5.2
-## explicit
-github.com/x-cray/logrus-prefixed-formatter
 # github.com/xanzy/go-gitlab v0.52.2
 ## explicit; go 1.13
 github.com/xanzy/go-gitlab
@@ -1233,14 +1205,9 @@ golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
-golang.org/x/crypto/ssh/terminal
 # golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e
 ## explicit; go 1.18
 golang.org/x/exp/typeparams
-# golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
-## explicit; go 1.11
-golang.org/x/lint
-golang.org/x/lint/golint
 # golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 ## explicit; go 1.17
 golang.org/x/mod/internal/lazyregexp
@@ -1297,6 +1264,7 @@ golang.org/x/time/rate
 # golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a
 ## explicit; go 1.17
 golang.org/x/tools/cmd/cover
+golang.org/x/tools/cmd/goimports
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/cover
 golang.org/x/tools/go/analysis
@@ -1514,9 +1482,6 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/fieldmaskpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
-# gopkg.in/alecthomas/kingpin.v2 v2.2.6
-## explicit
-gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 ## explicit
 gopkg.in/alexcesaro/quotedprintable.v3

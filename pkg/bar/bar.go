@@ -61,7 +61,7 @@ type Bar interface {
 // }.
 //
 func New(max int, barType BType) Bar {
-	switch barType { //nolint:exhaustive
+	switch barType { //nolint:exhaustive // this is expected behavior.
 	case BTypeRendered:
 		b := realBar{
 			bar:   progressbar.New(max),
