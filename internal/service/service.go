@@ -187,7 +187,9 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 	}
 
 	if err := users.Error(); err != nil {
-		return nil, fmt.Errorf("users iterate: %w", err)
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return nil, fmt.Errorf("users iterate: %w", err)
+		}
 	}
 
 	return usersList, nil
@@ -304,7 +306,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 	}
 
 	if len(notMutual) == 0 {
-		return 0, nil
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
 	log.WithFields(ctx, log.Fields{
@@ -315,22 +317,14 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 	diff := svc.whitelistNotMutual(notMutual)
 
 	if len(diff) == 0 {
-		return 0, nil
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
-	pBar := bar.New(len(diff), getBarType(ctx))
-
-	go pBar.Run(ctx)
-
-	defer func() {
-		pBar.Finish()
-	}()
-
-	return svc.unfollowUsers(ctx, pBar, notMutual)
+	return svc.unfollowUsers(ctx, notMutual)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
-	result := make([]models.User, 0, len(notMutual))
+	result := notMutual[:0]
 
 	whitelist := svc.instagram.Whitelist()
 
@@ -365,18 +359,27 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 
 // RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
 func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []string) (int, error) {
-	pBar := bar.New(len(usernames), getBarType(ctx))
+	return svc.removeFollowers(ctx, usernames)
+}
+
+func makeProgressBar(ctx context.Context, capacity int) bar.Bar {
+	pBar := bar.New(capacity, getBarType(ctx))
 
 	go pBar.Run(ctx)
 
-	defer func() {
-		pBar.Finish()
-	}()
-
-	return svc.removeFollowers(ctx, pBar, usernames)
+	return pBar
 }
 
-func (svc *Service) removeFollowers(ctx context.Context, pBar bar.Bar, users []string) (int, error) {
+func (svc *Service) removeFollowers(ctx context.Context, users []string) (int, error) {
+	if len(users) == 0 {
+		return 0, nil
+	}
+
+	const double = 2
+
+	pBar := makeProgressBar(ctx, len(users)*double)
+	defer pBar.Finish()
+
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -387,9 +390,25 @@ func (svc *Service) removeFollowers(ctx context.Context, pBar bar.Bar, users []s
 	var errsNum int
 
 LOOP:
-	for _, un := range users {
+	for i, un := range users {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
+		}
+
+		if i == 0 {
+			pBar.Progress() <- struct{}{}
+
+			err := svc.removeUser(un)
+
+			pBar.Progress() <- struct{}{}
+
+			if err != nil {
+				log.WithError(ctx, err).WithField("username", un).Error("Failed to remove follower")
+
+				errsNum++
+
+				continue
+			}
 		}
 
 		select {
@@ -398,26 +417,12 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			u, err := svc.instagram.client.Profiles.ByName(un)
+			err := svc.removeUser(un)
+
+			pBar.Progress() <- struct{}{}
+
 			if err != nil {
-				log.WithError(ctx, err).WithField("username", un).Error("User lookup failed")
-
-				errsNum++
-				continue
-			}
-
-			u.SetInstagram(svc.instagram.client)
-
-			if err = u.Block(false); err != nil {
-				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to block follower")
-
-				errsNum++
-
-				continue
-			}
-
-			if err = u.Unblock(); err != nil {
-				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to unblock follower")
+				log.WithError(ctx, err).WithField("username", un).Error("Failed to remove follower")
 
 				errsNum++
 
@@ -429,18 +434,44 @@ LOOP:
 			if count >= svc.instagram.limits.unFollow {
 				return count, ErrLimitExceed
 			}
-
-			time.Sleep(svc.instagram.sleep)
 		}
 	}
 
 	return count, nil
 }
 
-func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []models.User) (int, error) {
+func (svc *Service) removeUser(username string) error {
+	u, err := svc.instagram.client.Profiles.ByName(username)
+	if err != nil {
+		return fmt.Errorf("user lookup: %w", err)
+	}
+
+	u.SetInstagram(svc.instagram.client)
+
+	if err = u.Block(false); err != nil {
+		return fmt.Errorf("block user: %w", err)
+	}
+
+	if err = u.Unblock(); err != nil {
+		return fmt.Errorf("unblock user: %w", err)
+	}
+
+	return nil
+}
+
+func (svc *Service) unfollowUsers(ctx context.Context, users []models.User) (int, error) {
 	if ctx.Err() != nil {
 		return 0, ctx.Err()
 	}
+
+	if len(users) == 0 {
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
+	}
+
+	const double = 2
+
+	pBar := makeProgressBar(ctx, len(users)*double)
+	defer pBar.Finish()
 
 	var count int
 
@@ -460,7 +491,10 @@ LOOP:
 		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.unfollowWhitelist(ctx, u); err != nil {
+			err := svc.unfollowWhitelist(ctx, u)
+
+			pBar.Progress() <- struct{}{}
+			if err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -476,7 +510,10 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.unfollowWhitelist(ctx, u); err != nil {
+			err := svc.unfollowWhitelist(ctx, u)
+
+			pBar.Progress() <- struct{}{}
+			if err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -529,6 +566,7 @@ func (svc *Service) stop() error {
 
 type isBotResult struct {
 	user  models.User
+	err   error
 	isBot bool
 }
 
@@ -567,12 +605,19 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) 
 		for {
 			select {
 			case result := <-processResultChan:
+				pBar.Progress() <- struct{}{}
+
+				if result.err != nil {
+					log.WithError(ctx, err).Error("Failed to check if user")
+
+					continue
+				}
+
 				m.Lock()
 				if result.isBot {
 					businessAccs = append(businessAccs, result.user)
 				}
 				m.Unlock()
-				pBar.Progress() <- struct{}{}
 			case <-ctx.Done():
 				return
 			}
@@ -582,6 +627,12 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) 
 	for svc.instagram.client.Account.Followers().Next() {
 		for i := range svc.instagram.client.Account.Followers().Users {
 			svc.processUser(ctx, &processWG, svc.instagram.client.Account.Followers().Users[i], processResultChan)
+		}
+	}
+
+	if err := svc.instagram.client.Account.Followers().Error(); err != nil {
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return nil, fmt.Errorf("users iterate: %w", err)
 		}
 	}
 
@@ -601,18 +652,32 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 	}()
 
 	if ctx.Err() != nil {
-		log.WithError(ctx, ctx.Err()).Error("Context canceled")
+		resultChan <- isBotResult{
+			user:  models.User{},
+			err:   ctx.Err(),
+			isBot: false,
+		}
 
 		return
 	}
 
+	isBot, err := svc.isBotOrBusiness(ctx, u)
+	if err != nil {
+		resultChan <- isBotResult{
+			user:  models.User{},
+			err:   fmt.Errorf("check user[%s]: %w", u.Username, err),
+			isBot: isBot,
+		}
+	}
+
 	resultChan <- isBotResult{
 		user:  models.MakeUser(u.ID, u.Username, u.FullName),
-		isBot: svc.isBotOrBusiness(ctx, u),
+		isBot: isBot,
+		err:   nil,
 	}
 }
 
-func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) bool {
+func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) (bool, error) {
 	user.SetInstagram(svc.instagram.client)
 
 	const businessMarkNumFollowers = 500
@@ -624,6 +689,12 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 		flwsNum += len(flws.Users)
 	}
 
+	if err := flws.Error(); err != nil {
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return false, fmt.Errorf("users iterate: %w", err)
+		}
+	}
+
 	log.WithFields(ctx, log.Fields{
 		"username":   user.Username,
 		"followings": flwsNum,
@@ -633,7 +704,7 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 		user.CanBeReportedAsFraud ||
 		user.HasAnonymousProfilePicture ||
 		user.HasAffiliateShop ||
-		user.HasPlacedOrders
+		user.HasPlacedOrders, nil
 }
 
 // GetDiffFollowers returns batches with lost and new followers.
