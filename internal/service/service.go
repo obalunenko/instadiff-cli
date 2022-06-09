@@ -187,7 +187,9 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 	}
 
 	if err := users.Error(); err != nil {
-		return nil, fmt.Errorf("users iterate: %w", err)
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return nil, fmt.Errorf("users iterate: %w", err)
+		}
 	}
 
 	return usersList, nil
@@ -529,6 +531,7 @@ func (svc *Service) stop() error {
 
 type isBotResult struct {
 	user  models.User
+	err   error
 	isBot bool
 }
 
@@ -567,12 +570,19 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) 
 		for {
 			select {
 			case result := <-processResultChan:
+				pBar.Progress() <- struct{}{}
+
+				if result.err != nil {
+					log.WithError(ctx, err).Error("Failed to check if user")
+
+					continue
+				}
+
 				m.Lock()
 				if result.isBot {
 					businessAccs = append(businessAccs, result.user)
 				}
 				m.Unlock()
-				pBar.Progress() <- struct{}{}
 			case <-ctx.Done():
 				return
 			}
@@ -582,6 +592,12 @@ func (svc *Service) GetBusinessAccountsOrBotsFromFollowers(ctx context.Context) 
 	for svc.instagram.client.Account.Followers().Next() {
 		for i := range svc.instagram.client.Account.Followers().Users {
 			svc.processUser(ctx, &processWG, svc.instagram.client.Account.Followers().Users[i], processResultChan)
+		}
+	}
+
+	if err := svc.instagram.client.Account.Followers().Error(); err != nil {
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return nil, fmt.Errorf("users iterate: %w", err)
 		}
 	}
 
@@ -601,18 +617,32 @@ func (svc *Service) processUser(ctx context.Context, group *sync.WaitGroup, u *g
 	}()
 
 	if ctx.Err() != nil {
-		log.WithError(ctx, ctx.Err()).Error("Context canceled")
+		resultChan <- isBotResult{
+			user:  models.User{},
+			err:   ctx.Err(),
+			isBot: false,
+		}
 
 		return
 	}
 
+	isBot, err := svc.isBotOrBusiness(ctx, u)
+	if err != nil {
+		resultChan <- isBotResult{
+			user:  models.User{},
+			err:   fmt.Errorf("check user[%s]: %w", u.Username, err),
+			isBot: isBot,
+		}
+	}
+
 	resultChan <- isBotResult{
 		user:  models.MakeUser(u.ID, u.Username, u.FullName),
-		isBot: svc.isBotOrBusiness(ctx, u),
+		isBot: isBot,
+		err:   nil,
 	}
 }
 
-func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) bool {
+func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) (bool, error) {
 	user.SetInstagram(svc.instagram.client)
 
 	const businessMarkNumFollowers = 500
@@ -624,6 +654,12 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 		flwsNum += len(flws.Users)
 	}
 
+	if err := flws.Error(); err != nil {
+		if !errors.Is(err, goinsta.ErrNoMore) {
+			return false, fmt.Errorf("users iterate: %w", err)
+		}
+	}
+
 	log.WithFields(ctx, log.Fields{
 		"username":   user.Username,
 		"followings": flwsNum,
@@ -633,7 +669,7 @@ func (svc *Service) isBotOrBusiness(ctx context.Context, user *goinsta.User) boo
 		user.CanBeReportedAsFraud ||
 		user.HasAnonymousProfilePicture ||
 		user.HasAffiliateShop ||
-		user.HasPlacedOrders
+		user.HasPlacedOrders, nil
 }
 
 // GetDiffFollowers returns batches with lost and new followers.
