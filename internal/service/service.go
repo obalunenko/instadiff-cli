@@ -362,8 +362,8 @@ func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []s
 	return svc.removeFollowers(ctx, usernames)
 }
 
-func makeProgressBar(ctx context.Context, cap int) bar.Bar {
-	pBar := bar.New(cap, getBarType(ctx))
+func makeProgressBar(ctx context.Context, capacity int) bar.Bar {
+	pBar := bar.New(capacity, getBarType(ctx))
 
 	go pBar.Run(ctx)
 
