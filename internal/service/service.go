@@ -320,15 +320,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 		return 0, nil
 	}
 
-	pBar := bar.New(len(diff), getBarType(ctx))
-
-	go pBar.Run(ctx)
-
-	defer func() {
-		pBar.Finish()
-	}()
-
-	return svc.unfollowUsers(ctx, pBar, notMutual)
+	return svc.unfollowUsers(ctx, notMutual)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
@@ -367,7 +359,14 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 
 // RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
 func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []string) (int, error) {
-	pBar := bar.New(len(usernames), getBarType(ctx))
+	return svc.removeFollowers(ctx, usernames)
+}
+
+func (svc *Service) removeFollowers(ctx context.Context, users []string) (int, error) {
+	if len(users) == 0 {
+		return 0, nil
+	}
+	pBar := bar.New(len(users)*2, getBarType(ctx))
 
 	go pBar.Run(ctx)
 
@@ -375,10 +374,6 @@ func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []s
 		pBar.Finish()
 	}()
 
-	return svc.removeFollowers(ctx, pBar, usernames)
-}
-
-func (svc *Service) removeFollowers(ctx context.Context, pBar bar.Bar, users []string) (int, error) {
 	var count int
 
 	ticker := time.NewTicker(svc.instagram.sleep)
@@ -389,9 +384,25 @@ func (svc *Service) removeFollowers(ctx context.Context, pBar bar.Bar, users []s
 	var errsNum int
 
 LOOP:
-	for _, un := range users {
+	for i, un := range users {
 		if errsNum >= errsLimit {
 			return count, ErrCorrupted
+		}
+
+		if i == 0 {
+			pBar.Progress() <- struct{}{}
+
+			err := svc.removeUser(un)
+
+			pBar.Progress() <- struct{}{}
+
+			if err != nil {
+				log.WithError(ctx, err).WithField("username", un).Error("Failed to remove follower")
+
+				errsNum++
+
+				continue
+			}
 		}
 
 		select {
@@ -400,26 +411,12 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			u, err := svc.instagram.client.Profiles.ByName(un)
+			err := svc.removeUser(un)
+
+			pBar.Progress() <- struct{}{}
+
 			if err != nil {
-				log.WithError(ctx, err).WithField("username", un).Error("User lookup failed")
-
-				errsNum++
-				continue
-			}
-
-			u.SetInstagram(svc.instagram.client)
-
-			if err = u.Block(false); err != nil {
-				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to block follower")
-
-				errsNum++
-
-				continue
-			}
-
-			if err = u.Unblock(); err != nil {
-				log.WithError(ctx, err).WithField("username", u.Username).Error("Failed to unblock follower")
+				log.WithError(ctx, err).WithField("username", un).Error("Failed to remove follower")
 
 				errsNum++
 
@@ -431,18 +428,47 @@ LOOP:
 			if count >= svc.instagram.limits.unFollow {
 				return count, ErrLimitExceed
 			}
-
-			time.Sleep(svc.instagram.sleep)
 		}
 	}
 
 	return count, nil
 }
 
-func (svc *Service) unfollowUsers(ctx context.Context, pBar bar.Bar, users []models.User) (int, error) {
+func (svc *Service) removeUser(username string) error {
+	u, err := svc.instagram.client.Profiles.ByName(username)
+	if err != nil {
+		return fmt.Errorf("user lookup: %w", err)
+	}
+
+	u.SetInstagram(svc.instagram.client)
+
+	if err = u.Block(false); err != nil {
+		return fmt.Errorf("block user: %w", err)
+	}
+
+	if err = u.Unblock(); err != nil {
+		return fmt.Errorf("unblock user: %w", err)
+	}
+
+	return nil
+}
+
+func (svc *Service) unfollowUsers(ctx context.Context, users []models.User) (int, error) {
 	if ctx.Err() != nil {
 		return 0, ctx.Err()
 	}
+
+	if len(users) == 0 {
+		return 0, nil
+	}
+
+	pBar := bar.New(len(users)*2, getBarType(ctx))
+
+	go pBar.Run(ctx)
+
+	defer func() {
+		pBar.Finish()
+	}()
 
 	var count int
 
@@ -462,7 +488,10 @@ LOOP:
 		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.unfollowWhitelist(ctx, u); err != nil {
+			err := svc.unfollowWhitelist(ctx, u)
+
+			pBar.Progress() <- struct{}{}
+			if err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
@@ -478,7 +507,10 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			if err := svc.unfollowWhitelist(ctx, u); err != nil {
+			err := svc.unfollowWhitelist(ctx, u)
+
+			pBar.Progress() <- struct{}{}
+			if err != nil {
 				log.WithError(ctx, err).WithField("username", u.UserName).Error("Failed to unfollow")
 				errsNum++
 
