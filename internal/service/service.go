@@ -306,7 +306,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 	}
 
 	if len(notMutual) == 0 {
-		return 0, nil
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
 	log.WithFields(ctx, log.Fields{
@@ -317,14 +317,14 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 	diff := svc.whitelistNotMutual(notMutual)
 
 	if len(diff) == 0 {
-		return 0, nil
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
 	return svc.unfollowUsers(ctx, notMutual)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
-	result := make([]models.User, 0, len(notMutual))
+	result := notMutual[:0]
 
 	whitelist := svc.instagram.Whitelist()
 
@@ -362,17 +362,23 @@ func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []s
 	return svc.removeFollowers(ctx, usernames)
 }
 
+func makeProgressBar(ctx context.Context, cap int) bar.Bar {
+	pBar := bar.New(cap, getBarType(ctx))
+
+	go pBar.Run(ctx)
+
+	return pBar
+}
+
 func (svc *Service) removeFollowers(ctx context.Context, users []string) (int, error) {
 	if len(users) == 0 {
 		return 0, nil
 	}
-	pBar := bar.New(len(users)*2, getBarType(ctx))
 
-	go pBar.Run(ctx)
+	const double = 2
 
-	defer func() {
-		pBar.Finish()
-	}()
+	pBar := makeProgressBar(ctx, len(users)*double)
+	defer pBar.Finish()
 
 	var count int
 
@@ -459,16 +465,13 @@ func (svc *Service) unfollowUsers(ctx context.Context, users []models.User) (int
 	}
 
 	if len(users) == 0 {
-		return 0, nil
+		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
-	pBar := bar.New(len(users)*2, getBarType(ctx))
+	const double = 2
 
-	go pBar.Run(ctx)
-
-	defer func() {
-		pBar.Finish()
-	}()
+	pBar := makeProgressBar(ctx, len(users)*double)
+	defer pBar.Finish()
 
 	var count int
 

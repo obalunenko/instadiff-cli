@@ -131,25 +131,28 @@ func cmdCleanFollowings(c *cli.Context, svc *service.Service) error {
 	log.Info(ctx, "Cleaning from not mutual followings...")
 
 	count, err := svc.UnFollowAllNotMutualExceptWhitelisted(ctx)
-	if err != nil {
-		if errors.Is(err, service.ErrLimitExceed) {
-			log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
 
-			return nil
-		}
+	switch {
+	case errors.Is(err, service.ErrNoUsers):
+		log.Info(ctx, "There is no users to unfollow")
 
-		if errors.Is(err, service.ErrCorrupted) {
-			log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
-
-			return fmt.Errorf("clean notmutual: %w", err)
-		}
+		return nil
+	case errors.Is(err, service.ErrCorrupted):
+		log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
 
 		return fmt.Errorf("clean notmutual: %w", err)
+	case errors.Is(err, service.ErrLimitExceed):
+		log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
+
+		return nil
+	case errors.Is(err, nil):
+		log.WithField(ctx, "count", count).Info("Total unfollowed")
+
+		return nil
+
+	default:
+		return fmt.Errorf("clean notmutual: %w", err)
 	}
-
-	log.WithField(ctx, "count", count).Info("Total unfollowed")
-
-	return nil
 }
 
 func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
