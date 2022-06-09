@@ -43,11 +43,11 @@ USAGE:
 VERSION:
 
 | app_name:     instadiff-cli                            |
-| version:      v0.16.0-local                            |
+| version:      v1.0.2                                   |
 | go_version:   go1.18.3                                 |
-| commit:       140a8740352fb5e437e7e747391c4073a726ed78 |
-| short_commit: 140a8740                                 |
-| build_date:   2022-06-08T19:10:31Z                     |
+| commit:       27f935bc9559c191c803a51a046c0055641d608f |
+| short_commit: 27f935bc                                 |
+| build_date:   2022-06-09T08:51:35Z                     |
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -74,6 +74,7 @@ GLOBAL OPTIONS:
    --help, -h           show help (default: false)
    --log_level value    Level of output logs (default: "INFO")
    --version, -v        print the version (default: false)
+   
 ```
 
 To get help for any supported command:
