@@ -116,12 +116,49 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followers", "", "yellow")
 	defer stop()
 
+	var noPreviousData bool
+
+	bt := models.UsersBatchTypeFollowers
+
+	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			noPreviousData = true
+		} else {
+			return nil, fmt.Errorf("get last batch [%s]: %w", bt.String(), err)
+		}
+	}
+
 	followers, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
 	if err != nil {
 		return nil, fmt.Errorf("make users list: %w", err)
 	}
 
-	bt := models.UsersBatchTypeFollowers
+	if !noPreviousData {
+		lostFlw := getLost(oldBatch.Users, followers)
+		lostBatch := models.UsersBatch{
+			Users:     lostFlw,
+			Type:      models.UsersBatchTypeLostFollowers,
+			CreatedAt: time.Now(),
+		}
+
+		_, err = svc.storeUsers(ctx, lostBatch)
+		if err != nil && !errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
+		}
+
+		newFlw := getNew(oldBatch.Users, followers)
+		newBatch := models.UsersBatch{
+			Users:     newFlw,
+			Type:      models.UsersBatchTypeNewFollowers,
+			CreatedAt: time.Now(),
+		}
+
+		_, err = svc.storeUsers(ctx, newBatch)
+		if err != nil && !errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
+		}
+	}
 
 	return svc.storeUsers(ctx, models.UsersBatch{
 		Users:     followers,
@@ -135,12 +172,49 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followings", "", "yellow")
 	defer stop()
 
-	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Following())
+	var noPreviousData bool
+
+	bt := models.UsersBatchTypeFollowings
+
+	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			noPreviousData = true
+		} else {
+			return nil, fmt.Errorf("get last batch [%s]: %w", bt.String(), err)
+		}
+	}
+
+	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
 	if err != nil {
 		return nil, fmt.Errorf("make users list: %w", err)
 	}
 
-	bt := models.UsersBatchTypeFollowings
+	if !noPreviousData {
+		lostFlw := getLost(oldBatch.Users, followings)
+		lostBatch := models.UsersBatch{
+			Users:     lostFlw,
+			Type:      models.UsersBatchTypeLostFollowings,
+			CreatedAt: time.Now(),
+		}
+
+		_, err = svc.storeUsers(ctx, lostBatch)
+		if err != nil && !errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
+		}
+
+		newFlw := getNew(oldBatch.Users, followings)
+		newBatch := models.UsersBatch{
+			Users:     newFlw,
+			Type:      models.UsersBatchTypeNewFollowings,
+			CreatedAt: time.Now(),
+		}
+
+		_, err = svc.storeUsers(ctx, newBatch)
+		if err != nil && !errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
+		}
+	}
 
 	return svc.storeUsers(ctx, models.UsersBatch{
 		Users:     followings,
@@ -709,56 +783,36 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	var noPreviousData bool
-
-	bType := models.UsersBatchTypeFollowers
-
-	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bType)
+	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeLostFollowers)
 	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			noPreviousData = true
+		if errors.Is(err, ErrNoUsers) {
+			lostBatch = models.UsersBatch{
+				Users:     nil,
+				Type:      models.UsersBatchTypeLostFollowers,
+				CreatedAt: time.Now(),
+			}
 		} else {
-			return nil, fmt.Errorf("get last batch [%s]: %w", bType.String(), err)
+			return nil, fmt.Errorf("get lost folowers: %w", err)
 		}
 	}
 
-	newList, err := svc.GetFollowers(ctx)
+	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeNewFollowers)
 	if err != nil {
-		return nil, fmt.Errorf("get followers: %w", err)
-	}
-
-	if noPreviousData {
-		oldBatch.Users = newList
-	}
-
-	lostFlw := getLostFollowers(oldBatch.Users, newList)
-	lostBatch := models.UsersBatch{
-		Users:     lostFlw,
-		Type:      models.UsersBatchTypeLostFollowers,
-		CreatedAt: time.Now(),
-	}
-
-	_, err = svc.storeUsers(ctx, lostBatch)
-	if err != nil && !errors.Is(err, ErrNoUsers) {
-		log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
-	}
-
-	newFlw := getNewFollowers(oldBatch.Users, newList)
-	newBatch := models.UsersBatch{
-		Users:     newFlw,
-		Type:      models.UsersBatchTypeNewFollowers,
-		CreatedAt: time.Now(),
-	}
-
-	_, err = svc.storeUsers(ctx, newBatch)
-	if err != nil && !errors.Is(err, ErrNoUsers) {
-		log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
+		if errors.Is(err, ErrNoUsers) {
+			lostBatch = models.UsersBatch{
+				Users:     nil,
+				Type:      models.UsersBatchTypeNewFollowers,
+				CreatedAt: time.Now(),
+			}
+		} else {
+			return nil, fmt.Errorf("get new folowers: %w", err)
+		}
 	}
 
 	return []models.UsersBatch{lostBatch, newBatch}, nil
 }
 
-func getLostFollowers(oldlist, newlist []models.User) []models.User {
+func getLost(oldlist, newlist []models.User) []models.User {
 	var diff []models.User
 
 	for _, oU := range oldlist {
@@ -780,7 +834,7 @@ func getLostFollowers(oldlist, newlist []models.User) []models.User {
 	return diff
 }
 
-func getNewFollowers(oldlist, newlist []models.User) []models.User {
+func getNew(oldlist, newlist []models.User) []models.User {
 	var diff []models.User
 
 	for _, nU := range newlist {
