@@ -31,7 +31,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 				batchType: models.UsersBatchTypeFollowers,
 			},
 			want: models.UsersBatch{
-				Users:     followersFixture,
+				Users:     followersFixture2,
 				Type:      models.UsersBatchTypeFollowers,
 				CreatedAt: time.Time{},
 			},
@@ -81,7 +81,7 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	assert.Equal(t, models.EmptyUsersBatch, gotBatch)
 
 	goldenBatch := models.UsersBatch{
-		Users:     followersFixture,
+		Users:     followersFixture2,
 		Type:      models.UsersBatchTypeFollowers,
 		CreatedAt: time.Time{},
 	}
@@ -96,7 +96,7 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 }
 
 var (
-	followersFixture = []models.User{
+	followersFixture1 = []models.User{
 		{
 			ID:       1,
 			UserName: "user1",
@@ -108,7 +108,25 @@ var (
 			FullName: "test user 2",
 		},
 	}
-	followingsFixture = []models.User{
+	followersFixture2 = []models.User{
+		{
+			ID:       1,
+			UserName: "user1",
+			FullName: "test user 1",
+		},
+		{
+			ID:       2,
+			UserName: "user2",
+			FullName: "test user 2",
+		},
+		{
+			ID:       3,
+			UserName: "user3",
+			FullName: "test user 3",
+		},
+	}
+
+	followingsFixture1 = []models.User{
 		{
 			ID:       3,
 			UserName: "user3",
@@ -123,16 +141,30 @@ var (
 )
 
 func setUpDBWithFixtures(t testing.TB) DB {
+
 	t.Helper()
 
-	fixtures := map[models.UsersBatchType]models.UsersBatch{
+	now := time.Now()
+
+	fixtures := map[models.UsersBatchType][]models.UsersBatch{
 		models.UsersBatchTypeFollowers: {
-			Users: followersFixture,
-			Type:  models.UsersBatchTypeFollowers,
+			{
+				Users:     followersFixture1,
+				Type:      models.UsersBatchTypeFollowers,
+				CreatedAt: now.AddDate(0, 0, -2),
+			},
+			{
+				Users:     followersFixture2,
+				Type:      models.UsersBatchTypeFollowers,
+				CreatedAt: now,
+			},
 		},
 		models.UsersBatchTypeFollowings: {
-			Users: followingsFixture,
-			Type:  models.UsersBatchTypeFollowings,
+			{
+				Users:     followingsFixture1,
+				Type:      models.UsersBatchTypeFollowings,
+				CreatedAt: time.Time{},
+			},
 		},
 	}
 

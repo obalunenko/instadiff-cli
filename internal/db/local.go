@@ -8,12 +8,12 @@ import (
 )
 
 type localDB struct {
-	users map[models.UsersBatchType]models.UsersBatch
+	users map[models.UsersBatchType][]models.UsersBatch
 }
 
 func newLocalDB() *localDB {
 	return &localDB{
-		users: make(map[models.UsersBatchType]models.UsersBatch),
+		users: make(map[models.UsersBatchType][]models.UsersBatch),
 	}
 }
 
@@ -22,11 +22,17 @@ func (l *localDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch)
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		if !users.Type.Valid() {
-			return models.MakeInvalidBatchTypeError(users.Type)
+		bt := users.Type
+
+		if !bt.Valid() {
+			return models.MakeInvalidBatchTypeError(bt)
 		}
 
-		l.users[users.Type] = users
+		s := l.users[bt]
+
+		s = append(s, users)
+
+		l.users[bt] = s
 
 		return nil
 	}
@@ -42,11 +48,31 @@ func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
 			return models.EmptyUsersBatch, models.MakeInvalidBatchTypeError(batchType)
 		}
 
-		batch, exist := l.users[batchType]
-		if !exist {
+		batches, exist := l.users[batchType]
+		if !exist || len(batches) == 0 {
 			return models.EmptyUsersBatch, ErrNoData
 		}
 
-		return batch, nil
+		last := batches[len(batches)-1]
+
+		return last, nil
+	}
+}
+
+func (l *localDB) GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		if !batchType.Valid() {
+			return nil, models.MakeInvalidBatchTypeError(batchType)
+		}
+
+		batches, exist := l.users[batchType]
+		if !exist || len(batches) == 0 {
+			return nil, ErrNoData
+		}
+
+		return batches, nil
 	}
 }

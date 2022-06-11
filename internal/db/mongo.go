@@ -90,3 +90,57 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 
 	return ub, nil
 }
+
+func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error) {
+	filter := bson.M{"batch_type": batchType}
+	resp, err := m.collection.Find(ctx, filter, &options.FindOptions{
+		AllowDiskUse:        nil,
+		AllowPartialResults: nil,
+		BatchSize:           nil,
+		Collation:           nil,
+		Comment:             nil,
+		CursorType:          nil,
+		Hint:                nil,
+		Limit:               nil,
+		Max:                 nil,
+		MaxAwaitTime:        nil,
+		MaxTime:             nil,
+		Min:                 nil,
+		NoCursorTimeout:     nil,
+		OplogReplay:         nil,
+		Projection:          nil,
+		ReturnKey:           nil,
+		ShowRecordID:        nil,
+		Skip:                nil,
+		Snapshot:            nil,
+		Sort:                bson.M{"$natural": -1},
+		Let:                 nil,
+	})
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNoData
+		}
+
+		return nil, fmt.Errorf("find batches [%s]: %w", batchType.String(), err)
+	}
+
+	var batches []models.UsersBatch
+
+	for resp.Next(ctx) {
+		var ub models.UsersBatch
+
+		if err := resp.Decode(&ub); err != nil {
+			return nil, fmt.Errorf("decode response: %w", err)
+		}
+
+		batches = append(batches, ub)
+	}
+	if err := resp.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNoData
+		}
+
+	}
+
+	return batches, nil
+}
