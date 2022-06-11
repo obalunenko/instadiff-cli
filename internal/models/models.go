@@ -47,6 +47,10 @@ const (
 	UsersBatchTypeLostFollowers
 	// UsersBatchTypeNewFollowers represents new followers.
 	UsersBatchTypeNewFollowers
+	// UsersBatchTypeNewFollowings represents new followings.
+	UsersBatchTypeNewFollowings
+	// UsersBatchTypeLostFollowings represents lost followings.
+	UsersBatchTypeLostFollowings
 
 	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )

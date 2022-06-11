@@ -15,12 +15,14 @@ func _() {
 	_ = x[UsersBatchTypeBusinessAccounts-4]
 	_ = x[UsersBatchTypeLostFollowers-5]
 	_ = x[UsersBatchTypeNewFollowers-6]
-	_ = x[usersBatchTypeSentinel-7]
+	_ = x[UsersBatchTypeNewFollowings-7]
+	_ = x[UsersBatchTypeLostFollowings-8]
+	_ = x[usersBatchTypeSentinel-9]
 }
 
-const _UsersBatchType_name = "UnknownFollowersFollowingsNotMutualBusinessAccountsLostFollowersNewFollowersusersBatchTypeSentinel"
+const _UsersBatchType_name = "UnknownFollowersFollowingsNotMutualBusinessAccountsLostFollowersNewFollowersNewFollowingsLostFollowingsusersBatchTypeSentinel"
 
-var _UsersBatchType_index = [...]uint8{0, 7, 16, 26, 35, 51, 64, 76, 98}
+var _UsersBatchType_index = [...]uint8{0, 7, 16, 26, 35, 51, 64, 76, 89, 103, 125}
 
 func (i UsersBatchType) String() string {
 	if i < 0 || i >= UsersBatchType(len(_UsersBatchType_index)-1) {
