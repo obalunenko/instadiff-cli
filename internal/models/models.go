@@ -2,8 +2,6 @@
 package models
 
 import (
-	"errors"
-	"fmt"
 	"time"
 )
 
@@ -52,14 +50,6 @@ const (
 
 	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )
-
-// ErrInvalidUsersBatchType means that batch type not supported.
-var ErrInvalidUsersBatchType = errors.New("invalid users batch type")
-
-// MakeInvalidBatchTypeError returns ErrInvalidUsersBatchType with added bathtype info.
-func MakeInvalidBatchTypeError(t UsersBatchType) error {
-	return fmt.Errorf("%s: %w", t.String(), ErrInvalidUsersBatchType)
-}
 
 // Valid checks if value is valid type.
 func (i UsersBatchType) Valid() bool {

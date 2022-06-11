@@ -103,9 +103,6 @@ func login(uname, pwd string) (*goinsta.Instagram, error) {
 	return cl, nil
 }
 
-// ErrEmptyInput returned in case when user input is empty.
-var ErrEmptyInput = errors.New("should not be empty")
-
 func username() (string, error) {
 	ask := "What is your username?"
 	key := "username"

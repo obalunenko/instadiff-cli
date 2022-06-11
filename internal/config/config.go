@@ -3,7 +3,6 @@ package config
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -100,9 +99,6 @@ func (c Config) MongoDBCollection() string {
 func (c Config) StoreSession() bool {
 	return c.instagram.save
 }
-
-// ErrEmptyPath returned when empty path is passed.
-var ErrEmptyPath = errors.New("config path is empty")
 
 // Load loads config from passed filepath.
 func Load(ctx context.Context, path string) (Config, error) {

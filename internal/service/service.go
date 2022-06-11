@@ -21,13 +21,6 @@ import (
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 )
 
-var (
-	// ErrLimitExceed returned when limit for action exceeded.
-	ErrLimitExceed = errors.New("limit exceeded")
-	// ErrCorrupted returned when instagram returned error response more than one time during loop processing.
-	ErrCorrupted = errors.New("unable to continue - instagram responses with errors")
-)
-
 // Service represents service for operating instagram account.
 type Service struct {
 	instagram instagram
