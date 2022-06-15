@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	log "github.com/obalunenko/logger"
@@ -18,7 +17,12 @@ import (
 
 // BuildCollectionName constructs collection name.
 func BuildCollectionName(s string) string {
-	return strings.Join([]string{s, "statistics"}, "_")
+	const (
+		sep = "_"
+		pfx = "statistics"
+	)
+
+	return s + sep + pfx
 }
 
 // MongoParams represents mongo db configuration parameters.
