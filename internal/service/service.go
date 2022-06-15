@@ -118,6 +118,8 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 
 	var noPreviousData bool
 
+	now := time.Now()
+
 	bt := models.UsersBatchTypeFollowers
 
 	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
@@ -139,7 +141,7 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 		lostBatch := models.UsersBatch{
 			Users:     lostFlw,
 			Type:      models.UsersBatchTypeLostFollowers,
-			CreatedAt: time.Now(),
+			CreatedAt: now,
 		}
 
 		_, err = svc.storeUsers(ctx, lostBatch)
@@ -151,7 +153,7 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 		newBatch := models.UsersBatch{
 			Users:     newFlw,
 			Type:      models.UsersBatchTypeNewFollowers,
-			CreatedAt: time.Now(),
+			CreatedAt: now,
 		}
 
 		_, err = svc.storeUsers(ctx, newBatch)
@@ -174,6 +176,8 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 
 	var noPreviousData bool
 
+	now := time.Now()
+
 	bt := models.UsersBatchTypeFollowings
 
 	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
@@ -185,7 +189,7 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 		}
 	}
 
-	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
+	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Following())
 	if err != nil {
 		return nil, fmt.Errorf("make users list: %w", err)
 	}
@@ -195,7 +199,7 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 		lostBatch := models.UsersBatch{
 			Users:     lostFlw,
 			Type:      models.UsersBatchTypeLostFollowings,
-			CreatedAt: time.Now(),
+			CreatedAt: now,
 		}
 
 		_, err = svc.storeUsers(ctx, lostBatch)
@@ -207,7 +211,7 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 		newBatch := models.UsersBatch{
 			Users:     newFlw,
 			Type:      models.UsersBatchTypeNewFollowings,
-			CreatedAt: time.Now(),
+			CreatedAt: now,
 		}
 
 		_, err = svc.storeUsers(ctx, newBatch)
@@ -783,12 +787,14 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeLostFollowers)
+	bt := models.UsersBatchTypeLostFollowers
+
+	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
 	if err != nil {
-		if errors.Is(err, ErrNoUsers) {
+		if errors.Is(err, db.ErrNoData) {
 			lostBatch = models.UsersBatch{
 				Users:     nil,
-				Type:      models.UsersBatchTypeLostFollowers,
+				Type:      bt,
 				CreatedAt: time.Now(),
 			}
 		} else {
@@ -796,12 +802,14 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 		}
 	}
 
-	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeNewFollowers)
+	bt = models.UsersBatchTypeNewFollowers
+
+	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
 	if err != nil {
-		if errors.Is(err, ErrNoUsers) {
-			lostBatch = models.UsersBatch{
+		if errors.Is(err, db.ErrNoData) {
+			newBatch = models.UsersBatch{
 				Users:     nil,
-				Type:      models.UsersBatchTypeNewFollowers,
+				Type:      bt,
 				CreatedAt: time.Now(),
 			}
 		} else {
@@ -810,6 +818,140 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 	}
 
 	return []models.UsersBatch{lostBatch, newBatch}, nil
+}
+
+// GetDiffFollowings returns batches with lost and new followings.
+func (svc *Service) GetDiffFollowings(ctx context.Context) ([]models.UsersBatch, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeLostFollowings)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			lostBatch = models.UsersBatch{
+				Users:     nil,
+				Type:      models.UsersBatchTypeLostFollowings,
+				CreatedAt: time.Now(),
+			}
+		} else {
+			return nil, fmt.Errorf("get lost folowings: %w", err)
+		}
+	}
+
+	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeNewFollowings)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			newBatch = models.UsersBatch{
+				Users:     nil,
+				Type:      models.UsersBatchTypeNewFollowings,
+				CreatedAt: time.Now(),
+			}
+		} else {
+			return nil, fmt.Errorf("get new followings: %w", err)
+		}
+	}
+
+	return []models.UsersBatch{lostBatch, newBatch}, nil
+}
+
+// GetHistoryDiffFollowings returns diff history of followings for an account.
+func (svc *Service) GetHistoryDiffFollowings(ctx context.Context) (models.DiffHistory, error) {
+	resp := models.MakeDiffHistory(models.DiffTypeFollowings)
+
+	if ctx.Err() != nil {
+		return models.DiffHistory{}, ctx.Err()
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	bt := models.UsersBatchTypeLostFollowings
+
+	lost, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			lost = []models.UsersBatch{{
+				Users:     nil,
+				Type:      bt,
+				CreatedAt: time.Now(),
+			}}
+		} else {
+			return models.DiffHistory{}, fmt.Errorf("get lost folowings: %w", err)
+		}
+	}
+
+	resp.Add(lost...)
+
+	bt = models.UsersBatchTypeNewFollowings
+
+	newBatches, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			newBatches = []models.UsersBatch{{
+				Users:     nil,
+				Type:      bt,
+				CreatedAt: time.Now(),
+			}}
+		} else {
+			return models.DiffHistory{}, fmt.Errorf("get new followings: %w", err)
+		}
+	}
+
+	resp.Add(newBatches...)
+
+	return resp, nil
+}
+
+// GetHistoryDiffFollowers returns diff history of followers for an account.
+func (svc *Service) GetHistoryDiffFollowers(ctx context.Context) (models.DiffHistory, error) {
+	resp := models.MakeDiffHistory(models.DiffTypeFollowers)
+
+	if ctx.Err() != nil {
+		return models.DiffHistory{}, ctx.Err()
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	bt := models.UsersBatchTypeLostFollowers
+
+	lost, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			lost = []models.UsersBatch{{
+				Users:     nil,
+				Type:      bt,
+				CreatedAt: time.Now(),
+			}}
+		} else {
+			return models.DiffHistory{}, fmt.Errorf("get lost folowers: %w", err)
+		}
+	}
+
+	resp.Add(lost...)
+
+	bt = models.UsersBatchTypeNewFollowers
+
+	newBatches, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			newBatches = []models.UsersBatch{{
+				Users:     nil,
+				Type:      bt,
+				CreatedAt: time.Now(),
+			}}
+		} else {
+			return models.DiffHistory{}, fmt.Errorf("get new followers: %w", err)
+		}
+	}
+
+	resp.Add(newBatches...)
+
+	return resp, nil
 }
 
 func getLost(oldlist, newlist []models.User) []models.User {

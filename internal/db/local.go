@@ -3,6 +3,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
@@ -38,19 +39,18 @@ func (l *localDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch)
 	}
 }
 
-func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
-	batchType models.UsersBatchType) (models.UsersBatch, error) {
+func (l *localDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBatchType) (models.UsersBatch, error) {
 	select {
 	case <-ctx.Done():
-		return models.EmptyUsersBatch, ctx.Err()
+		return models.MakeUsersBatch(bt, nil, time.Now()), ctx.Err()
 	default:
-		if !batchType.Valid() {
-			return models.EmptyUsersBatch, models.MakeInvalidBatchTypeError(batchType)
+		if !bt.Valid() {
+			return models.MakeUsersBatch(bt, nil, time.Now()), models.MakeInvalidBatchTypeError(bt)
 		}
 
-		batches, exist := l.users[batchType]
+		batches, exist := l.users[bt]
 		if !exist || len(batches) == 0 {
-			return models.EmptyUsersBatch, ErrNoData
+			return models.MakeUsersBatch(bt, nil, time.Now()), ErrNoData
 		}
 
 		last := batches[len(batches)-1]

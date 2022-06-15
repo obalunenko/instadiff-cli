@@ -72,6 +72,10 @@ func cmdListFollowers(c *cli.Context, svc *service.Service) error {
 }
 
 func printUsersList(c *cli.Context, users []models.User) error {
+	if len(users) == 0 {
+		return nil
+	}
+
 	if !c.Bool(list) {
 		return nil
 	}
@@ -202,20 +206,119 @@ func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
 func cmdListDiff(c *cli.Context, svc *service.Service) error {
 	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_diff"))
 
-	diff, err := svc.GetDiffFollowers(ctx)
+	diffFlwrs, err := svc.GetDiffFollowers(ctx)
 	if err != nil {
 		return fmt.Errorf("fetch diff followers: %w", err)
 	}
 
-	for _, batch := range diff {
+	diffFlwngs, err := svc.GetDiffFollowings(ctx)
+	if err != nil {
+		return fmt.Errorf("fetch diff followings: %w", err)
+	}
+
+	result := make([]models.UsersBatch, 0, len(diffFlwrs)+len(diffFlwngs))
+	result = append(result, diffFlwrs...)
+	result = append(result, diffFlwngs...)
+
+	return printBatches(ctx, c, result)
+}
+
+func printBatches(ctx context.Context, c *cli.Context, batches []models.UsersBatch) error {
+	for i := range batches {
+		batch := batches[i]
+
 		log.WithFields(ctx, log.Fields{
 			"batch_type": batch.Type,
 			"count":      len(batch.Users),
 		}).Info("Users batch")
 
-		if err = printUsersList(c, batch.Users); err != nil {
+		if err := printUsersList(c, batch.Users); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func cmdListHistoryDiff(c *cli.Context, svc *service.Service) error {
+	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_history_diff"))
+
+	diffFlwrs, err := svc.GetHistoryDiffFollowers(ctx)
+	if err != nil {
+		return fmt.Errorf("get hostory diff followers: %w", err)
+	}
+
+	if err = printDiffHistory(ctx, diffFlwrs); err != nil {
+		return fmt.Errorf("print followers history: %w", err)
+	}
+
+	diffFlwngs, err := svc.GetHistoryDiffFollowings(ctx)
+	if err != nil {
+		return fmt.Errorf("get hostory diff followings: %w", err)
+	}
+
+	if err = printDiffHistory(ctx, diffFlwngs); err != nil {
+		return fmt.Errorf("print followings history: %w", err)
+	}
+
+	return nil
+}
+
+func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
+	ctx = log.ContextWithLogger(ctx, log.FromContext(ctx).WithField("diff_type", dh.DiffType))
+
+	log.Info(ctx, "Diff history")
+
+	if len(dh.History) == 0 {
+		log.Info(ctx, "No data")
+
+		return nil
+	}
+
+	const (
+		padding  int  = 1
+		minWidth int  = 0
+		tabWidth int  = 0
+		padChar  byte = ' '
+	)
+
+	w := tabwriter.NewWriter(os.Stdout, minWidth, tabWidth, padding, padChar, tabwriter.TabIndent|tabwriter.Debug)
+
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("write empty line: %w", err)
+	}
+
+	if _, err := fmt.Fprintf(w, "date \t lost \t new \n"); err != nil {
+		return fmt.Errorf("write header list: %w", err)
+	}
+
+	for date, records := range dh.History {
+		if len(records) > 2 {
+			return errors.New("wrong diff history data")
+		}
+
+		var l, n models.UsersBatch
+
+		for i := range records {
+			switch records[i].Type {
+			case models.UsersBatchTypeLostFollowers, models.UsersBatchTypeLostFollowings:
+				l = records[i]
+			case models.UsersBatchTypeNewFollowers, models.UsersBatchTypeNewFollowings:
+				n = records[i]
+			}
+		}
+
+		if _, err := fmt.Fprintf(w, "%s \t %d \t %d \n", date.String(), len(l.Users), len(n.Users)); err != nil {
+			return fmt.Errorf("write user details line: %w", err)
+		}
+	}
+
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("write empty line: %w", err)
+	}
+
+	if err := w.Flush(); err != nil {
+		return fmt.Errorf("flush writer: %w", err)
 	}
 
 	return nil

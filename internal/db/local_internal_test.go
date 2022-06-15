@@ -41,7 +41,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: models.UsersBatchTypeUnknown,
 			},
-			want:    models.EmptyUsersBatch,
+			want:    resetBatchTime(models.MakeUsersBatch(models.UsersBatchTypeUnknown, nil, time.Now())),
 			wantErr: true,
 		},
 		{
@@ -49,7 +49,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: notExistBatch,
 			},
-			want:    models.EmptyUsersBatch,
+			want:    resetBatchTime(models.MakeUsersBatch(models.UsersBatchTypeUnknown, nil, time.Now())),
 			wantErr: true,
 		},
 	}
@@ -77,7 +77,7 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 
 	gotBatch, err := ldb.GetLastUsersBatchByType(context.TODO(), bType)
 	require.ErrorIs(t, err, ErrNoData)
-	assert.Equal(t, models.EmptyUsersBatch, resetBatchTime(gotBatch))
+	assert.Equal(t, resetBatchTime(models.MakeUsersBatch(bType, nil, time.Now())), resetBatchTime(gotBatch))
 
 	goldenBatch := models.UsersBatch{
 		Users:     followersFixture2,

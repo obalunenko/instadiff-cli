@@ -18,6 +18,39 @@ const (
 	EnvDBTestURI = "DBTEST_ISTADIFF"
 )
 
+// ConnectForTesting returns a connection to a newly created database
+// Test cleanup automatically drops the database and closes underlying connections.
+func ConnectForTesting(tb testing.TB, dbname string, collection string) DB {
+	ctx := context.Background()
+
+	u, err := getTestURI()
+	require.NoError(tb, err)
+
+	suffix := strings.ToLower(tb.Name())
+	if dbname != "" {
+		suffix = fmt.Sprintf("%s_%s", suffix, dbname)
+	}
+
+	dbName := fmt.Sprintf("%s_%d_%s", dbTestPrefix, time.Now().UnixNano(), suffix)
+
+	cl, err := newMongoDB(ctx, MongoParams{
+		URL:        u,
+		Database:   dbName,
+		Collection: collection,
+	})
+	require.NoError(tb, err)
+
+	tb.Cleanup(func() {
+		defer func() {
+			require.NoError(tb, cl.client.Disconnect(ctx))
+		}()
+
+		require.NoError(tb, cl.database.Drop(ctx))
+	})
+
+	return cl
+}
+
 func getTestURI() (string, error) {
 	if uri, ok := os.LookupEnv(EnvDBTestURI); ok {
 		return uri, nil
@@ -50,37 +83,4 @@ func setEnvForTest(ctx context.Context, _ *testing.M, kv kv) func() {
 			log.WithError(ctx, err).Fatal("failed to set env")
 		}
 	}
-}
-
-// ConnectForTesting returns a connection to a newly created database
-// Test cleanup automatically drops the database and closes underlying connections.
-func ConnectForTesting(tb testing.TB, dbname string, collection string) *mongoDB {
-	ctx := context.Background()
-
-	u, err := getTestURI()
-	require.NoError(tb, err)
-
-	suffix := strings.ToLower(tb.Name())
-	if dbname != "" {
-		suffix = fmt.Sprintf("%s_%s", suffix, dbname)
-	}
-
-	dbName := fmt.Sprintf("%s_%d_%s", dbTestPrefix, time.Now().UnixNano(), suffix)
-
-	cl, err := newMongoDB(ctx, MongoParams{
-		URL:        u,
-		Database:   dbName,
-		Collection: collection,
-	})
-	require.NoError(tb, err)
-
-	tb.Cleanup(func() {
-		defer func() {
-			require.NoError(tb, cl.client.Disconnect(ctx))
-		}()
-
-		require.NoError(tb, cl.database.Drop(ctx))
-	})
-
-	return cl
 }

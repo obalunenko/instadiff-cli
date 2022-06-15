@@ -15,7 +15,7 @@ import (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	reset := SetUpMongoContainer(ctx, m, "5.0.9", DBParams{
+	reset := SetUpMongoContainer(ctx, m, "5.0.9", ContainerParams{
 		User:          "user",
 		UserPassword:  "pwd",
 		ExpireSeconds: 30,
@@ -59,7 +59,7 @@ func TestMongoDB(t *testing.T) {
 	gotbatch, err := dbc.GetLastUsersBatchByType(ctx, models.UsersBatchTypeFollowings)
 	require.ErrorIs(t, err, ErrNoData)
 
-	assert.Equal(t, models.EmptyUsersBatch, resetBatchTime(gotbatch))
+	assert.Equal(t, resetBatchTime(models.MakeUsersBatch(models.UsersBatchTypeFollowings, nil, time.Now())), resetBatchTime(gotbatch))
 
 	gotbatch, err = dbc.GetLastUsersBatchByType(ctx, models.UsersBatchTypeFollowers)
 	require.NoError(t, err)

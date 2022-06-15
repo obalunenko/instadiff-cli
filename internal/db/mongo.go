@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	log "github.com/obalunenko/logger"
 	"go.mongodb.org/mongo-driver/bson"
@@ -51,8 +52,8 @@ func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) 
 	return nil
 }
 
-func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) (models.UsersBatch, error) {
-	filter := bson.M{"batch_type": batchType}
+func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBatchType) (models.UsersBatch, error) {
+	filter := bson.M{"batch_type": bt}
 
 	resp := m.collection.FindOne(ctx, filter, &options.FindOneOptions{
 		Sort: bson.M{"$natural": -1},
@@ -60,23 +61,23 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, batchType models.U
 
 	if err := resp.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return models.EmptyUsersBatch, ErrNoData
+			return models.MakeUsersBatch(bt, nil, time.Now()), ErrNoData
 		}
 
-		return models.EmptyUsersBatch, fmt.Errorf("find batch [%s]: %w", batchType.String(), err)
+		return models.MakeUsersBatch(bt, nil, time.Now()), fmt.Errorf("find batch [%s]: %w", bt.String(), err)
 	}
 
 	var ub models.UsersBatch
 
 	if err := resp.Decode(&ub); err != nil {
-		return models.EmptyUsersBatch, fmt.Errorf("decode response: %w", err)
+		return models.MakeUsersBatch(bt, nil, time.Now()), fmt.Errorf("decode response: %w", err)
 	}
 
 	return ub, nil
 }
 
-func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error) {
-	filter := bson.M{"batch_type": batchType}
+func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBatchType) ([]models.UsersBatch, error) {
+	filter := bson.M{"batch_type": bt}
 
 	resp, err := m.collection.Find(ctx, filter, &options.FindOptions{
 		Sort: bson.M{"$natural": -1},
@@ -86,7 +87,7 @@ func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.Us
 			return nil, ErrNoData
 		}
 
-		return nil, fmt.Errorf("find batches [%s]: %w", batchType.String(), err)
+		return nil, fmt.Errorf("find batches [%s]: %w", bt.String(), err)
 	}
 
 	defer func() {

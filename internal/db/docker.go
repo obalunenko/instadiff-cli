@@ -18,8 +18,8 @@ const (
 	mdb    = "mongo"
 )
 
-// DBParams holds mongo container parameters.
-type DBParams struct {
+// ContainerParams holds mongo container parameters.
+type ContainerParams struct {
 	User          string
 	UserPassword  string
 	ExpireSeconds uint
@@ -27,7 +27,7 @@ type DBParams struct {
 
 // SetUpMongoContainer starts up mongoDB docker container and returns reset closure func, that should be run
 // after m.Run().
-func SetUpMongoContainer(ctx context.Context, m *testing.M, tag string, p DBParams) func() {
+func SetUpMongoContainer(ctx context.Context, m *testing.M, tag string, p ContainerParams) func() {
 	log.Info(ctx, logPfx+"Setting up MongoDB test container")
 	env := []string{
 		// username and password for mongodb superuser
@@ -51,7 +51,7 @@ type containerParams struct {
 	env  []string
 }
 
-func setUpDB(ctx context.Context, m *testing.M, container containerParams, p DBParams) func() {
+func setUpDB(ctx context.Context, m *testing.M, container containerParams, p ContainerParams) func() {
 	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
 	pool, err := dockertest.NewPool("")
 	if err != nil {
