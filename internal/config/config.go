@@ -36,9 +36,8 @@ type storage struct {
 }
 
 type mongo struct {
-	url        string
-	db         string
-	collection string
+	url string
+	db  string
 }
 
 // UnFollowLimits returns unFollow action daily limits.
@@ -90,11 +89,6 @@ func (c Config) MongoDBName() string {
 	return c.storage.mongo.db
 }
 
-// MongoDBCollection returns configured MongoDB collection.
-func (c Config) MongoDBCollection() string {
-	return c.storage.mongo.collection
-}
-
 // StoreSession returns flag if session should be stored locally.
 func (c Config) StoreSession() bool {
 	return c.instagram.save
@@ -132,9 +126,8 @@ func Load(ctx context.Context, path string) (Config, error) {
 		storage: storage{
 			local: viper.GetBool("storage.local"),
 			mongo: mongo{
-				url:        viper.GetString("storage.mongo.url"),
-				db:         viper.GetString("storage.mongo.db"),
-				collection: viper.GetString("storage.mongo.collection"),
+				url: viper.GetString("storage.mongo.url"),
+				db:  viper.GetString("storage.mongo.db"),
 			},
 		},
 		instagram: instagram{

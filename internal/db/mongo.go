@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/obalunenko/logger"
@@ -14,6 +15,11 @@ import (
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
+
+// BuildCollectionName constructs collection name.
+func BuildCollectionName(s string) string {
+	return strings.Join([]string{s, "statistics"}, "_")
+}
 
 // MongoParams represents mongo db configuration parameters.
 type MongoParams struct {

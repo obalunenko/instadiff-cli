@@ -31,11 +31,11 @@ func ConnectForTesting(tb testing.TB, dbname, collection string) DB {
 		suffix = fmt.Sprintf("%s_%s", suffix, dbname)
 	}
 
-	dbName := fmt.Sprintf("%s_%d_%s", dbTestPrefix, time.Now().UnixNano(), suffix)
+	dbname = fmt.Sprintf("%s_%d_%s", dbTestPrefix, time.Now().UnixNano(), suffix)
 
 	cl, err := newMongoDB(ctx, MongoParams{
 		URL:        u,
-		Database:   dbName,
+		Database:   dbname,
 		Collection: collection,
 	})
 	require.NoError(tb, err)

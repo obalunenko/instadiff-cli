@@ -73,7 +73,9 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		return nil, nil, fmt.Errorf("make client: %w", err)
 	}
 
-	log.WithField(ctx, "username", cl.Account.Username).Info("Logged-in")
+	uname := cl.Account.Username
+
+	log.WithField(ctx, "username", uname).Info("Logged-in")
 
 	if err = cl.OpenApp(); err != nil {
 		log.WithError(ctx, err).Error("Failed to refresh app info")
@@ -84,7 +86,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		MongoParams: db.MongoParams{
 			URL:        cfg.MongoConfigURL(),
 			Database:   cfg.MongoDBName(),
-			Collection: cfg.MongoDBCollection(),
+			Collection: db.BuildCollectionName(uname),
 		},
 	})
 	if err != nil {

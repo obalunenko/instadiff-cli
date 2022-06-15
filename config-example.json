@@ -16,8 +16,7 @@
     "local": true,
     "mongo": {
       "url": "mongodb://127.0.0.1:27017",
-      "db": "testing",
-      "collection": "users"
+      "db": "testing"
     }
   },
   "debug": "false"
