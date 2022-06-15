@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	log "github.com/obalunenko/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -50,28 +51,11 @@ func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) 
 	return nil
 }
 
-func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
-	batchType models.UsersBatchType) (models.UsersBatch, error) {
+func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) (models.UsersBatch, error) {
 	filter := bson.M{"batch_type": batchType}
+
 	resp := m.collection.FindOne(ctx, filter, &options.FindOneOptions{
-		AllowPartialResults: nil,
-		BatchSize:           nil,
-		Collation:           nil,
-		Comment:             nil,
-		CursorType:          nil,
-		Hint:                nil,
-		Max:                 nil,
-		MaxAwaitTime:        nil,
-		MaxTime:             nil,
-		Min:                 nil,
-		NoCursorTimeout:     nil,
-		OplogReplay:         nil,
-		Projection:          nil,
-		ReturnKey:           nil,
-		ShowRecordID:        nil,
-		Skip:                nil,
-		Snapshot:            nil,
-		Sort:                bson.M{"$natural": -1},
+		Sort: bson.M{"$natural": -1},
 	})
 
 	if err := resp.Err(); err != nil {
@@ -93,28 +77,9 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context,
 
 func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error) {
 	filter := bson.M{"batch_type": batchType}
+
 	resp, err := m.collection.Find(ctx, filter, &options.FindOptions{
-		AllowDiskUse:        nil,
-		AllowPartialResults: nil,
-		BatchSize:           nil,
-		Collation:           nil,
-		Comment:             nil,
-		CursorType:          nil,
-		Hint:                nil,
-		Limit:               nil,
-		Max:                 nil,
-		MaxAwaitTime:        nil,
-		MaxTime:             nil,
-		Min:                 nil,
-		NoCursorTimeout:     nil,
-		OplogReplay:         nil,
-		Projection:          nil,
-		ReturnKey:           nil,
-		ShowRecordID:        nil,
-		Skip:                nil,
-		Snapshot:            nil,
-		Sort:                bson.M{"$natural": -1},
-		Let:                 nil,
+		Sort: bson.M{"$natural": -1},
 	})
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -123,6 +88,12 @@ func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.Us
 
 		return nil, fmt.Errorf("find batches [%s]: %w", batchType.String(), err)
 	}
+
+	defer func() {
+		if err := resp.Close(ctx); err != nil {
+			log.WithError(ctx, err).Error("mongo: Failed to close cursor")
+		}
+	}()
 
 	var batches []models.UsersBatch
 
@@ -135,6 +106,7 @@ func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, batchType models.Us
 
 		batches = append(batches, ub)
 	}
+
 	if err := resp.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNoData

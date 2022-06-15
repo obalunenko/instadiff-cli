@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )

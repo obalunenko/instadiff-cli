@@ -22,7 +22,6 @@ const (
 type DBParams struct {
 	User          string
 	UserPassword  string
-	Database      string
 	ExpireSeconds uint
 }
 

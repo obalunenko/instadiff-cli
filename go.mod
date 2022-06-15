@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/Davincible/goinsta v0.0.0-20220425072628-96aad7267204
 	github.com/briandowns/spinner v1.18.1
-	github.com/magiconair/properties v1.8.6
 	github.com/obalunenko/logger v0.4.0
 	github.com/obalunenko/version v1.1.0
 	github.com/ory/dockertest/v3 v3.9.1
@@ -48,6 +47,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
