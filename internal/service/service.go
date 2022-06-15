@@ -161,6 +161,10 @@ func (svc *Service) getFollowersFollowings(ctx context.Context, bt models.UsersB
 		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
 	}
 
+	if err = svc.findDiffUsers(ctx, users, bt); err != nil {
+		return nil, fmt.Errorf("find diff users: %w", err)
+	}
+
 	return users, nil
 }
 
@@ -188,27 +192,27 @@ func (svc *Service) findDiffUsers(ctx context.Context, users []models.User, bt m
 	}
 
 	lostFlw := getLost(oldBatch.Users, users)
+
 	lostBatch := models.UsersBatch{
 		Users:     lostFlw,
 		Type:      lbt,
 		CreatedAt: now,
 	}
 
-	err = svc.storeUsers(ctx, lostBatch)
-	if err != nil && !errors.Is(err, ErrNoUsers) {
-		log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
+	if err = svc.storeUsers(ctx, lostBatch); err != nil && !errors.Is(err, ErrNoUsers) {
+		return fmt.Errorf("store users [%s]: %w", lostBatch.Type, err)
 	}
 
 	newFlw := getNew(oldBatch.Users, users)
+
 	newBatch := models.UsersBatch{
 		Users:     newFlw,
 		Type:      nbt,
 		CreatedAt: now,
 	}
 
-	err = svc.storeUsers(ctx, newBatch)
-	if err != nil && !errors.Is(err, ErrNoUsers) {
-		log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
+	if err = svc.storeUsers(ctx, newBatch); err != nil && !errors.Is(err, ErrNoUsers) {
+		return fmt.Errorf("store users [%s]: %w", newBatch.Type, err)
 	}
 
 	return nil
@@ -615,7 +619,7 @@ func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error 
 // Should be called in defer after creating new instance from New().
 func (svc *Service) stop() error {
 	if err := svc.instagram.client.Logout(); err != nil {
-		// wierd error - just ignore it.
+		// weird error - just ignore it.
 		if strings.Contains(err.Error(), "405 Method Not Allowed") {
 			return nil
 		}
