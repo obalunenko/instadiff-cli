@@ -104,11 +104,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 		debug:   cfg.Debug(),
 	}
 
-	stopFunc := func() error {
-		return svc.stop()
-	}
-
-	return &svc, stopFunc, nil
+	return &svc, svc.stop, nil
 }
 
 // GetFollowers returns list of followers for logged-in user.
@@ -303,37 +299,37 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 // UnFollow removes user from followings.
 func (svc *Service) UnFollow(ctx context.Context, user models.User) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
 	log.WithField(ctx, "username", user.UserName).Debug("Unfollow user")
 
-	if svc.debug {
-		return nil
-	}
-
-	us := goinsta.User{
-		ID:       user.ID,
-		Username: user.UserName,
-	}
-
-	us.SetInstagram(svc.instagram.client)
-
-	if err := us.Unfollow(); err != nil {
-		return fmt.Errorf("[%s] unfollow: %w", user.UserName, err)
-	}
-
-	return nil
+	return svc.actUser(ctx, user, userActionUnfollow)
 }
 
 // Follow adds user to followings.
 func (svc *Service) Follow(ctx context.Context, user models.User) error {
+	log.WithField(ctx, "username", user.UserName).Debug("Follow user")
+
+	return svc.actUser(ctx, user, userActionFollow)
+}
+
+//go:generate stringer -type=userAction -trimprefix=userAction
+
+type userAction uint
+
+const (
+	userActionUnknown userAction = iota
+
+	userActionFollow
+	userActionUnfollow
+	userActionBlock
+	userActionUnblock
+
+	userActionSentinel
+)
+
+func (svc *Service) actUser(ctx context.Context, user models.User, act userAction) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-
-	log.WithField(ctx, "username", user.UserName).Debug("Follow user")
 
 	if svc.debug {
 		return nil
@@ -346,8 +342,25 @@ func (svc *Service) Follow(ctx context.Context, user models.User) error {
 
 	us.SetInstagram(svc.instagram.client)
 
-	if err := us.Follow(); err != nil {
-		return fmt.Errorf("[%s] follow: %w", user.UserName, err)
+	var f func() error
+
+	switch act {
+	case userActionFollow:
+		f = us.Follow
+	case userActionUnfollow:
+		f = us.Unfollow
+	case userActionBlock:
+		f = func() error {
+			return us.Block(false)
+		}
+	case userActionUnblock:
+		f = us.Unblock
+	default:
+		return fmt.Errorf("unsupported user action type: %s", act.String())
+	}
+
+	if err := f(); err != nil {
+		return fmt.Errorf("action[%s]: %w", act.String(), err)
 	}
 
 	return nil
@@ -464,7 +477,7 @@ LOOP:
 		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			err := svc.removeUser(un)
+			err := svc.removeUser(ctx, un)
 
 			pBar.Progress() <- struct{}{}
 
@@ -483,7 +496,7 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			err := svc.removeUser(un)
+			err := svc.removeUser(ctx, un)
 
 			pBar.Progress() <- struct{}{}
 
@@ -506,20 +519,24 @@ LOOP:
 	return count, nil
 }
 
-func (svc *Service) removeUser(username string) error {
+func (svc *Service) removeUser(ctx context.Context, username string) error {
 	u, err := svc.instagram.client.Profiles.ByName(username)
 	if err != nil {
 		return fmt.Errorf("user lookup: %w", err)
 	}
 
-	u.SetInstagram(svc.instagram.client)
-
-	if err = u.Block(false); err != nil {
-		return fmt.Errorf("block user: %w", err)
+	um := models.User{
+		ID:       u.ID,
+		UserName: u.Username,
+		FullName: u.FullName,
 	}
 
-	if err = u.Unblock(); err != nil {
-		return fmt.Errorf("unblock user: %w", err)
+	if err = svc.actUser(ctx, um, userActionBlock); err != nil {
+		return fmt.Errorf("action user: %w", err)
+	}
+
+	if err = svc.actUser(ctx, um, userActionUnblock); err != nil {
+		return fmt.Errorf("action user: %w", err)
 	}
 
 	return nil
@@ -608,7 +625,7 @@ func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error 
 		return nil
 	}
 
-	if err := svc.UnFollow(ctx, u); err != nil {
+	if err := svc.actUser(ctx, u, userActionUnfollow); err != nil {
 		return err
 	}
 
@@ -782,37 +799,9 @@ func (svc *Service) GetDiffFollowers(ctx context.Context) ([]models.UsersBatch, 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	bt := models.UsersBatchTypeLostFollowers
+	dt := models.DiffTypeFollowers
 
-	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			lostBatch = models.UsersBatch{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}
-		} else {
-			return nil, fmt.Errorf("get lost folowers: %w", err)
-		}
-	}
-
-	bt = models.UsersBatchTypeNewFollowers
-
-	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			newBatch = models.UsersBatch{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}
-		} else {
-			return nil, fmt.Errorf("get new folowers: %w", err)
-		}
-	}
-
-	return []models.UsersBatch{lostBatch, newBatch}, nil
+	return svc.getDiff(ctx, dt)
 }
 
 // GetDiffFollowings returns batches with lost and new followings.
@@ -824,86 +813,52 @@ func (svc *Service) GetDiffFollowings(ctx context.Context) ([]models.UsersBatch,
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	lostBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeLostFollowings)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			lostBatch = models.UsersBatch{
-				Users:     nil,
-				Type:      models.UsersBatchTypeLostFollowings,
-				CreatedAt: time.Now(),
-			}
-		} else {
-			return nil, fmt.Errorf("get lost folowings: %w", err)
-		}
-	}
+	dt := models.DiffTypeFollowings
 
-	newBatch, err := svc.storage.GetLastUsersBatchByType(ctx, models.UsersBatchTypeNewFollowings)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			newBatch = models.UsersBatch{
-				Users:     nil,
-				Type:      models.UsersBatchTypeNewFollowings,
-				CreatedAt: time.Now(),
-			}
-		} else {
-			return nil, fmt.Errorf("get new followings: %w", err)
-		}
-	}
-
-	return []models.UsersBatch{lostBatch, newBatch}, nil
+	return svc.getDiff(ctx, dt)
 }
 
-// GetHistoryDiffFollowings returns diff history of followings for an account.
-func (svc *Service) GetHistoryDiffFollowings(ctx context.Context) (models.DiffHistory, error) {
-	resp := models.MakeDiffHistory(models.DiffTypeFollowings)
+func (svc *Service) getDiff(ctx context.Context, dt models.DiffType) ([]models.UsersBatch, error) {
+	var batchTypes []models.UsersBatchType
 
-	if ctx.Err() != nil {
-		return models.DiffHistory{}, ctx.Err()
+	switch dt {
+	case models.DiffTypeFollowers:
+		batchTypes = []models.UsersBatchType{models.UsersBatchTypeNewFollowers, models.UsersBatchTypeLostFollowers}
+	case models.DiffTypeFollowings:
+		batchTypes = []models.UsersBatchType{models.UsersBatchTypeNewFollowings, models.UsersBatchTypeLostFollowings}
+	default:
+		return nil, fmt.Errorf("unsupported diff type [%s]", dt.String())
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	const respnum = 2
 
-	bt := models.UsersBatchTypeLostFollowings
+	resp := make([]models.UsersBatch, 0, respnum)
 
-	lost, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			lost = []models.UsersBatch{{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}}
-		} else {
-			return models.DiffHistory{}, fmt.Errorf("get lost folowings: %w", err)
+	for i := range batchTypes {
+		bt := batchTypes[i]
+
+		users, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
+		if err != nil {
+			if errors.Is(err, db.ErrNoData) {
+				users = models.UsersBatch{
+					Users:     nil,
+					Type:      bt,
+					CreatedAt: time.Now(),
+				}
+			} else {
+				return nil, fmt.Errorf("get users [%s]: %w", bt.String(), err)
+			}
 		}
+
+		resp = append(resp, users)
 	}
-
-	resp.Add(lost...)
-
-	bt = models.UsersBatchTypeNewFollowings
-
-	newBatches, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			newBatches = []models.UsersBatch{{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}}
-		} else {
-			return models.DiffHistory{}, fmt.Errorf("get new followings: %w", err)
-		}
-	}
-
-	resp.Add(newBatches...)
 
 	return resp, nil
 }
 
-// GetHistoryDiffFollowers returns diff history of followers for an account.
-func (svc *Service) GetHistoryDiffFollowers(ctx context.Context) (models.DiffHistory, error) {
-	resp := models.MakeDiffHistory(models.DiffTypeFollowers)
+// GetHistoryDiffFollowings returns diff history of followings for an account.
+func (svc *Service) GetHistoryDiffFollowings(ctx context.Context) (models.DiffHistory, error) {
+	dt := models.DiffTypeFollowings
 
 	if ctx.Err() != nil {
 		return models.DiffHistory{}, ctx.Err()
@@ -912,39 +867,55 @@ func (svc *Service) GetHistoryDiffFollowers(ctx context.Context) (models.DiffHis
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	bt := models.UsersBatchTypeLostFollowers
+	return svc.getHistoryDiff(ctx, dt)
+}
 
-	lost, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			lost = []models.UsersBatch{{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}}
-		} else {
-			return models.DiffHistory{}, fmt.Errorf("get lost folowers: %w", err)
-		}
+// GetHistoryDiffFollowers returns diff history of followers for an account.
+func (svc *Service) GetHistoryDiffFollowers(ctx context.Context) (models.DiffHistory, error) {
+	dt := models.DiffTypeFollowers
+
+	if ctx.Err() != nil {
+		return models.DiffHistory{}, ctx.Err()
 	}
 
-	resp.Add(lost...)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	bt = models.UsersBatchTypeNewFollowers
+	return svc.getHistoryDiff(ctx, dt)
+}
 
-	newBatches, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			newBatches = []models.UsersBatch{{
-				Users:     nil,
-				Type:      bt,
-				CreatedAt: time.Now(),
-			}}
-		} else {
-			return models.DiffHistory{}, fmt.Errorf("get new followers: %w", err)
-		}
+func (svc *Service) getHistoryDiff(ctx context.Context, dt models.DiffType) (models.DiffHistory, error) {
+	var batchTypes []models.UsersBatchType
+
+	switch dt {
+	case models.DiffTypeFollowers:
+		batchTypes = []models.UsersBatchType{models.UsersBatchTypeNewFollowers, models.UsersBatchTypeLostFollowers}
+	case models.DiffTypeFollowings:
+		batchTypes = []models.UsersBatchType{models.UsersBatchTypeNewFollowings, models.UsersBatchTypeLostFollowings}
+	default:
+		return models.DiffHistory{}, fmt.Errorf("unsupported diff type [%s]", dt.String())
 	}
 
-	resp.Add(newBatches...)
+	resp := models.MakeDiffHistory(dt)
+
+	for i := range batchTypes {
+		bt := batchTypes[i]
+
+		users, err := svc.storage.GetAllUsersBatchByType(ctx, bt)
+		if err != nil {
+			if errors.Is(err, db.ErrNoData) {
+				users = []models.UsersBatch{{
+					Users:     nil,
+					Type:      bt,
+					CreatedAt: time.Now(),
+				}}
+			} else {
+				return models.DiffHistory{}, fmt.Errorf("get users [%s]: %w", bt.String(), err)
+			}
+		}
+
+		resp.Add(users...)
+	}
 
 	return resp, nil
 }
