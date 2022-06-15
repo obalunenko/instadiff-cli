@@ -29,6 +29,7 @@ type ContainerParams struct {
 // after m.Run().
 func SetUpMongoContainer(ctx context.Context, m *testing.M, tag string, p ContainerParams) func() {
 	log.Info(ctx, logPfx+"Setting up MongoDB test container")
+
 	env := []string{
 		// username and password for mongodb superuser
 		"MONGO_INITDB_ROOT_USERNAME=" + p.User,
@@ -58,7 +59,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 		log.WithError(ctx, err).Fatal(logPfx + "Could not connect to docker")
 	}
 
-	// pulls an repo, creates a container based on it and runs it
+	// pulls a repo, creates a container based on it and runs it
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: container.repo,
 		Tag:        container.tag,
@@ -73,7 +74,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 	}
 
 	// Tell docker to hard kill the container in configured expiration time
-	if err := resource.Expire(p.ExpireSeconds); err != nil {
+	if err = resource.Expire(p.ExpireSeconds); err != nil {
 		log.WithError(ctx, err).WithFields(log.Fields{
 			"container": resource.Container.Name,
 		}).Fatal(logPfx + "Could not set expiration to docker container")

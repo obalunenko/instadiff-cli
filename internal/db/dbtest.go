@@ -20,7 +20,7 @@ const (
 
 // ConnectForTesting returns a connection to a newly created database
 // Test cleanup automatically drops the database and closes underlying connections.
-func ConnectForTesting(tb testing.TB, dbname string, collection string) DB {
+func ConnectForTesting(tb testing.TB, dbname, collection string) DB {
 	ctx := context.Background()
 
 	u, err := getTestURI()

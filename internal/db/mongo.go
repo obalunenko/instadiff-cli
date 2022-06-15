@@ -112,7 +112,6 @@ func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBatc
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNoData
 		}
-
 	}
 
 	return batches, nil

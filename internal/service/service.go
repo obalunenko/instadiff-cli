@@ -116,57 +116,9 @@ func (svc *Service) GetFollowers(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followers", "", "yellow")
 	defer stop()
 
-	var noPreviousData bool
-
-	now := time.Now()
-
 	bt := models.UsersBatchTypeFollowers
 
-	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			noPreviousData = true
-		} else {
-			return nil, fmt.Errorf("get last batch [%s]: %w", bt.String(), err)
-		}
-	}
-
-	followers, err := makeUsersList(ctx, svc.instagram.client.Account.Followers())
-	if err != nil {
-		return nil, fmt.Errorf("make users list: %w", err)
-	}
-
-	if !noPreviousData {
-		lostFlw := getLost(oldBatch.Users, followers)
-		lostBatch := models.UsersBatch{
-			Users:     lostFlw,
-			Type:      models.UsersBatchTypeLostFollowers,
-			CreatedAt: now,
-		}
-
-		_, err = svc.storeUsers(ctx, lostBatch)
-		if err != nil && !errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
-		}
-
-		newFlw := getNew(oldBatch.Users, followers)
-		newBatch := models.UsersBatch{
-			Users:     newFlw,
-			Type:      models.UsersBatchTypeNewFollowers,
-			CreatedAt: now,
-		}
-
-		_, err = svc.storeUsers(ctx, newBatch)
-		if err != nil && !errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
-		}
-	}
-
-	return svc.storeUsers(ctx, models.UsersBatch{
-		Users:     followers,
-		Type:      bt,
-		CreatedAt: time.Now(),
-	})
+	return svc.getFollowersFollowings(ctx, bt)
 }
 
 // GetFollowings returns list of followings for logged-in user.
@@ -174,73 +126,105 @@ func (svc *Service) GetFollowings(ctx context.Context) ([]models.User, error) {
 	stop := spinner.Set("Fetching followings", "", "yellow")
 	defer stop()
 
-	var noPreviousData bool
-
-	now := time.Now()
-
 	bt := models.UsersBatchTypeFollowings
 
-	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
-	if err != nil {
-		if errors.Is(err, db.ErrNoData) {
-			noPreviousData = true
-		} else {
-			return nil, fmt.Errorf("get last batch [%s]: %w", bt.String(), err)
-		}
+	return svc.getFollowersFollowings(ctx, bt)
+}
+
+func (svc *Service) getFollowersFollowings(ctx context.Context, bt models.UsersBatchType) ([]models.User, error) {
+	var (
+		users []models.User
+		err   error
+	)
+
+	switch bt {
+	case models.UsersBatchTypeFollowers:
+		users, err = makeUsersList(ctx, svc.instagram.client.Account.Followers())
+	case models.UsersBatchTypeFollowings:
+		users, err = makeUsersList(ctx, svc.instagram.client.Account.Following())
+	default:
+		return nil, fmt.Errorf("not supported batch type for this func: %s", bt.String())
 	}
 
-	followings, err := makeUsersList(ctx, svc.instagram.client.Account.Following())
 	if err != nil {
 		return nil, fmt.Errorf("make users list: %w", err)
 	}
 
-	if !noPreviousData {
-		lostFlw := getLost(oldBatch.Users, followings)
-		lostBatch := models.UsersBatch{
-			Users:     lostFlw,
-			Type:      models.UsersBatchTypeLostFollowings,
-			CreatedAt: now,
-		}
+	now := time.Now()
 
-		_, err = svc.storeUsers(ctx, lostBatch)
-		if err != nil && !errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
-		}
-
-		newFlw := getNew(oldBatch.Users, followings)
-		newBatch := models.UsersBatch{
-			Users:     newFlw,
-			Type:      models.UsersBatchTypeNewFollowings,
-			CreatedAt: now,
-		}
-
-		_, err = svc.storeUsers(ctx, newBatch)
-		if err != nil && !errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
-		}
+	err = svc.storeUsers(ctx, models.UsersBatch{
+		Users:     users,
+		Type:      bt,
+		CreatedAt: now,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
 	}
 
-	return svc.storeUsers(ctx, models.UsersBatch{
-		Users:     followings,
-		Type:      bt,
-		CreatedAt: time.Now(),
-	})
+	return users, nil
 }
 
-func (svc *Service) storeUsers(ctx context.Context, batch models.UsersBatch) ([]models.User, error) {
+func (svc *Service) findDiffUsers(ctx context.Context, users []models.User, bt models.UsersBatchType) error {
+	var lbt, nbt models.UsersBatchType
+
+	now := time.Now()
+
+	switch bt {
+	case models.UsersBatchTypeFollowers:
+		lbt, nbt = models.UsersBatchTypeLostFollowers, models.UsersBatchTypeNewFollowers
+	case models.UsersBatchTypeFollowings:
+		lbt, nbt = models.UsersBatchTypeLostFollowings, models.UsersBatchTypeNewFollowings
+	default:
+		return fmt.Errorf("not supported batch type for this func: %s", bt.String())
+	}
+
+	oldBatch, err := svc.storage.GetLastUsersBatchByType(ctx, bt)
+	if err != nil {
+		if errors.Is(err, db.ErrNoData) {
+			return nil
+		}
+
+		return fmt.Errorf("get last batch [%s]: %w", bt.String(), err)
+	}
+
+	lostFlw := getLost(oldBatch.Users, users)
+	lostBatch := models.UsersBatch{
+		Users:     lostFlw,
+		Type:      lbt,
+		CreatedAt: now,
+	}
+
+	err = svc.storeUsers(ctx, lostBatch)
+	if err != nil && !errors.Is(err, ErrNoUsers) {
+		log.WithError(ctx, err).WithField("batch_type", lostBatch.Type.String()).Error("Failed store users")
+	}
+
+	newFlw := getNew(oldBatch.Users, users)
+	newBatch := models.UsersBatch{
+		Users:     newFlw,
+		Type:      nbt,
+		CreatedAt: now,
+	}
+
+	err = svc.storeUsers(ctx, newBatch)
+	if err != nil && !errors.Is(err, ErrNoUsers) {
+		log.WithError(ctx, err).WithField("batch_type", newBatch.Type.String()).Error("Failed store users")
+	}
+
+	return nil
+}
+
+func (svc *Service) storeUsers(ctx context.Context, batch models.UsersBatch) error {
 	if len(batch.Users) == 0 {
-		return nil, makeNoUsersError(batch.Type)
+		return makeNoUsersError(batch.Type)
 	}
 
 	err := svc.storage.InsertUsersBatch(ctx, batch)
 	if err != nil {
-		log.WithFields(ctx, log.Fields{
-			"error":      err,
-			"batch_type": batch.Type.String(),
-		}).Error("Failed to insert batch to db")
+		return fmt.Errorf("insert users batch [%s]: %w", batch.Type.String(), err)
 	}
 
-	return batch.Users, nil
+	return nil
 }
 
 func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, error) {
@@ -299,11 +283,18 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 		}
 	}
 
-	return svc.storeUsers(ctx, models.UsersBatch{
+	bt := models.UsersBatchTypeNotMutual
+
+	err = svc.storeUsers(ctx, models.UsersBatch{
 		Users:     notmutual,
-		Type:      models.UsersBatchTypeNotMutual,
+		Type:      bt,
 		CreatedAt: time.Now(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("store users [%s]: %w", bt, err)
+	}
+
+	return notmutual, nil
 }
 
 // UnFollow removes user from followings.

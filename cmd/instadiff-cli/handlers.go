@@ -292,19 +292,25 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 		return fmt.Errorf("write header list: %w", err)
 	}
 
+	const recnum = 2
+
 	for date, records := range dh.History {
-		if len(records) > 2 {
+		if len(records) > recnum {
 			return errors.New("wrong diff history data")
 		}
 
 		var l, n models.UsersBatch
 
 		for i := range records {
-			switch records[i].Type {
+			r := records[i]
+
+			switch r.Type {
 			case models.UsersBatchTypeLostFollowers, models.UsersBatchTypeLostFollowings:
-				l = records[i]
+				l = r
 			case models.UsersBatchTypeNewFollowers, models.UsersBatchTypeNewFollowings:
-				n = records[i]
+				n = r
+			default:
+				return fmt.Errorf("invalid batch type[%s]", r.Type.String())
 			}
 		}
 

@@ -102,13 +102,15 @@ func (d *DiffHistory) Add(batches ...UsersBatch) {
 		return
 	}
 
+	const bnum = 2
+
 	for i := range batches {
 		batch := batches[i]
 		date := batch.CreatedAt
 
 		l, ok := d.History[date]
 		if !ok {
-			l = make([]UsersBatch, 0, 2)
+			l = make([]UsersBatch, 0, bnum)
 		}
 
 		l = append(l, batch)
