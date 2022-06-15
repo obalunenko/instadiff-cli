@@ -3,17 +3,18 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
 type localDB struct {
-	users map[models.UsersBatchType]models.UsersBatch
+	users map[models.UsersBatchType][]models.UsersBatch
 }
 
 func newLocalDB() *localDB {
 	return &localDB{
-		users: make(map[models.UsersBatchType]models.UsersBatch),
+		users: make(map[models.UsersBatchType][]models.UsersBatch),
 	}
 }
 
@@ -22,31 +23,56 @@ func (l *localDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch)
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		if !users.Type.Valid() {
-			return models.MakeInvalidBatchTypeError(users.Type)
+		bt := users.Type
+
+		if !bt.Valid() {
+			return models.MakeInvalidBatchTypeError(bt)
 		}
 
-		l.users[users.Type] = users
+		s := l.users[bt]
+
+		s = append(s, users)
+
+		l.users[bt] = s
 
 		return nil
 	}
 }
 
-func (l *localDB) GetLastUsersBatchByType(ctx context.Context,
-	batchType models.UsersBatchType) (models.UsersBatch, error) {
+func (l *localDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBatchType) (models.UsersBatch, error) {
 	select {
 	case <-ctx.Done():
-		return models.EmptyUsersBatch, ctx.Err()
+		return models.MakeUsersBatch(bt, nil, time.Now()), ctx.Err()
+	default:
+		if !bt.Valid() {
+			return models.MakeUsersBatch(bt, nil, time.Now()), models.MakeInvalidBatchTypeError(bt)
+		}
+
+		batches, exist := l.users[bt]
+		if !exist || len(batches) == 0 {
+			return models.MakeUsersBatch(bt, nil, time.Now()), ErrNoData
+		}
+
+		last := batches[len(batches)-1]
+
+		return last, nil
+	}
+}
+
+func (l *localDB) GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	default:
 		if !batchType.Valid() {
-			return models.EmptyUsersBatch, models.MakeInvalidBatchTypeError(batchType)
+			return nil, models.MakeInvalidBatchTypeError(batchType)
 		}
 
-		batch, exist := l.users[batchType]
-		if !exist {
-			return models.EmptyUsersBatch, ErrNoData
+		batches, exist := l.users[batchType]
+		if !exist || len(batches) == 0 {
+			return nil, ErrNoData
 		}
 
-		return batch, nil
+		return batches, nil
 	}
 }

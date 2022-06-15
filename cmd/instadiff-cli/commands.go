@@ -33,19 +33,10 @@ func commands(ctx context.Context) []*cli.Command {
 			Action:  executeCmd(ctx, cmdRemoveFollowers),
 			Flags: []cli.Flag{
 				&cli.StringSliceFlag{
-					Name:        "follower",
-					Category:    "",
-					DefaultText: "",
-					FilePath:    "",
-					Usage:       "Follower to remove",
-					Required:    true,
-					Hidden:      false,
-					HasBeenSet:  false,
-					Value:       &cli.StringSlice{},
-					Destination: nil,
-					Aliases:     nil,
-					EnvVars:     nil,
-					TakesFile:   false,
+					Name:     "follower",
+					Usage:    "Follower to remove",
+					Required: true,
+					Value:    &cli.StringSlice{},
 				},
 			},
 		},
@@ -63,9 +54,15 @@ func commands(ctx context.Context) []*cli.Command {
 		},
 		{
 			Name:   "diff",
-			Usage:  "List diff followers (lost and new)",
+			Usage:  "List diff for account (lost and new followers and followings)",
 			Action: executeCmd(ctx, cmdListDiff),
 			Flags:  []cli.Flag{addListFlag()},
+		},
+		{
+			Name:    "diff-history",
+			Aliases: []string{"history"},
+			Usage:   "List diff account history (lost and new followers and followings)",
+			Action:  executeCmd(ctx, cmdListHistoryDiff),
 		},
 	}
 }

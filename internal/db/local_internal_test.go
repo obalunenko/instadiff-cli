@@ -2,11 +2,10 @@ package db
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
@@ -31,7 +30,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 				batchType: models.UsersBatchTypeFollowers,
 			},
 			want: models.UsersBatch{
-				Users:     followersFixture,
+				Users:     followersFixture2,
 				Type:      models.UsersBatchTypeFollowers,
 				CreatedAt: time.Time{},
 			},
@@ -42,7 +41,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: models.UsersBatchTypeUnknown,
 			},
-			want:    models.EmptyUsersBatch,
+			want:    resetBatchTime(models.MakeUsersBatch(models.UsersBatchTypeUnknown, nil, time.Now())),
 			wantErr: true,
 		},
 		{
@@ -50,7 +49,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 			args: args{
 				batchType: notExistBatch,
 			},
-			want:    models.EmptyUsersBatch,
+			want:    resetBatchTime(models.MakeUsersBatch(models.UsersBatchTypeUnknown, nil, time.Now())),
 			wantErr: true,
 		},
 	}
@@ -58,7 +57,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			l := setUpDBWithFixtures(t)
+			l := setUpLocalDBWithFixtures(t)
 
 			got, err := l.GetLastUsersBatchByType(context.TODO(), tt.args.batchType)
 			if tt.wantErr {
@@ -67,7 +66,7 @@ func Test_localDB_GetLastUsersBatchByType(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, resetBatchTime(tt.want), resetBatchTime(got))
 		})
 	}
 }
@@ -77,11 +76,11 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	bType := models.UsersBatchTypeFollowers
 
 	gotBatch, err := ldb.GetLastUsersBatchByType(context.TODO(), bType)
-	require.True(t, err == nil || errors.Is(err, ErrNoData))
-	assert.Equal(t, models.EmptyUsersBatch, gotBatch)
+	require.ErrorIs(t, err, ErrNoData)
+	assert.Equal(t, resetBatchTime(models.MakeUsersBatch(bType, nil, time.Now())), resetBatchTime(gotBatch))
 
 	goldenBatch := models.UsersBatch{
-		Users:     followersFixture,
+		Users:     followersFixture2,
 		Type:      models.UsersBatchTypeFollowers,
 		CreatedAt: time.Time{},
 	}
@@ -92,52 +91,5 @@ func Test_localDB_InsertUsersBatch(t *testing.T) {
 	gotBatch, err = ldb.GetLastUsersBatchByType(context.TODO(), bType)
 	require.NoError(t, err)
 
-	assert.Equal(t, goldenBatch, gotBatch)
-}
-
-var (
-	followersFixture = []models.User{
-		{
-			ID:       1,
-			UserName: "user1",
-			FullName: "test user 1",
-		},
-		{
-			ID:       2,
-			UserName: "user2",
-			FullName: "test user 2",
-		},
-	}
-	followingsFixture = []models.User{
-		{
-			ID:       3,
-			UserName: "user3",
-			FullName: "test user 3",
-		},
-		{
-			ID:       4,
-			UserName: "user4",
-			FullName: "test user 4",
-		},
-	}
-)
-
-func setUpDBWithFixtures(t testing.TB) DB {
-	t.Helper()
-
-	fixtures := map[models.UsersBatchType]models.UsersBatch{
-		models.UsersBatchTypeFollowers: {
-			Users: followersFixture,
-			Type:  models.UsersBatchTypeFollowers,
-		},
-		models.UsersBatchTypeFollowings: {
-			Users: followingsFixture,
-			Type:  models.UsersBatchTypeFollowings,
-		},
-	}
-
-	db := newLocalDB()
-	db.users = fixtures
-
-	return db
+	assert.Equal(t, resetBatchTime(goldenBatch), resetBatchTime(gotBatch))
 }

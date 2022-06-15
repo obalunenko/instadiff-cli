@@ -2,8 +2,6 @@
 package models
 
 import (
-	"errors"
-	"fmt"
 	"time"
 )
 
@@ -21,11 +19,13 @@ type UsersBatch struct {
 	CreatedAt time.Time      `bson:"created_at"`
 }
 
-// EmptyUsersBatch represents nil batch.
-var EmptyUsersBatch = UsersBatch{
-	Users:     nil,
-	Type:      UsersBatchTypeUnknown,
-	CreatedAt: time.Time{},
+// MakeUsersBatch constructs UsersBatch.
+func MakeUsersBatch(bt UsersBatchType, users []User, created time.Time) UsersBatch {
+	return UsersBatch{
+		Users:     users,
+		Type:      bt,
+		CreatedAt: created,
+	}
 }
 
 //go:generate stringer -type=UsersBatchType -trimprefix=UsersBatchType
@@ -49,17 +49,13 @@ const (
 	UsersBatchTypeLostFollowers
 	// UsersBatchTypeNewFollowers represents new followers.
 	UsersBatchTypeNewFollowers
+	// UsersBatchTypeNewFollowings represents new followings.
+	UsersBatchTypeNewFollowings
+	// UsersBatchTypeLostFollowings represents lost followings.
+	UsersBatchTypeLostFollowings
 
 	usersBatchTypeSentinel // should be always last. New types should be added at the end before sentinel.
 )
-
-// ErrInvalidUsersBatchType means that batch type not supported.
-var ErrInvalidUsersBatchType = errors.New("invalid users batch type")
-
-// MakeInvalidBatchTypeError returns ErrInvalidUsersBatchType with added bathtype info.
-func MakeInvalidBatchTypeError(t UsersBatchType) error {
-	return fmt.Errorf("%s: %w", t.String(), ErrInvalidUsersBatchType)
-}
 
 // Valid checks if value is valid type.
 func (i UsersBatchType) Valid() bool {
@@ -75,4 +71,63 @@ func MakeUser(id int64, username, fullname string) User {
 type Limits struct {
 	Follow   int
 	UnFollow int
+}
+
+//go:generate stringer -type=DiffType -trimprefix=DiffType
+
+// DiffType marks what is the type of diff hostory is.
+type DiffType uint
+
+const (
+	// DiffTypeUnknown is unknown type, to cover default value case.
+	DiffTypeUnknown DiffType = iota
+
+	// DiffTypeFollowers represents followers history.
+	DiffTypeFollowers
+	// DiffTypeFollowings represents followings history.
+	DiffTypeFollowings
+
+	diffTypeSentinel // should be always last. New types should be added at the end before sentinel.
+)
+
+// DiffHistory represents history of account changes.
+type DiffHistory struct {
+	DiffType DiffType
+	History  map[time.Time][]UsersBatch
+}
+
+// Add adds user batch to the history.
+func (d *DiffHistory) Add(batches ...UsersBatch) {
+	if len(batches) == 0 {
+		return
+	}
+
+	const bnum = 2
+
+	for i := range batches {
+		batch := batches[i]
+		date := batch.CreatedAt
+
+		l, ok := d.History[date]
+		if !ok {
+			l = make([]UsersBatch, 0, bnum)
+		}
+
+		l = append(l, batch)
+
+		d.History[date] = l
+	}
+}
+
+// Get returns all UsersBatch for specified date.
+func (d *DiffHistory) Get(date time.Time) []UsersBatch {
+	return d.History[date]
+}
+
+// MakeDiffHistory constructs DiffHistory.
+func MakeDiffHistory(dt DiffType) DiffHistory {
+	return DiffHistory{
+		DiffType: dt,
+		History:  make(map[time.Time][]UsersBatch),
+	}
 }
