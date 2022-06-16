@@ -43,11 +43,11 @@ USAGE:
 VERSION:
 
 | app_name:     instadiff-cli                            |
-| version:      v1.0.2                                   |
+| version:      v1.3.0                                   |
 | go_version:   go1.18.3                                 |
-| commit:       27f935bc9559c191c803a51a046c0055641d608f |
-| short_commit: 27f935bc                                 |
-| build_date:   2022-06-09T08:51:35Z                     |
+| commit:       0f8eff5c83a7c1ab1f8593af9071a045f31bb91c |
+| short_commit: 0f8eff5c                                 |
+| build_date:   2022-06-16T10:37:30Z                     |
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -65,7 +65,7 @@ COMMANDS:
    remove-followers, rm, remove  Remove a list of followers, by username.
    unmutual                      List all not mutual followings
    bots                          List all bots or business accounts (alpha)
-   diff                          List diff followers (lost and new)
+   diff                          List diff for account (lost and new followers and followings)
    diff-history, history         List diff account history (lost and new followers and followings)
    help, h                       Shows a list of commands or help for one command
 
