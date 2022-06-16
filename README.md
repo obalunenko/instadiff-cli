@@ -111,12 +111,10 @@ Example of config file:
 ```
 
 * instagram: it is a config for instagram
-    * save: sets if session should be stored locally.
     * whitelist: list of followings that will be not unfollowed even if they are not mutual (usernames and ID's supported both).
     * limits: limits per one run.
         * unfollow: number of users that could be unfollowed in one run (be careful with big number - account could be banned)
     * sleep: sleep interval in seconds between each unfollow request to prevent account ban for ddos reason.
-* debug: if true, all operations will be influence on account (e.g. unfollow will just list users and not really unfollow users)
 * storage: it's a config for database storage. 
 	* local: if true, memory cache will be used and connection to mongo will be not set.
 	* mongo: is a config for mongo database
