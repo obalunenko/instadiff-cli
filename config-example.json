@@ -1,6 +1,5 @@
 {
   "instagram":{
-    "save": true,
     "whitelist":[
       "user1",
       "user2",
@@ -18,6 +17,5 @@
       "url": "mongodb://127.0.0.1:27017",
       "db": "testing"
     }
-  },
-  "debug": "false"
+  }
 }

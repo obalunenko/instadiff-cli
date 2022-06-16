@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	list     = "list"
-	debug    = "debug"
-	logLevel = "log_level"
-	cfgPath  = "config_path"
+	list      = "list"
+	debug     = "debug"
+	logLevel  = "log_level"
+	cfgPath   = "config_path"
+	incognito = "incognito"
 )
 
 func main() {
@@ -79,9 +80,7 @@ func serviceSetUp(c *cli.Context) (*service.Service, service.StopFunc, error) {
 		os.Exit(1)
 	}()
 
-	cfg.SetDebug(c.Bool(debug))
-
-	return service.New(cancelCtx, cfg, cfgDir)
+	return service.New(cancelCtx, cfg, cfgDir, c.Bool(debug), c.Bool(incognito))
 }
 
 func setLogger(c *cli.Context) {
