@@ -15,6 +15,16 @@ import (
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
+// BuildCollectionName constructs collection name.
+func BuildCollectionName(s string) string {
+	const (
+		sep = "_"
+		pfx = "statistics"
+	)
+
+	return s + sep + pfx
+}
+
 // MongoParams represents mongo db configuration parameters.
 type MongoParams struct {
 	URL        string

@@ -42,9 +42,8 @@ func TestLoad(t *testing.T) {
 				storage: storage{
 					local: true,
 					mongo: mongo{
-						url:        "mongoURL:test",
-						db:         "testing",
-						collection: "users",
+						url: "mongoURL:test",
+						db:  "testing",
 					},
 				},
 

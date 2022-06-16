@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 func TestMongoDB(t *testing.T) {
 	ctx := context.Background()
 
-	dbc := ConnectForTesting(t, "", "users")
+	dbc := ConnectForTesting(t, "", BuildCollectionName("test"))
 
 	now := time.Now()
 

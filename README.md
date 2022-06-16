@@ -66,6 +66,7 @@ COMMANDS:
    unmutual                      List all not mutual followings
    bots                          List all bots or business accounts (alpha)
    diff                          List diff followers (lost and new)
+   diff-history, history         List diff account history (lost and new followers and followings)
    help, h                       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -103,8 +104,7 @@ Example of config file:
     "local": true,
     "mongo": {
       "url": "mongoURL:test",
-      "db": "testing",
-      "collection": "users"
+      "db": "testing"
     }
   },
   "debug": "false"
@@ -123,9 +123,6 @@ Example of config file:
 	* mongo: is a config for mongo database
 	  - url: url of mongo DB to connect
 	  - db: name of Database
-	  - collection: collection name in database where models will be stored
-
- 
 
 Create a json file with configuration and pass the path to it via flag `--config_path`
 
