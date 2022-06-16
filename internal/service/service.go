@@ -148,19 +148,17 @@ func (svc *Service) getFollowersFollowings(ctx context.Context, bt models.UsersB
 		return nil, fmt.Errorf("make users list: %w", err)
 	}
 
-	now := time.Now()
+	if err = svc.findDiffUsers(ctx, users, bt); err != nil {
+		return nil, fmt.Errorf("find diff users: %w", err)
+	}
 
 	err = svc.storeUsers(ctx, models.UsersBatch{
 		Users:     users,
 		Type:      bt,
-		CreatedAt: now,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
-	}
-
-	if err = svc.findDiffUsers(ctx, users, bt); err != nil {
-		return nil, fmt.Errorf("find diff users: %w", err)
 	}
 
 	return users, nil
