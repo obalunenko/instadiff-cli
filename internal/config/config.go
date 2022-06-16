@@ -16,11 +16,9 @@ import (
 type Config struct {
 	storage   storage
 	instagram instagram
-	debug     bool
 }
 
 type instagram struct {
-	save      bool
 	whitelist []string
 	limits    limits
 	sleep     int64
@@ -64,16 +62,6 @@ func (c Config) Whitelist() map[string]struct{} {
 	return wl
 }
 
-// Debug returns current dubug status.
-func (c *Config) Debug() bool {
-	return c.debug
-}
-
-// SetDebug updates debug status.
-func (c *Config) SetDebug(debug bool) {
-	c.debug = debug
-}
-
 // IsLocalDBEnabled returns local DB enabled status.
 func (c Config) IsLocalDBEnabled() bool {
 	return c.storage.local
@@ -87,11 +75,6 @@ func (c Config) MongoConfigURL() string {
 // MongoDBName returns configured MongoDB name.
 func (c Config) MongoDBName() string {
 	return c.storage.mongo.db
-}
-
-// StoreSession returns flag if session should be stored locally.
-func (c Config) StoreSession() bool {
-	return c.instagram.save
 }
 
 // Load loads config from passed filepath.
@@ -131,14 +114,12 @@ func Load(ctx context.Context, path string) (Config, error) {
 			},
 		},
 		instagram: instagram{
-			save:      viper.GetBool("instagram.save"),
 			whitelist: viper.GetStringSlice("instagram.whitelist"),
 			limits: limits{
 				unfollow: viper.GetInt("instagram.limits.unfollow"),
 			},
 			sleep: viper.GetInt64("instagram.sleep"),
 		},
-		debug: false,
 	}
 
 	return cfg, nil

@@ -14,16 +14,17 @@ import (
 
 	log "github.com/obalunenko/logger"
 
-	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 )
 
-func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinsta.Instagram, error) {
+type logoutFunc func() error
+
+func makeClient(ctx context.Context, cfgPath string) (*goinsta.Instagram, logoutFunc, error) {
 	var cl *goinsta.Instagram
 
 	uname, err := username()
 	if err != nil {
-		return nil, fmt.Errorf("username: %w", err)
+		return nil, nil, fmt.Errorf("username: %w", err)
 	}
 
 	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
@@ -37,26 +38,24 @@ func makeClient(ctx context.Context, cfg config.Config, cfgPath string) (*goinst
 	if err == nil {
 		log.WithField(ctx, "session_file", sessFile).Info("Session imported")
 
-		return cl, nil
+		return cl, logout(ctx, cl, sessFile), nil
 	}
 
 	pwd, err := password()
 	if err != nil {
-		return nil, fmt.Errorf("password: %w", err)
+		return nil, nil, fmt.Errorf("password: %w", err)
 	}
 
 	cl, err = login(uname, pwd)
 	if err != nil {
-		return nil, fmt.Errorf("failed to login: %w", err)
+		return nil, nil, fmt.Errorf("failed to login: %w", err)
 	}
 
-	if cfg.StoreSession() {
-		if err = cl.Export(sessFile); err != nil {
-			log.WithError(ctx, err).Error("Failed to save session")
-		}
+	if err = cl.Export(sessFile); err != nil {
+		log.WithError(ctx, err).Error("Failed to save session")
 	}
 
-	return cl, nil
+	return cl, logout(ctx, cl, sessFile), nil
 }
 
 func login(uname, pwd string) (*goinsta.Instagram, error) {
@@ -178,4 +177,27 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 	}
 
 	return cl, nil
+}
+
+func logout(ctx context.Context, cl *goinsta.Instagram, sessfile string) logoutFunc {
+	return func() error {
+		if err := os.Remove(sessfile); err != nil {
+			return fmt.Errorf("remove ssession file: %w", err)
+		}
+
+		log.WithField(ctx, "file_path", sessfile).Info("Session file removed")
+
+		if err := cl.Logout(); err != nil {
+			// weird error - just ignore it.
+			if strings.Contains(err.Error(), "405 Method Not Allowed") {
+				return nil
+			}
+
+			return fmt.Errorf("logout: %w", err)
+		}
+
+		log.WithField(ctx, "username", cl.Account.Username).Info("Logged out")
+
+		return nil
+	}
 }

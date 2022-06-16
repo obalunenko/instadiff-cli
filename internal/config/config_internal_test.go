@@ -28,7 +28,6 @@ func TestLoad(t *testing.T) {
 			},
 			want: Config{
 				instagram: instagram{
-					save: true,
 					whitelist: []string{
 						"user1",
 						"user2",
@@ -46,8 +45,6 @@ func TestLoad(t *testing.T) {
 						db:  "testing",
 					},
 				},
-
-				debug: false,
 			},
 			wantErr: false,
 		},

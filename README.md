@@ -73,6 +73,7 @@ GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
    --debug              Debug mode, where actions has no real effect (default: false)
    --help, -h           show help (default: false)
+   --incognito          Incognito removes session on application exit. (default: false)
    --log_level value    Level of output logs (default: "INFO")
    --version, -v        print the version (default: false)
    
@@ -89,7 +90,6 @@ Example of config file:
 ```json
 {
   "instagram":{
-    "save": true,
     "whitelist":[
       "user1",
       "user2",
@@ -106,8 +106,7 @@ Example of config file:
       "url": "mongoURL:test",
       "db": "testing"
     }
-  },
-  "debug": "false"
+  }
 }
 ```
 

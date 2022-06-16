@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -26,6 +25,7 @@ type Service struct {
 	instagram instagram
 	storage   db.DB
 	debug     bool
+	incognito bool
 }
 
 type instagram struct {
@@ -67,8 +67,8 @@ type StopFunc func() error
 // }
 // defer stop().
 //
-func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, StopFunc, error) {
-	cl, err := makeClient(ctx, cfg, cfgPath)
+func New(ctx context.Context, cfg config.Config, cfgPath string, isDebug, isIncognito bool) (*Service, StopFunc, error) {
+	cl, lf, err := makeClient(ctx, cfgPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("make client: %w", err)
 	}
@@ -102,11 +102,22 @@ func New(ctx context.Context, cfg config.Config, cfgPath string) (*Service, Stop
 			},
 			sleep: cfg.Sleep(),
 		},
-		storage: dbc,
-		debug:   cfg.Debug(),
+		storage:   dbc,
+		debug:     isDebug,
+		incognito: isIncognito,
 	}
 
-	return &svc, svc.stop, nil
+	return &svc, svc.stop(lf), nil
+}
+
+func (svc *Service) stop(f logoutFunc) StopFunc {
+	return func() error {
+		if !svc.incognito {
+			return nil
+		}
+
+		return f()
+	}
 }
 
 // GetFollowers returns list of followers for logged-in user.
@@ -627,21 +638,6 @@ func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error 
 
 	if err := svc.actUser(ctx, u, userActionUnfollow); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// stop logs out from instagram and clean sessions.
-// Should be called in defer after creating new instance from New().
-func (svc *Service) stop() error {
-	if err := svc.instagram.client.Logout(); err != nil {
-		// weird error - just ignore it.
-		if strings.Contains(err.Error(), "405 Method Not Allowed") {
-			return nil
-		}
-
-		return fmt.Errorf("logout: %w", err)
 	}
 
 	return nil
