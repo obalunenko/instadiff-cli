@@ -43,11 +43,11 @@ USAGE:
 VERSION:
 
 | app_name:     instadiff-cli                            |
-| version:      v1.3.0                                   |
+| version:      v1.4.0                                   |
 | go_version:   go1.18.3                                 |
-| commit:       0f8eff5c83a7c1ab1f8593af9071a045f31bb91c |
-| short_commit: 0f8eff5c                                 |
-| build_date:   2022-06-16T10:37:30Z                     |
+| commit:       1f073e67df08d7c78e2734d762b9ac7a7283d804 |
+| short_commit: 1f073e67                                 |
+| build_date:   2022-06-17T19:59:18Z                     |
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -59,15 +59,16 @@ AUTHOR:
    Oleg Balunenko <oleg.balunenko@gmail.com>
 
 COMMANDS:
-   followers                     List your followers
-   followings                    List your followings
-   clean-followers, clean        Un follow not mutual followings, except of whitelisted
-   remove-followers, rm, remove  Remove a list of followers, by username.
-   unmutual                      List all not mutual followings
-   bots                          List all bots or business accounts (alpha)
-   diff                          List diff for account (lost and new followers and followings)
-   diff-history, history         List diff account history (lost and new followers and followings)
-   help, h                       Shows a list of commands or help for one command
+   list-followers, followers                                                   List your followers
+   list-followings, followings                                                 List your followings
+   clean-followings, clean, unfollow-untmutual, remove-untmutual, rm-unmutual  Un follow not mutual followings, except of whitelisted
+   remove-followers, rm, remove                                                Remove a list of followers, by username.
+   unfollow-users, unfollow, remove-followings                                 Unfollow a list of followings, by username.
+   list-unmutual, unmutual                                                     List all not mutual followings
+   list-bots, bots                                                             List all bots or business accounts (alpha)
+   list-diff, diff                                                             List diff for account (lost and new followers and followings)
+   diff-history, history                                                       List diff account history (lost and new followers and followings)
+   help, h                                                                     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
