@@ -410,7 +410,21 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 		return 0, makeNoUsersError(models.UsersBatchTypeNotMutual)
 	}
 
-	return svc.unfollowUsers(ctx, notMutual)
+	return svc.unfollowUsers(ctx, notMutual, true)
+}
+
+// UnfollowUsers unfollows users by the name passed.
+func (svc *Service) UnfollowUsers(ctx context.Context, usernames []string) (int, error) {
+	if len(usernames) == 0 {
+		return 0, errors.New("no usernames passed")
+	}
+
+	uslist, err := svc.getUsersByUsername(usernames)
+	if err != nil {
+		return 0, fmt.Errorf("get users by usernames: %w", err)
+	}
+
+	return svc.unfollowUsers(ctx, uslist, false)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
@@ -429,11 +443,11 @@ func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
 	return result
 }
 
-func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, error) {
+func (svc *Service) getUsersByUsername(usernames []string) ([]models.User, error) {
 	stop := spinner.Set("Fetching users by names", "", "yellow")
 	defer stop()
 
-	users := make([]*goinsta.User, 0, len(usernames))
+	users := make([]models.User, 0, len(usernames))
 
 	for _, un := range usernames {
 		u, err := svc.instagram.client.Profiles.ByName(un)
@@ -441,7 +455,7 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 			return nil, fmt.Errorf("get user profile by name[%s]: %w", un, err)
 		}
 
-		users = append(users, u)
+		users = append(users, models.MakeUser(u.ID, u.Username, u.FullName))
 	}
 
 	return users, nil
@@ -553,7 +567,7 @@ func (svc *Service) removeUser(ctx context.Context, username string) error {
 	return nil
 }
 
-func (svc *Service) unfollowUsers(ctx context.Context, users []models.User) (int, error) {
+func (svc *Service) unfollowUsers(ctx context.Context, users []models.User, useWhitelist bool) (int, error) {
 	if ctx.Err() != nil {
 		return 0, ctx.Err()
 	}
@@ -585,7 +599,7 @@ LOOP:
 		if i == 0 {
 			pBar.Progress() <- struct{}{}
 
-			err := svc.unfollowWhitelist(ctx, u)
+			err := svc.unfollowWhitelist(ctx, u, useWhitelist)
 
 			pBar.Progress() <- struct{}{}
 			if err != nil {
@@ -604,7 +618,7 @@ LOOP:
 		case <-ticker.C:
 			pBar.Progress() <- struct{}{}
 
-			err := svc.unfollowWhitelist(ctx, u)
+			err := svc.unfollowWhitelist(ctx, u, useWhitelist)
 
 			pBar.Progress() <- struct{}{}
 			if err != nil {
@@ -625,15 +639,17 @@ LOOP:
 	return count, nil
 }
 
-func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User) error {
+func (svc *Service) unfollowWhitelist(ctx context.Context, u models.User, useWhitelist bool) error {
 	whitelist := svc.instagram.Whitelist()
 
-	if _, exist := whitelist[u.UserName]; exist {
-		return nil
-	}
+	if useWhitelist {
+		if _, exist := whitelist[u.UserName]; exist {
+			return nil
+		}
 
-	if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-		return nil
+		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+			return nil
+		}
 	}
 
 	if err := svc.actUser(ctx, u, userActionUnfollow); err != nil {
