@@ -24,6 +24,7 @@ const (
 	logLevel  = "log_level"
 	cfgPath   = "config_path"
 	incognito = "incognito"
+	users     = "users"
 )
 
 func main() {

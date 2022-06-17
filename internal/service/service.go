@@ -413,6 +413,30 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 	return svc.unfollowUsers(ctx, notMutual)
 }
 
+func (svc *Service) UnfollowUsers(ctx context.Context, usernames []string) (int, error) {
+	if len(usernames) == 0 {
+		return 0, errors.New("no usernames passed")
+	}
+
+	uslist, err := svc.getUsersByUsername(usernames)
+	if err != nil {
+		return 0, fmt.Errorf("get users by usernames: %w", err)
+	}
+
+	for i := range uslist {
+		u := uslist[i]
+
+		// TODO: add progress bar and sleep for ddos ban prevent.
+		//  Add count
+
+		if err = svc.actUser(ctx, u, userActionUnfollow); err != nil {
+			return 0, fmt.Errorf("act user[%s]: %w", u.UserName, err)
+		}
+	}
+
+	return 0, nil
+}
+
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
 	result := notMutual[:0]
 
@@ -429,11 +453,11 @@ func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
 	return result
 }
 
-func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, error) {
+func (svc *Service) getUsersByUsername(usernames []string) ([]models.User, error) {
 	stop := spinner.Set("Fetching users by names", "", "yellow")
 	defer stop()
 
-	users := make([]*goinsta.User, 0, len(usernames))
+	users := make([]models.User, 0, len(usernames))
 
 	for _, un := range usernames {
 		u, err := svc.instagram.client.Profiles.ByName(un)
@@ -441,7 +465,7 @@ func (svc *Service) getUsersByUsername(usernames []string) ([]*goinsta.User, err
 			return nil, fmt.Errorf("get user profile by name[%s]: %w", un, err)
 		}
 
-		users = append(users, u)
+		users = append(users, models.MakeUser(u.ID, u.Username, u.FullName))
 	}
 
 	return users, nil

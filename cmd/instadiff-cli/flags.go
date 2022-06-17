@@ -34,3 +34,12 @@ func addListFlag() *cli.BoolFlag {
 		Usage: "Print the full list instead of only number",
 	}
 }
+
+func addUsersFlag() *cli.StringSliceFlag {
+	return &cli.StringSliceFlag{
+		Name:     users,
+		Usage:    "List of usernames for action",
+		Required: true,
+		Value:    &cli.StringSlice{},
+	}
+}

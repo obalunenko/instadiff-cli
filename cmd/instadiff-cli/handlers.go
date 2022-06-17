@@ -39,6 +39,8 @@ type cmdFunc func(c *cli.Context, svc *service.Service) error
 
 func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 	return func(c *cli.Context) error {
+		ctx = log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", c.Command.Name))
+
 		c.Context = ctx
 
 		svc, stop, err := serviceSetUp(c)
@@ -57,7 +59,7 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 }
 
 func cmdListFollowers(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_followers"))
+	ctx := c.Context
 
 	followers, err := svc.GetFollowers(ctx)
 	if err != nil {
@@ -115,7 +117,7 @@ func printUsersList(c *cli.Context, users []models.User) error {
 }
 
 func cmdListFollowings(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_followings"))
+	ctx := c.Context
 
 	followings, err := svc.GetFollowings(ctx)
 	if err != nil {
@@ -130,7 +132,7 @@ func cmdListFollowings(c *cli.Context, svc *service.Service) error {
 }
 
 func cmdCleanFollowings(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "clean_not_mutual"))
+	ctx := c.Context
 
 	log.Info(ctx, "Cleaning from not mutual followings...")
 
@@ -160,13 +162,42 @@ func cmdCleanFollowings(c *cli.Context, svc *service.Service) error {
 }
 
 func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "remove_followers"))
+	ctx := c.Context
 
-	followers := c.StringSlice("follower")
+	followers := c.StringSlice(users)
 
 	log.WithField(ctx, "count", len(followers)).Info("Removing followers...")
 
 	count, err := svc.RemoveFollowersByUsername(ctx, followers)
+	if err != nil {
+		if errors.Is(err, service.ErrLimitExceed) {
+			log.WithField(ctx, "count", count).Info("Removed before limit exceeded")
+
+			return nil
+		}
+
+		if errors.Is(err, service.ErrCorrupted) {
+			log.WithField(ctx, "count", count).Info("Removed before corrupted")
+
+			return fmt.Errorf("remove followers: %w", err)
+		}
+
+		return fmt.Errorf("remove followers: %w", err)
+	}
+
+	log.WithField(ctx, "count", count).Info("Total removed")
+
+	return nil
+}
+
+func cmdUnfollowUsers(c *cli.Context, svc *service.Service) error {
+	ctx := c.Context
+
+	followings := c.StringSlice(users)
+
+	log.WithField(ctx, "count", len(followings)).Info("Removing followings...")
+
+	count, err := svc.UnfollowUsers(ctx, followings)
 	if err != nil {
 		if errors.Is(err, service.ErrLimitExceed) {
 			log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
@@ -177,7 +208,7 @@ func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
 		if errors.Is(err, service.ErrCorrupted) {
 			log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
 
-			return fmt.Errorf("remove followers: %w", err)
+			return fmt.Errorf("remove follow: %w", err)
 		}
 
 		return fmt.Errorf("remove followers: %w", err)
@@ -189,7 +220,7 @@ func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
 }
 
 func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_not_mutual"))
+	ctx := c.Context
 
 	notMutualFollowers, err := svc.GetNotMutualFollowers(ctx)
 	if err != nil {
@@ -204,7 +235,7 @@ func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
 }
 
 func cmdListDiff(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_diff"))
+	ctx := c.Context
 
 	diffFlwrs, err := svc.GetDiffFollowers(ctx)
 	if err != nil {
@@ -241,7 +272,7 @@ func printBatches(ctx context.Context, c *cli.Context, batches []models.UsersBat
 }
 
 func cmdListHistoryDiff(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_history_diff"))
+	ctx := c.Context
 
 	diffFlwrs, err := svc.GetHistoryDiffFollowers(ctx)
 	if err != nil {
@@ -331,7 +362,7 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 }
 
 func cmdListBotsAndBusiness(c *cli.Context, svc *service.Service) error {
-	ctx := log.ContextWithLogger(c.Context, log.FromContext(c.Context).WithField("cmd", "list_bots_and_business"))
+	ctx := c.Context
 
 	bots, err := svc.GetBusinessAccountsOrBotsFromFollowers(ctx)
 	if err != nil {
