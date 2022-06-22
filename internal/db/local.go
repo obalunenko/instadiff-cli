@@ -12,6 +12,10 @@ type localDB struct {
 	users map[models.UsersBatchType][]models.UsersBatch
 }
 
+func (l *localDB) Close(_ context.Context) error {
+	return nil
+}
+
 func newLocalDB() *localDB {
 	return &localDB{
 		users: make(map[models.UsersBatchType][]models.UsersBatch),

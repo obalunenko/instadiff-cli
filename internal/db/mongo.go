@@ -38,6 +38,11 @@ type mongoDB struct {
 	collection *mongo.Collection
 }
 
+// Close closes connections.
+func (m *mongoDB) Close(ctx context.Context) error {
+	return m.client.Disconnect(ctx)
+}
+
 func newMongoDB(ctx context.Context, params MongoParams) (*mongoDB, error) {
 	cl, err := mongo.Connect(ctx, options.Client().ApplyURI(params.URL))
 	if err != nil {
