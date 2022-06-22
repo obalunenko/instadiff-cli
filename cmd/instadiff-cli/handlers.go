@@ -43,13 +43,13 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 
 		c.Context = ctx
 
-		svc, stop, err := serviceSetUp(c)
+		svc, err := serviceSetUp(c)
 		if err != nil {
 			return fmt.Errorf("service setup: %w", err)
 		}
 
 		defer func() {
-			if err = stop(); err != nil {
+			if err = svc.Stop(ctx); err != nil {
 				log.WithError(ctx, err).Warn("Error occurred during the service stop")
 			}
 		}()
@@ -365,12 +365,12 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 	return nil
 }
 
-func cmdListBotsAndBusiness(c *cli.Context, svc *service.Service) error {
+func cmdListUseless(c *cli.Context, svc *service.Service) error {
 	ctx := c.Context
 
-	bots, err := svc.GetBusinessAccountsOrBotsFromFollowers(ctx)
+	bots, err := svc.GetUselessFollowers(ctx)
 	if err != nil {
-		return fmt.Errorf("get business and bots: %w", err)
+		return fmt.Errorf("get useless followers: %w", err)
 	}
 
 	log.WithField(ctx, "count", len(bots)).Info("Could be blocked")

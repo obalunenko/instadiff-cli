@@ -50,10 +50,10 @@ func commands(ctx context.Context) []*cli.Command {
 			Flags:   []cli.Flag{addListFlag()},
 		},
 		{
-			Name:    "list-bots",
-			Aliases: []string{"bots"},
-			Usage:   "List all bots or business accounts (alpha)",
-			Action:  executeCmd(ctx, cmdListBotsAndBusiness),
+			Name:    "list-useless",
+			Aliases: []string{"useless, bots"},
+			Usage:   "List all statistic-useless accounts (bots, business accounts or mass-followers) (alpha)",
+			Action:  executeCmd(ctx, cmdListUseless),
 			Flags:   []cli.Flag{addListFlag()},
 		},
 		{

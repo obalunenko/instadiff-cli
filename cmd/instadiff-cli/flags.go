@@ -18,10 +18,6 @@ func globalFlags() []cli.Flag {
 			Value: "INFO",
 		},
 		&cli.BoolFlag{
-			Name:  debug,
-			Usage: "Debug mode, where actions has no real effect",
-		},
-		&cli.BoolFlag{
 			Name:  incognito,
 			Usage: "Incognito removes session on application exit.",
 		},
