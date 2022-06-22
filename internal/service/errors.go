@@ -15,8 +15,6 @@ var (
 	ErrCorrupted = errors.New("unable to continue - instagram responses with errors")
 	// ErrNoUsers means that no users found.
 	ErrNoUsers = errors.New("no users")
-	// ErrEmptyInput returned in case when user input is empty.
-	ErrEmptyInput = errors.New("should not be empty")
 )
 
 func makeNoUsersError(t models.UsersBatchType) error {
