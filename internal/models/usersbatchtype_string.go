@@ -12,7 +12,7 @@ func _() {
 	_ = x[UsersBatchTypeFollowers-1]
 	_ = x[UsersBatchTypeFollowings-2]
 	_ = x[UsersBatchTypeNotMutual-3]
-	_ = x[UsersBatchTypeBusinessAccounts-4]
+	_ = x[UsersBatchTypeUselessFollowers-4]
 	_ = x[UsersBatchTypeLostFollowers-5]
 	_ = x[UsersBatchTypeNewFollowers-6]
 	_ = x[UsersBatchTypeNewFollowings-7]
@@ -20,7 +20,7 @@ func _() {
 	_ = x[usersBatchTypeSentinel-9]
 }
 
-const _UsersBatchType_name = "UnknownFollowersFollowingsNotMutualBusinessAccountsLostFollowersNewFollowersNewFollowingsLostFollowingsusersBatchTypeSentinel"
+const _UsersBatchType_name = "UnknownFollowersFollowingsNotMutualUselessFollowersLostFollowersNewFollowersNewFollowingsLostFollowingsusersBatchTypeSentinel"
 
 var _UsersBatchType_index = [...]uint8{0, 7, 16, 26, 35, 51, 64, 76, 89, 103, 125}
 
