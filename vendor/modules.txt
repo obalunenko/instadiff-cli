@@ -81,7 +81,7 @@ github.com/chromedp/sysutil
 # github.com/containerd/continuity v0.3.0
 ## explicit; go 1.17
 github.com/containerd/continuity/pathdriver
-# github.com/cpuguy83/go-md2man/v2 v2.0.1
+# github.com/cpuguy83/go-md2man/v2 v2.0.2
 ## explicit; go 1.11
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
@@ -307,7 +307,7 @@ github.com/subosito/gotenv
 # github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 ## explicit
 github.com/tcnksm/go-input
-# github.com/urfave/cli/v2 v2.10.1
+# github.com/urfave/cli/v2 v2.10.2
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xdg-go/pbkdf2 v1.0.0
