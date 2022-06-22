@@ -59,7 +59,7 @@ func importFromFile(ctx context.Context, sessFile string) (*Client, error) {
 	stop := spinner.Set("Trying to import previous session..", "", "yellow")
 
 	i, err := goinsta.Import(sessFile)
-	
+
 	stop()
 
 	if err != nil {
