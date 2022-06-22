@@ -30,6 +30,8 @@ const (
 	PermissionsPolicyFeatureAmbientLightSensor          PermissionsPolicyFeature = "ambient-light-sensor"
 	PermissionsPolicyFeatureAttributionReporting        PermissionsPolicyFeature = "attribution-reporting"
 	PermissionsPolicyFeatureAutoplay                    PermissionsPolicyFeature = "autoplay"
+	PermissionsPolicyFeatureBluetooth                   PermissionsPolicyFeature = "bluetooth"
+	PermissionsPolicyFeatureBrowsingTopics              PermissionsPolicyFeature = "browsing-topics"
 	PermissionsPolicyFeatureCamera                      PermissionsPolicyFeature = "camera"
 	PermissionsPolicyFeatureChDpr                       PermissionsPolicyFeature = "ch-dpr"
 	PermissionsPolicyFeatureChDeviceMemory              PermissionsPolicyFeature = "ch-device-memory"
@@ -37,6 +39,7 @@ const (
 	PermissionsPolicyFeatureChEct                       PermissionsPolicyFeature = "ch-ect"
 	PermissionsPolicyFeatureChPrefersColorScheme        PermissionsPolicyFeature = "ch-prefers-color-scheme"
 	PermissionsPolicyFeatureChRtt                       PermissionsPolicyFeature = "ch-rtt"
+	PermissionsPolicyFeatureChSaveData                  PermissionsPolicyFeature = "ch-save-data"
 	PermissionsPolicyFeatureChUa                        PermissionsPolicyFeature = "ch-ua"
 	PermissionsPolicyFeatureChUaArch                    PermissionsPolicyFeature = "ch-ua-arch"
 	PermissionsPolicyFeatureChUaBitness                 PermissionsPolicyFeature = "ch-ua-bitness"
@@ -52,7 +55,6 @@ const (
 	PermissionsPolicyFeatureChViewportHeight            PermissionsPolicyFeature = "ch-viewport-height"
 	PermissionsPolicyFeatureChViewportWidth             PermissionsPolicyFeature = "ch-viewport-width"
 	PermissionsPolicyFeatureChWidth                     PermissionsPolicyFeature = "ch-width"
-	PermissionsPolicyFeatureChPartitionedCookies        PermissionsPolicyFeature = "ch-partitioned-cookies"
 	PermissionsPolicyFeatureClipboardRead               PermissionsPolicyFeature = "clipboard-read"
 	PermissionsPolicyFeatureClipboardWrite              PermissionsPolicyFeature = "clipboard-write"
 	PermissionsPolicyFeatureCrossOriginIsolated         PermissionsPolicyFeature = "cross-origin-isolated"
@@ -70,8 +72,10 @@ const (
 	PermissionsPolicyFeatureGyroscope                   PermissionsPolicyFeature = "gyroscope"
 	PermissionsPolicyFeatureHid                         PermissionsPolicyFeature = "hid"
 	PermissionsPolicyFeatureIdleDetection               PermissionsPolicyFeature = "idle-detection"
+	PermissionsPolicyFeatureInterestCohort              PermissionsPolicyFeature = "interest-cohort"
 	PermissionsPolicyFeatureJoinAdInterestGroup         PermissionsPolicyFeature = "join-ad-interest-group"
 	PermissionsPolicyFeatureKeyboardMap                 PermissionsPolicyFeature = "keyboard-map"
+	PermissionsPolicyFeatureLocalFonts                  PermissionsPolicyFeature = "local-fonts"
 	PermissionsPolicyFeatureMagnetometer                PermissionsPolicyFeature = "magnetometer"
 	PermissionsPolicyFeatureMicrophone                  PermissionsPolicyFeature = "microphone"
 	PermissionsPolicyFeatureMidi                        PermissionsPolicyFeature = "midi"
@@ -114,6 +118,10 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureAttributionReporting
 	case PermissionsPolicyFeatureAutoplay:
 		*t = PermissionsPolicyFeatureAutoplay
+	case PermissionsPolicyFeatureBluetooth:
+		*t = PermissionsPolicyFeatureBluetooth
+	case PermissionsPolicyFeatureBrowsingTopics:
+		*t = PermissionsPolicyFeatureBrowsingTopics
 	case PermissionsPolicyFeatureCamera:
 		*t = PermissionsPolicyFeatureCamera
 	case PermissionsPolicyFeatureChDpr:
@@ -128,6 +136,8 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureChPrefersColorScheme
 	case PermissionsPolicyFeatureChRtt:
 		*t = PermissionsPolicyFeatureChRtt
+	case PermissionsPolicyFeatureChSaveData:
+		*t = PermissionsPolicyFeatureChSaveData
 	case PermissionsPolicyFeatureChUa:
 		*t = PermissionsPolicyFeatureChUa
 	case PermissionsPolicyFeatureChUaArch:
@@ -158,8 +168,6 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureChViewportWidth
 	case PermissionsPolicyFeatureChWidth:
 		*t = PermissionsPolicyFeatureChWidth
-	case PermissionsPolicyFeatureChPartitionedCookies:
-		*t = PermissionsPolicyFeatureChPartitionedCookies
 	case PermissionsPolicyFeatureClipboardRead:
 		*t = PermissionsPolicyFeatureClipboardRead
 	case PermissionsPolicyFeatureClipboardWrite:
@@ -194,10 +202,14 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureHid
 	case PermissionsPolicyFeatureIdleDetection:
 		*t = PermissionsPolicyFeatureIdleDetection
+	case PermissionsPolicyFeatureInterestCohort:
+		*t = PermissionsPolicyFeatureInterestCohort
 	case PermissionsPolicyFeatureJoinAdInterestGroup:
 		*t = PermissionsPolicyFeatureJoinAdInterestGroup
 	case PermissionsPolicyFeatureKeyboardMap:
 		*t = PermissionsPolicyFeatureKeyboardMap
+	case PermissionsPolicyFeatureLocalFonts:
+		*t = PermissionsPolicyFeatureLocalFonts
 	case PermissionsPolicyFeatureMagnetometer:
 		*t = PermissionsPolicyFeatureMagnetometer
 	case PermissionsPolicyFeatureMicrophone:
@@ -560,13 +572,13 @@ type Viewport struct {
 //
 // See: https://chromedevtools.github.io/devtools-protocol/tot/Page#type-FontFamilies
 type FontFamilies struct {
-	Standard   string `json:"standard,omitempty"`   // The standard font-family.
-	Fixed      string `json:"fixed,omitempty"`      // The fixed font-family.
-	Serif      string `json:"serif,omitempty"`      // The serif font-family.
-	SansSerif  string `json:"sansSerif,omitempty"`  // The sansSerif font-family.
-	Cursive    string `json:"cursive,omitempty"`    // The cursive font-family.
-	Fantasy    string `json:"fantasy,omitempty"`    // The fantasy font-family.
-	Pictograph string `json:"pictograph,omitempty"` // The pictograph font-family.
+	Standard  string `json:"standard,omitempty"`  // The standard font-family.
+	Fixed     string `json:"fixed,omitempty"`     // The fixed font-family.
+	Serif     string `json:"serif,omitempty"`     // The serif font-family.
+	SansSerif string `json:"sansSerif,omitempty"` // The sansSerif font-family.
+	Cursive   string `json:"cursive,omitempty"`   // The cursive font-family.
+	Fantasy   string `json:"fantasy,omitempty"`   // The fantasy font-family.
+	Math      string `json:"math,omitempty"`      // The math font-family.
 }
 
 // ScriptFontFamilies font families collection for a script.
@@ -857,7 +869,6 @@ const (
 	BackForwardCacheNotRestoredReasonJavaScriptExecution                                      BackForwardCacheNotRestoredReason = "JavaScriptExecution"
 	BackForwardCacheNotRestoredReasonRendererProcessKilled                                    BackForwardCacheNotRestoredReason = "RendererProcessKilled"
 	BackForwardCacheNotRestoredReasonRendererProcessCrashed                                   BackForwardCacheNotRestoredReason = "RendererProcessCrashed"
-	BackForwardCacheNotRestoredReasonGrantedMediaStreamAccess                                 BackForwardCacheNotRestoredReason = "GrantedMediaStreamAccess"
 	BackForwardCacheNotRestoredReasonSchedulerTrackedFeatureUsed                              BackForwardCacheNotRestoredReason = "SchedulerTrackedFeatureUsed"
 	BackForwardCacheNotRestoredReasonConflictingBrowsingInstance                              BackForwardCacheNotRestoredReason = "ConflictingBrowsingInstance"
 	BackForwardCacheNotRestoredReasonCacheFlushed                                             BackForwardCacheNotRestoredReason = "CacheFlushed"
@@ -884,7 +895,6 @@ const (
 	BackForwardCacheNotRestoredReasonForegroundCacheLimit                                     BackForwardCacheNotRestoredReason = "ForegroundCacheLimit"
 	BackForwardCacheNotRestoredReasonBrowsingInstanceNotSwapped                               BackForwardCacheNotRestoredReason = "BrowsingInstanceNotSwapped"
 	BackForwardCacheNotRestoredReasonBackForwardCacheDisabledForDelegate                      BackForwardCacheNotRestoredReason = "BackForwardCacheDisabledForDelegate"
-	BackForwardCacheNotRestoredReasonOptInUnloadHeaderNotPresent                              BackForwardCacheNotRestoredReason = "OptInUnloadHeaderNotPresent"
 	BackForwardCacheNotRestoredReasonUnloadHandlerExistsInMainFrame                           BackForwardCacheNotRestoredReason = "UnloadHandlerExistsInMainFrame"
 	BackForwardCacheNotRestoredReasonUnloadHandlerExistsInSubFrame                            BackForwardCacheNotRestoredReason = "UnloadHandlerExistsInSubFrame"
 	BackForwardCacheNotRestoredReasonServiceWorkerUnregistration                              BackForwardCacheNotRestoredReason = "ServiceWorkerUnregistration"
@@ -894,6 +904,8 @@ const (
 	BackForwardCacheNotRestoredReasonNoResponseHead                                           BackForwardCacheNotRestoredReason = "NoResponseHead"
 	BackForwardCacheNotRestoredReasonUnknown                                                  BackForwardCacheNotRestoredReason = "Unknown"
 	BackForwardCacheNotRestoredReasonActivationNavigationsDisallowedForBug1234857             BackForwardCacheNotRestoredReason = "ActivationNavigationsDisallowedForBug1234857"
+	BackForwardCacheNotRestoredReasonErrorDocument                                            BackForwardCacheNotRestoredReason = "ErrorDocument"
+	BackForwardCacheNotRestoredReasonFencedFramesEmbedder                                     BackForwardCacheNotRestoredReason = "FencedFramesEmbedder"
 	BackForwardCacheNotRestoredReasonWebSocket                                                BackForwardCacheNotRestoredReason = "WebSocket"
 	BackForwardCacheNotRestoredReasonWebTransport                                             BackForwardCacheNotRestoredReason = "WebTransport"
 	BackForwardCacheNotRestoredReasonWebRTC                                                   BackForwardCacheNotRestoredReason = "WebRTC"
@@ -1011,8 +1023,6 @@ func (t *BackForwardCacheNotRestoredReason) UnmarshalEasyJSON(in *jlexer.Lexer) 
 		*t = BackForwardCacheNotRestoredReasonRendererProcessKilled
 	case BackForwardCacheNotRestoredReasonRendererProcessCrashed:
 		*t = BackForwardCacheNotRestoredReasonRendererProcessCrashed
-	case BackForwardCacheNotRestoredReasonGrantedMediaStreamAccess:
-		*t = BackForwardCacheNotRestoredReasonGrantedMediaStreamAccess
 	case BackForwardCacheNotRestoredReasonSchedulerTrackedFeatureUsed:
 		*t = BackForwardCacheNotRestoredReasonSchedulerTrackedFeatureUsed
 	case BackForwardCacheNotRestoredReasonConflictingBrowsingInstance:
@@ -1065,8 +1075,6 @@ func (t *BackForwardCacheNotRestoredReason) UnmarshalEasyJSON(in *jlexer.Lexer) 
 		*t = BackForwardCacheNotRestoredReasonBrowsingInstanceNotSwapped
 	case BackForwardCacheNotRestoredReasonBackForwardCacheDisabledForDelegate:
 		*t = BackForwardCacheNotRestoredReasonBackForwardCacheDisabledForDelegate
-	case BackForwardCacheNotRestoredReasonOptInUnloadHeaderNotPresent:
-		*t = BackForwardCacheNotRestoredReasonOptInUnloadHeaderNotPresent
 	case BackForwardCacheNotRestoredReasonUnloadHandlerExistsInMainFrame:
 		*t = BackForwardCacheNotRestoredReasonUnloadHandlerExistsInMainFrame
 	case BackForwardCacheNotRestoredReasonUnloadHandlerExistsInSubFrame:
@@ -1085,6 +1093,10 @@ func (t *BackForwardCacheNotRestoredReason) UnmarshalEasyJSON(in *jlexer.Lexer) 
 		*t = BackForwardCacheNotRestoredReasonUnknown
 	case BackForwardCacheNotRestoredReasonActivationNavigationsDisallowedForBug1234857:
 		*t = BackForwardCacheNotRestoredReasonActivationNavigationsDisallowedForBug1234857
+	case BackForwardCacheNotRestoredReasonErrorDocument:
+		*t = BackForwardCacheNotRestoredReasonErrorDocument
+	case BackForwardCacheNotRestoredReasonFencedFramesEmbedder:
+		*t = BackForwardCacheNotRestoredReasonFencedFramesEmbedder
 	case BackForwardCacheNotRestoredReasonWebSocket:
 		*t = BackForwardCacheNotRestoredReasonWebSocket
 	case BackForwardCacheNotRestoredReasonWebTransport:
@@ -1288,8 +1300,9 @@ func (t *BackForwardCacheNotRestoredReasonType) UnmarshalJSON(buf []byte) error 
 //
 // See: https://chromedevtools.github.io/devtools-protocol/tot/Page#type-BackForwardCacheNotRestoredExplanation
 type BackForwardCacheNotRestoredExplanation struct {
-	Type   BackForwardCacheNotRestoredReasonType `json:"type"`   // Type of the reason
-	Reason BackForwardCacheNotRestoredReason     `json:"reason"` // Not restored reason
+	Type    BackForwardCacheNotRestoredReasonType `json:"type"`              // Type of the reason
+	Reason  BackForwardCacheNotRestoredReason     `json:"reason"`            // Not restored reason
+	Context string                                `json:"context,omitempty"` // Context associated with the reason. The meaning of this context is dependent on the reason: - EmbedderExtensionSentMessageToCachedFrame: the extension ID.
 }
 
 // BackForwardCacheNotRestoredExplanationTree [no description].
@@ -1299,6 +1312,143 @@ type BackForwardCacheNotRestoredExplanationTree struct {
 	URL          string                                        `json:"url"`          // URL of each frame
 	Explanations []*BackForwardCacheNotRestoredExplanation     `json:"explanations"` // Not restored reasons of each frame
 	Children     []*BackForwardCacheNotRestoredExplanationTree `json:"children"`     // Array of children frame
+}
+
+// PrerenderFinalStatus list of FinalStatus reasons for Prerender2.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/Page#type-PrerenderFinalStatus
+type PrerenderFinalStatus string
+
+// String returns the PrerenderFinalStatus as string value.
+func (t PrerenderFinalStatus) String() string {
+	return string(t)
+}
+
+// PrerenderFinalStatus values.
+const (
+	PrerenderFinalStatusActivated                                 PrerenderFinalStatus = "Activated"
+	PrerenderFinalStatusDestroyed                                 PrerenderFinalStatus = "Destroyed"
+	PrerenderFinalStatusLowEndDevice                              PrerenderFinalStatus = "LowEndDevice"
+	PrerenderFinalStatusCrossOriginRedirect                       PrerenderFinalStatus = "CrossOriginRedirect"
+	PrerenderFinalStatusCrossOriginNavigation                     PrerenderFinalStatus = "CrossOriginNavigation"
+	PrerenderFinalStatusInvalidSchemeRedirect                     PrerenderFinalStatus = "InvalidSchemeRedirect"
+	PrerenderFinalStatusInvalidSchemeNavigation                   PrerenderFinalStatus = "InvalidSchemeNavigation"
+	PrerenderFinalStatusInProgressNavigation                      PrerenderFinalStatus = "InProgressNavigation"
+	PrerenderFinalStatusNavigationRequestBlockedByCsp             PrerenderFinalStatus = "NavigationRequestBlockedByCsp"
+	PrerenderFinalStatusMainFrameNavigation                       PrerenderFinalStatus = "MainFrameNavigation"
+	PrerenderFinalStatusMojoBinderPolicy                          PrerenderFinalStatus = "MojoBinderPolicy"
+	PrerenderFinalStatusRendererProcessCrashed                    PrerenderFinalStatus = "RendererProcessCrashed"
+	PrerenderFinalStatusRendererProcessKilled                     PrerenderFinalStatus = "RendererProcessKilled"
+	PrerenderFinalStatusDownload                                  PrerenderFinalStatus = "Download"
+	PrerenderFinalStatusTriggerDestroyed                          PrerenderFinalStatus = "TriggerDestroyed"
+	PrerenderFinalStatusNavigationNotCommitted                    PrerenderFinalStatus = "NavigationNotCommitted"
+	PrerenderFinalStatusNavigationBadHTTPStatus                   PrerenderFinalStatus = "NavigationBadHttpStatus"
+	PrerenderFinalStatusClientCertRequested                       PrerenderFinalStatus = "ClientCertRequested"
+	PrerenderFinalStatusNavigationRequestNetworkError             PrerenderFinalStatus = "NavigationRequestNetworkError"
+	PrerenderFinalStatusMaxNumOfRunningPrerendersExceeded         PrerenderFinalStatus = "MaxNumOfRunningPrerendersExceeded"
+	PrerenderFinalStatusCancelAllHostsForTesting                  PrerenderFinalStatus = "CancelAllHostsForTesting"
+	PrerenderFinalStatusDidFailLoad                               PrerenderFinalStatus = "DidFailLoad"
+	PrerenderFinalStatusStop                                      PrerenderFinalStatus = "Stop"
+	PrerenderFinalStatusSslCertificateError                       PrerenderFinalStatus = "SslCertificateError"
+	PrerenderFinalStatusLoginAuthRequested                        PrerenderFinalStatus = "LoginAuthRequested"
+	PrerenderFinalStatusUaChangeRequiresReload                    PrerenderFinalStatus = "UaChangeRequiresReload"
+	PrerenderFinalStatusBlockedByClient                           PrerenderFinalStatus = "BlockedByClient"
+	PrerenderFinalStatusAudioOutputDeviceRequested                PrerenderFinalStatus = "AudioOutputDeviceRequested"
+	PrerenderFinalStatusMixedContent                              PrerenderFinalStatus = "MixedContent"
+	PrerenderFinalStatusTriggerBackgrounded                       PrerenderFinalStatus = "TriggerBackgrounded"
+	PrerenderFinalStatusEmbedderTriggeredAndSameOriginRedirected  PrerenderFinalStatus = "EmbedderTriggeredAndSameOriginRedirected"
+	PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected PrerenderFinalStatus = "EmbedderTriggeredAndCrossOriginRedirected"
+	PrerenderFinalStatusEmbedderTriggeredAndDestroyed             PrerenderFinalStatus = "EmbedderTriggeredAndDestroyed"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t PrerenderFinalStatus) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t PrerenderFinalStatus) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *PrerenderFinalStatus) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch PrerenderFinalStatus(in.String()) {
+	case PrerenderFinalStatusActivated:
+		*t = PrerenderFinalStatusActivated
+	case PrerenderFinalStatusDestroyed:
+		*t = PrerenderFinalStatusDestroyed
+	case PrerenderFinalStatusLowEndDevice:
+		*t = PrerenderFinalStatusLowEndDevice
+	case PrerenderFinalStatusCrossOriginRedirect:
+		*t = PrerenderFinalStatusCrossOriginRedirect
+	case PrerenderFinalStatusCrossOriginNavigation:
+		*t = PrerenderFinalStatusCrossOriginNavigation
+	case PrerenderFinalStatusInvalidSchemeRedirect:
+		*t = PrerenderFinalStatusInvalidSchemeRedirect
+	case PrerenderFinalStatusInvalidSchemeNavigation:
+		*t = PrerenderFinalStatusInvalidSchemeNavigation
+	case PrerenderFinalStatusInProgressNavigation:
+		*t = PrerenderFinalStatusInProgressNavigation
+	case PrerenderFinalStatusNavigationRequestBlockedByCsp:
+		*t = PrerenderFinalStatusNavigationRequestBlockedByCsp
+	case PrerenderFinalStatusMainFrameNavigation:
+		*t = PrerenderFinalStatusMainFrameNavigation
+	case PrerenderFinalStatusMojoBinderPolicy:
+		*t = PrerenderFinalStatusMojoBinderPolicy
+	case PrerenderFinalStatusRendererProcessCrashed:
+		*t = PrerenderFinalStatusRendererProcessCrashed
+	case PrerenderFinalStatusRendererProcessKilled:
+		*t = PrerenderFinalStatusRendererProcessKilled
+	case PrerenderFinalStatusDownload:
+		*t = PrerenderFinalStatusDownload
+	case PrerenderFinalStatusTriggerDestroyed:
+		*t = PrerenderFinalStatusTriggerDestroyed
+	case PrerenderFinalStatusNavigationNotCommitted:
+		*t = PrerenderFinalStatusNavigationNotCommitted
+	case PrerenderFinalStatusNavigationBadHTTPStatus:
+		*t = PrerenderFinalStatusNavigationBadHTTPStatus
+	case PrerenderFinalStatusClientCertRequested:
+		*t = PrerenderFinalStatusClientCertRequested
+	case PrerenderFinalStatusNavigationRequestNetworkError:
+		*t = PrerenderFinalStatusNavigationRequestNetworkError
+	case PrerenderFinalStatusMaxNumOfRunningPrerendersExceeded:
+		*t = PrerenderFinalStatusMaxNumOfRunningPrerendersExceeded
+	case PrerenderFinalStatusCancelAllHostsForTesting:
+		*t = PrerenderFinalStatusCancelAllHostsForTesting
+	case PrerenderFinalStatusDidFailLoad:
+		*t = PrerenderFinalStatusDidFailLoad
+	case PrerenderFinalStatusStop:
+		*t = PrerenderFinalStatusStop
+	case PrerenderFinalStatusSslCertificateError:
+		*t = PrerenderFinalStatusSslCertificateError
+	case PrerenderFinalStatusLoginAuthRequested:
+		*t = PrerenderFinalStatusLoginAuthRequested
+	case PrerenderFinalStatusUaChangeRequiresReload:
+		*t = PrerenderFinalStatusUaChangeRequiresReload
+	case PrerenderFinalStatusBlockedByClient:
+		*t = PrerenderFinalStatusBlockedByClient
+	case PrerenderFinalStatusAudioOutputDeviceRequested:
+		*t = PrerenderFinalStatusAudioOutputDeviceRequested
+	case PrerenderFinalStatusMixedContent:
+		*t = PrerenderFinalStatusMixedContent
+	case PrerenderFinalStatusTriggerBackgrounded:
+		*t = PrerenderFinalStatusTriggerBackgrounded
+	case PrerenderFinalStatusEmbedderTriggeredAndSameOriginRedirected:
+		*t = PrerenderFinalStatusEmbedderTriggeredAndSameOriginRedirected
+	case PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected:
+		*t = PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected
+	case PrerenderFinalStatusEmbedderTriggeredAndDestroyed:
+		*t = PrerenderFinalStatusEmbedderTriggeredAndDestroyed
+
+	default:
+		in.AddError(errors.New("unknown PrerenderFinalStatus value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *PrerenderFinalStatus) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
 }
 
 // FileChooserOpenedMode input mode.

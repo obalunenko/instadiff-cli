@@ -68,6 +68,7 @@ type CallFrame struct {
 	ScopeChain       []*Scope              `json:"scopeChain"`                 // Scope chain for this call frame.
 	This             *runtime.RemoteObject `json:"this"`                       // this object for this call frame.
 	ReturnValue      *runtime.RemoteObject `json:"returnValue,omitempty"`      // The value being returned, if the function is at return point.
+	CanBeRestarted   bool                  `json:"canBeRestarted,omitempty"`   // Valid only while the VM is paused and indicates whether this frame can be restarted or not. Note that a true value here does not guarantee that Debugger#restartFrame with this CallFrameId will be successful, but it is very likely.
 }
 
 // Scope scope description.
@@ -431,6 +432,48 @@ func (t *ContinueToLocationTargetCallFrames) UnmarshalEasyJSON(in *jlexer.Lexer)
 
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *ContinueToLocationTargetCallFrames) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// RestartFrameMode the mode parameter must be present and set to 'StepInto',
+// otherwise restartFrame will error out.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/Debugger#method-restartFrame
+type RestartFrameMode string
+
+// String returns the RestartFrameMode as string value.
+func (t RestartFrameMode) String() string {
+	return string(t)
+}
+
+// RestartFrameMode values.
+const (
+	RestartFrameModeStepInto RestartFrameMode = "StepInto"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t RestartFrameMode) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t RestartFrameMode) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *RestartFrameMode) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch RestartFrameMode(in.String()) {
+	case RestartFrameModeStepInto:
+		*t = RestartFrameModeStepInto
+
+	default:
+		in.AddError(errors.New("unknown RestartFrameMode value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *RestartFrameMode) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
