@@ -107,39 +107,48 @@ func login(ctx context.Context, uname, pwd, sessFile string) (*Client, error) {
 
 	stop()
 
+	insta, err = maybeChallengeRequired(insta, err)
 	if err != nil {
-		switch {
-		case errors.Is(err, goinsta.ErrChallengeRequired):
-			var chErr *goinsta.ChallengeError
-
-			if !errors.As(err, &chErr) {
-				return nil, fmt.Errorf("failed to get challenge details: %w", err)
-			}
-
-			insta, err = challenge(insta, chErr.Challenge.APIPath)
-			if err != nil {
-				return nil, fmt.Errorf("challenge: %w", err)
-			}
-		case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
-			var code string
-
-			code, err = twoFactorCode()
-			if err != nil {
-				return nil, fmt.Errorf("2fa ocde: %w", err)
-			}
-
-			stop = spinner.Set("Sending 2fa code..", "", "yellow")
-			defer stop()
-
-			if err = insta.TwoFactorInfo.Login2FA(code); err != nil {
-				return nil, fmt.Errorf("login 2fa: %w", err)
-			}
-		default:
-			return nil, fmt.Errorf("unexpected: %w", err)
-		}
+		return nil, err
 	}
 
 	return syncInstagram(ctx, insta, sessFile)
+}
+
+func maybeChallengeRequired(insta *goinsta.Instagram, err error) (*goinsta.Instagram, error) {
+	switch {
+	case errors.Is(err, nil):
+		return insta, nil
+	case errors.Is(err, goinsta.ErrChallengeRequired):
+		var chErr *goinsta.ChallengeError
+
+		if !errors.As(err, &chErr) {
+			return nil, fmt.Errorf("failed to get challenge details: %w", err)
+		}
+
+		insta, err = challenge(insta, chErr.Challenge.APIPath)
+		if err != nil {
+			return nil, fmt.Errorf("challenge: %w", err)
+		}
+	case errors.Is(err, goinsta.Err2FARequired) || errors.Is(err, goinsta.Err2FANoCode):
+		var code string
+
+		code, err = twoFactorCode()
+		if err != nil {
+			return nil, fmt.Errorf("2fa ocde: %w", err)
+		}
+
+		stop := spinner.Set("Sending 2fa code..", "", "yellow")
+		defer stop()
+
+		if err = insta.TwoFactorInfo.Login2FA(code); err != nil {
+			return nil, fmt.Errorf("login 2fa: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("unexpected: %w", err)
+	}
+
+	return insta, nil
 }
 
 func username() (string, error) {
