@@ -15,6 +15,8 @@ type DB interface {
 	GetLastUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) (models.UsersBatch, error)
 	// GetAllUsersBatchByType returns all users batches by passed batch type.
 	GetAllUsersBatchByType(ctx context.Context, batchType models.UsersBatchType) ([]models.UsersBatch, error)
+	// Close closes connections.
+	Close(ctx context.Context) error
 }
 
 // Params used for DB constructor.

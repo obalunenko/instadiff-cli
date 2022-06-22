@@ -347,12 +347,13 @@ func GetMatchedStylesForNode(nodeID cdp.NodeID) *GetMatchedStylesForNodeParams {
 
 // GetMatchedStylesForNodeReturns return values.
 type GetMatchedStylesForNodeReturns struct {
-	InlineStyle       *Style                  `json:"inlineStyle,omitempty"`       // Inline style for the specified DOM node.
-	AttributesStyle   *Style                  `json:"attributesStyle,omitempty"`   // Attribute-defined element style (e.g. resulting from "width=20 height=100%").
-	MatchedCSSRules   []*RuleMatch            `json:"matchedCSSRules,omitempty"`   // CSS rules matching this node, from all applicable stylesheets.
-	PseudoElements    []*PseudoElementMatches `json:"pseudoElements,omitempty"`    // Pseudo style matches for this node.
-	Inherited         []*InheritedStyleEntry  `json:"inherited,omitempty"`         // A chain of inherited styles (from the immediate node parent up to the DOM tree root).
-	CSSKeyframesRules []*KeyframesRule        `json:"cssKeyframesRules,omitempty"` // A list of CSS keyframed animations matching this node.
+	InlineStyle             *Style                           `json:"inlineStyle,omitempty"`             // Inline style for the specified DOM node.
+	AttributesStyle         *Style                           `json:"attributesStyle,omitempty"`         // Attribute-defined element style (e.g. resulting from "width=20 height=100%").
+	MatchedCSSRules         []*RuleMatch                     `json:"matchedCSSRules,omitempty"`         // CSS rules matching this node, from all applicable stylesheets.
+	PseudoElements          []*PseudoElementMatches          `json:"pseudoElements,omitempty"`          // Pseudo style matches for this node.
+	Inherited               []*InheritedStyleEntry           `json:"inherited,omitempty"`               // A chain of inherited styles (from the immediate node parent up to the DOM tree root).
+	InheritedPseudoElements []*InheritedPseudoElementMatches `json:"inheritedPseudoElements,omitempty"` // A chain of inherited pseudo element styles (from the immediate node parent up to the DOM tree root).
+	CSSKeyframesRules       []*KeyframesRule                 `json:"cssKeyframesRules,omitempty"`       // A list of CSS keyframed animations matching this node.
 }
 
 // Do executes CSS.getMatchedStylesForNode against the provided context.
@@ -363,16 +364,17 @@ type GetMatchedStylesForNodeReturns struct {
 //   matchedCSSRules - CSS rules matching this node, from all applicable stylesheets.
 //   pseudoElements - Pseudo style matches for this node.
 //   inherited - A chain of inherited styles (from the immediate node parent up to the DOM tree root).
+//   inheritedPseudoElements - A chain of inherited pseudo element styles (from the immediate node parent up to the DOM tree root).
 //   cssKeyframesRules - A list of CSS keyframed animations matching this node.
-func (p *GetMatchedStylesForNodeParams) Do(ctx context.Context) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, cssKeyframesRules []*KeyframesRule, err error) {
+func (p *GetMatchedStylesForNodeParams) Do(ctx context.Context) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, inheritedPseudoElements []*InheritedPseudoElementMatches, cssKeyframesRules []*KeyframesRule, err error) {
 	// execute
 	var res GetMatchedStylesForNodeReturns
 	err = cdp.Execute(ctx, CommandGetMatchedStylesForNode, p, &res)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	return res.InlineStyle, res.AttributesStyle, res.MatchedCSSRules, res.PseudoElements, res.Inherited, res.CSSKeyframesRules, nil
+	return res.InlineStyle, res.AttributesStyle, res.MatchedCSSRules, res.PseudoElements, res.Inherited, res.InheritedPseudoElements, res.CSSKeyframesRules, nil
 }
 
 // GetMediaQueriesParams returns all media queries parsed by the rendering
@@ -483,6 +485,51 @@ func (p *GetStyleSheetTextParams) Do(ctx context.Context) (text string, err erro
 	return res.Text, nil
 }
 
+// GetLayersForNodeParams returns all layers parsed by the rendering engine
+// for the tree scope of a node. Given a DOM element identified by nodeId,
+// getLayersForNode returns the root layer for the nearest ancestor document or
+// shadow root. The layer root contains the full layer tree for the tree scope
+// and their ordering.
+type GetLayersForNodeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"`
+}
+
+// GetLayersForNode returns all layers parsed by the rendering engine for the
+// tree scope of a node. Given a DOM element identified by nodeId,
+// getLayersForNode returns the root layer for the nearest ancestor document or
+// shadow root. The layer root contains the full layer tree for the tree scope
+// and their ordering.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#method-getLayersForNode
+//
+// parameters:
+//   nodeID
+func GetLayersForNode(nodeID cdp.NodeID) *GetLayersForNodeParams {
+	return &GetLayersForNodeParams{
+		NodeID: nodeID,
+	}
+}
+
+// GetLayersForNodeReturns return values.
+type GetLayersForNodeReturns struct {
+	RootLayer *LayerData `json:"rootLayer,omitempty"`
+}
+
+// Do executes CSS.getLayersForNode against the provided context.
+//
+// returns:
+//   rootLayer
+func (p *GetLayersForNodeParams) Do(ctx context.Context) (rootLayer *LayerData, err error) {
+	// execute
+	var res GetLayersForNodeReturns
+	err = cdp.Execute(ctx, CommandGetLayersForNode, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.RootLayer, nil
+}
+
 // TrackComputedStyleUpdatesParams starts tracking the given computed styles
 // for updates. The specified array of properties replaces the one previously
 // specified. Pass empty array to disable tracking. Use takeComputedStyleUpdates
@@ -532,14 +579,14 @@ func TakeComputedStyleUpdates() *TakeComputedStyleUpdatesParams {
 
 // TakeComputedStyleUpdatesReturns return values.
 type TakeComputedStyleUpdatesReturns struct {
-	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // The list of node Ids that have their tracked computed styles updated
+	NodeIDs []cdp.NodeID `json:"nodeIds,omitempty"` // The list of node Ids that have their tracked computed styles updated
 }
 
 // Do executes CSS.takeComputedStyleUpdates against the provided context.
 //
 // returns:
-//   nodeIds - The list of node Ids that have their tracked computed styles updated
-func (p *TakeComputedStyleUpdatesParams) Do(ctx context.Context) (nodeIds []cdp.NodeID, err error) {
+//   nodeIDs - The list of node Ids that have their tracked computed styles updated
+func (p *TakeComputedStyleUpdatesParams) Do(ctx context.Context) (nodeIDs []cdp.NodeID, err error) {
 	// execute
 	var res TakeComputedStyleUpdatesReturns
 	err = cdp.Execute(ctx, CommandTakeComputedStyleUpdates, nil, &res)
@@ -547,7 +594,7 @@ func (p *TakeComputedStyleUpdatesParams) Do(ctx context.Context) (nodeIds []cdp.
 		return nil, err
 	}
 
-	return res.NodeIds, nil
+	return res.NodeIDs, nil
 }
 
 // SetEffectivePropertyValueForNodeParams find a rule with the given active
@@ -996,6 +1043,7 @@ const (
 	CommandGetMediaQueries                  = "CSS.getMediaQueries"
 	CommandGetPlatformFontsForNode          = "CSS.getPlatformFontsForNode"
 	CommandGetStyleSheetText                = "CSS.getStyleSheetText"
+	CommandGetLayersForNode                 = "CSS.getLayersForNode"
 	CommandTrackComputedStyleUpdates        = "CSS.trackComputedStyleUpdates"
 	CommandTakeComputedStyleUpdates         = "CSS.takeComputedStyleUpdates"
 	CommandSetEffectivePropertyValueForNode = "CSS.setEffectivePropertyValueForNode"

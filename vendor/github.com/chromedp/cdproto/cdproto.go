@@ -142,6 +142,7 @@ const (
 	CommandCSSGetMediaQueries                              = css.CommandGetMediaQueries
 	CommandCSSGetPlatformFontsForNode                      = css.CommandGetPlatformFontsForNode
 	CommandCSSGetStyleSheetText                            = css.CommandGetStyleSheetText
+	CommandCSSGetLayersForNode                             = css.CommandGetLayersForNode
 	CommandCSSTrackComputedStyleUpdates                    = css.CommandTrackComputedStyleUpdates
 	CommandCSSTakeComputedStyleUpdates                     = css.CommandTakeComputedStyleUpdates
 	CommandCSSSetEffectivePropertyValueForNode             = css.CommandSetEffectivePropertyValueForNode
@@ -195,7 +196,7 @@ const (
 	CommandDOMMoveTo                                       = dom.CommandMoveTo
 	CommandDOMPerformSearch                                = dom.CommandPerformSearch
 	CommandDOMPushNodeByPathToFrontend                     = dom.CommandPushNodeByPathToFrontend
-	CommandDOMPushNodesByBackendIdsToFrontend              = dom.CommandPushNodesByBackendIdsToFrontend
+	CommandDOMPushNodesByBackendIDsToFrontend              = dom.CommandPushNodesByBackendIDsToFrontend
 	CommandDOMQuerySelector                                = dom.CommandQuerySelector
 	CommandDOMQuerySelectorAll                             = dom.CommandQuerySelectorAll
 	CommandDOMRedo                                         = dom.CommandRedo
@@ -269,6 +270,7 @@ const (
 	CommandDebuggerGetStackTrace                           = debugger.CommandGetStackTrace
 	CommandDebuggerPause                                   = debugger.CommandPause
 	CommandDebuggerRemoveBreakpoint                        = debugger.CommandRemoveBreakpoint
+	CommandDebuggerRestartFrame                            = debugger.CommandRestartFrame
 	CommandDebuggerResume                                  = debugger.CommandResume
 	CommandDebuggerSearchInContent                         = debugger.CommandSearchInContent
 	CommandDebuggerSetAsyncCallStackDepth                  = debugger.CommandSetAsyncCallStackDepth
@@ -318,7 +320,9 @@ const (
 	CommandEmulationSetLocaleOverride                      = emulation.CommandSetLocaleOverride
 	CommandEmulationSetTimezoneOverride                    = emulation.CommandSetTimezoneOverride
 	CommandEmulationSetDisabledImageTypes                  = emulation.CommandSetDisabledImageTypes
+	CommandEmulationSetHardwareConcurrencyOverride         = emulation.CommandSetHardwareConcurrencyOverride
 	CommandEmulationSetUserAgentOverride                   = emulation.CommandSetUserAgentOverride
+	CommandEmulationSetAutomationOverride                  = emulation.CommandSetAutomationOverride
 	EventEmulationVirtualTimeBudgetExpired                 = "Emulation.virtualTimeBudgetExpired"
 	CommandEventBreakpointsSetInstrumentationBreakpoint    = eventbreakpoints.CommandSetInstrumentationBreakpoint
 	CommandEventBreakpointsRemoveInstrumentationBreakpoint = eventbreakpoints.CommandRemoveInstrumentationBreakpoint
@@ -566,6 +570,7 @@ const (
 	EventPageJavascriptDialogOpening                       = "Page.javascriptDialogOpening"
 	EventPageLifecycleEvent                                = "Page.lifecycleEvent"
 	EventPageBackForwardCacheNotUsed                       = "Page.backForwardCacheNotUsed"
+	EventPagePrerenderAttemptCompleted                     = "Page.prerenderAttemptCompleted"
 	EventPageLoadEventFired                                = "Page.loadEventFired"
 	EventPageNavigatedWithinDocument                       = "Page.navigatedWithinDocument"
 	EventPageScreencastFrame                               = "Page.screencastFrame"
@@ -643,6 +648,7 @@ const (
 	EventServiceWorkerWorkerErrorReported                  = "ServiceWorker.workerErrorReported"
 	EventServiceWorkerWorkerRegistrationUpdated            = "ServiceWorker.workerRegistrationUpdated"
 	EventServiceWorkerWorkerVersionUpdated                 = "ServiceWorker.workerVersionUpdated"
+	CommandStorageGetStorageKeyForFrame                    = storage.CommandGetStorageKeyForFrame
 	CommandStorageClearDataForOrigin                       = storage.CommandClearDataForOrigin
 	CommandStorageGetCookies                               = storage.CommandGetCookies
 	CommandStorageSetCookies                               = storage.CommandSetCookies
@@ -955,6 +961,9 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 	case CommandCSSGetStyleSheetText:
 		v = new(css.GetStyleSheetTextReturns)
 
+	case CommandCSSGetLayersForNode:
+		v = new(css.GetLayersForNodeReturns)
+
 	case CommandCSSTrackComputedStyleUpdates:
 		return emptyVal, nil
 
@@ -1114,8 +1123,8 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 	case CommandDOMPushNodeByPathToFrontend:
 		v = new(dom.PushNodeByPathToFrontendReturns)
 
-	case CommandDOMPushNodesByBackendIdsToFrontend:
-		v = new(dom.PushNodesByBackendIdsToFrontendReturns)
+	case CommandDOMPushNodesByBackendIDsToFrontend:
+		v = new(dom.PushNodesByBackendIDsToFrontendReturns)
 
 	case CommandDOMQuerySelector:
 		v = new(dom.QuerySelectorReturns)
@@ -1336,6 +1345,9 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 	case CommandDebuggerRemoveBreakpoint:
 		return emptyVal, nil
 
+	case CommandDebuggerRestartFrame:
+		return emptyVal, nil
+
 	case CommandDebuggerResume:
 		return emptyVal, nil
 
@@ -1483,7 +1495,13 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 	case CommandEmulationSetDisabledImageTypes:
 		return emptyVal, nil
 
+	case CommandEmulationSetHardwareConcurrencyOverride:
+		return emptyVal, nil
+
 	case CommandEmulationSetUserAgentOverride:
+		return emptyVal, nil
+
+	case CommandEmulationSetAutomationOverride:
 		return emptyVal, nil
 
 	case EventEmulationVirtualTimeBudgetExpired:
@@ -2227,6 +2245,9 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 	case EventPageBackForwardCacheNotUsed:
 		v = new(page.EventBackForwardCacheNotUsed)
 
+	case EventPagePrerenderAttemptCompleted:
+		v = new(page.EventPrerenderAttemptCompleted)
+
 	case EventPageLoadEventFired:
 		v = new(page.EventLoadEventFired)
 
@@ -2457,6 +2478,9 @@ func UnmarshalMessage(msg *Message) (interface{}, error) {
 
 	case EventServiceWorkerWorkerVersionUpdated:
 		v = new(serviceworker.EventWorkerVersionUpdated)
+
+	case CommandStorageGetStorageKeyForFrame:
+		v = new(storage.GetStorageKeyForFrameReturns)
 
 	case CommandStorageClearDataForOrigin:
 		return emptyVal, nil

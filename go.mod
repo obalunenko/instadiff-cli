@@ -3,8 +3,9 @@ module github.com/obalunenko/instadiff-cli
 go 1.18
 
 require (
-	github.com/Davincible/goinsta v0.0.0-20220425072628-96aad7267204
+	github.com/Davincible/goinsta/v3 v3.1.2
 	github.com/briandowns/spinner v1.18.1
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/logger v0.4.0
 	github.com/obalunenko/version v1.1.0
 	github.com/ory/dockertest/v3 v3.9.1
@@ -22,8 +23,8 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
-	github.com/chromedp/cdproto v0.0.0-20220217222649-d8c14a5c6edf // indirect
-	github.com/chromedp/chromedp v0.7.8 // indirect
+	github.com/chromedp/cdproto v0.0.0-20220530001853-c0f376d894d1 // indirect
+	github.com/chromedp/chromedp v0.8.2 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
@@ -43,6 +44,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -81,7 +83,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

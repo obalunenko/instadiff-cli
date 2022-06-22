@@ -90,6 +90,14 @@ type InheritedStyleEntry struct {
 	MatchedCSSRules []*RuleMatch `json:"matchedCSSRules"`       // Matches of CSS rules matching the ancestor node in the style inheritance chain.
 }
 
+// InheritedPseudoElementMatches inherited pseudo element matches from
+// pseudos of an ancestor node.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#type-InheritedPseudoElementMatches
+type InheritedPseudoElementMatches struct {
+	PseudoElements []*PseudoElementMatches `json:"pseudoElements"` // Matches of pseudo styles from the pseudos of an ancestor node.
+}
+
 // RuleMatch match data for a CSS rule.
 //
 // See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#type-RuleMatch
@@ -149,6 +157,7 @@ type Rule struct {
 	Media            []*Media          `json:"media,omitempty"`            // Media list array (for rules involving media queries). The array enumerates media queries starting with the innermost one, going outwards.
 	ContainerQueries []*ContainerQuery `json:"containerQueries,omitempty"` // Container query list array (for rules involving container queries). The array enumerates container queries starting with the innermost one, going outwards.
 	Supports         []*Supports       `json:"supports,omitempty"`         // @supports CSS at-rule array. The array enumerates @supports at-rules starting with the innermost one, going outwards.
+	Layers           []*Layer          `json:"layers,omitempty"`           // Cascade layer array. Contains the layer hierarchy that this rule belongs to starting with the innermost layer and going outwards.
 }
 
 // RuleUsage CSS coverage information.
@@ -259,8 +268,27 @@ type ContainerQuery struct {
 // See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#type-CSSSupports
 type Supports struct {
 	Text         string       `json:"text"`                   // Supports rule text.
+	Active       bool         `json:"active"`                 // Whether the supports condition is satisfied.
 	Range        *SourceRange `json:"range,omitempty"`        // The associated rule header range in the enclosing stylesheet (if available).
 	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the stylesheet containing this object (if exists).
+}
+
+// Layer CSS Layer at-rule descriptor.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#type-CSSLayer
+type Layer struct {
+	Text         string       `json:"text"`                   // Layer name.
+	Range        *SourceRange `json:"range,omitempty"`        // The associated rule header range in the enclosing stylesheet (if available).
+	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the stylesheet containing this object (if exists).
+}
+
+// LayerData CSS Layer data.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/CSS#type-CSSLayerData
+type LayerData struct {
+	Name      string       `json:"name"`                // Layer name.
+	SubLayers []*LayerData `json:"subLayers,omitempty"` // Direct sub-layers
+	Order     float64      `json:"order"`               // Layer order. The order determines the order of the layer in the cascade order. A higher number has higher priority in the cascade order.
 }
 
 // PlatformFontUsage information about amount of glyphs that were rendered

@@ -85,14 +85,19 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 	resetenv := setTestURI(ctx, m, fmt.Sprintf("mongodb://%s:%s@%s", p.User, p.UserPassword, hostport))
 
 	retryFn := func(ctx context.Context) func() error {
-		var retries int
+		var (
+			retries int
+			u       string
+		)
 
-		u, err := getTestURI()
+		u, err = getTestURI()
 		if err != nil {
 			log.WithError(ctx, err).Fatal("Failed to get test uri")
 		}
 
 		return func() error {
+			var cl *mongo.Client
+
 			retries++
 
 			log.WithFields(ctx, log.Fields{
@@ -100,7 +105,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 				"uri":     u,
 			}).Info(logPfx + "Trying to connect to database in container")
 
-			cl, err := mongo.Connect(ctx, options.Client().ApplyURI(u))
+			cl, err = mongo.Connect(ctx, options.Client().ApplyURI(u))
 			if err != nil {
 				return fmt.Errorf("connect: %w", err)
 			}
@@ -111,7 +116,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 				}
 			}()
 
-			if err := cl.Ping(ctx, nil); err != nil {
+			if err = cl.Ping(ctx, nil); err != nil {
 				return fmt.Errorf("ping: %w", err)
 			}
 

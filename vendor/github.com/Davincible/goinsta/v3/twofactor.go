@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Davincible/goinsta/utilities"
+	"github.com/Davincible/goinsta/v3/utilities"
 )
 
 type TwoFactorInfo struct {
@@ -45,7 +45,7 @@ func (info *TwoFactorInfo) Login2FA(in ...string) error {
 	var code string
 	if len(in) > 0 {
 		code = in[0]
-	} else if info.insta.totp == nil {
+	} else if info.insta.totp == nil || info.insta.totp.Seed == "" {
 		return Err2FANoCode
 	} else {
 		otp, err := utilities.GenTOTP(insta.totp.Seed)

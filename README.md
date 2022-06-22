@@ -65,14 +65,13 @@ COMMANDS:
    remove-followers, rm, remove                                                Remove a list of followers, by username.
    unfollow-users, unfollow, remove-followings                                 Unfollow a list of followings, by username.
    list-unmutual, unmutual                                                     List all not mutual followings
-   list-bots, bots                                                             List all bots or business accounts (alpha)
+   list-useless, useless, bots                                                 List all statistic-useless accounts (bots, business accounts or mass-followers) (alpha)
    list-diff, diff                                                             List diff for account (lost and new followers and followings)
    diff-history, history                                                       List diff account history (lost and new followers and followings)
    help, h                                                                     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --config_path value  Path to the config file (default: ".config.json")
-   --debug              Debug mode, where actions has no real effect (default: false)
    --help, -h           show help (default: false)
    --incognito          Incognito removes session on application exit. (default: false)
    --log_level value    Level of output logs (default: "INFO")

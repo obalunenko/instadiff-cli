@@ -20,7 +20,6 @@ import (
 
 const (
 	list      = "list"
-	debug     = "debug"
 	logLevel  = "log_level"
 	cfgPath   = "config_path"
 	incognito = "incognito"
@@ -49,7 +48,7 @@ func main() {
 	}
 }
 
-func serviceSetUp(c *cli.Context) (*service.Service, service.StopFunc, error) {
+func serviceSetUp(c *cli.Context) (*service.Service, error) {
 	setLogger(c)
 
 	configPath := c.String(cfgPath)
@@ -58,7 +57,7 @@ func serviceSetUp(c *cli.Context) (*service.Service, service.StopFunc, error) {
 
 	cfg, err := config.Load(c.Context, configPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("load config: %w", err)
+		return nil, fmt.Errorf("load config: %w", err)
 	}
 
 	sigChan := make(chan os.Signal, 1)
@@ -81,7 +80,7 @@ func serviceSetUp(c *cli.Context) (*service.Service, service.StopFunc, error) {
 		os.Exit(1)
 	}()
 
-	return service.New(cancelCtx, cfg, cfgDir, c.Bool(debug), c.Bool(incognito))
+	return service.New(cancelCtx, cfg, cfgDir, c.Bool(incognito))
 }
 
 func setLogger(c *cli.Context) {

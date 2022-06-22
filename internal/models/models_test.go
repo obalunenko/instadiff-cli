@@ -18,7 +18,7 @@ func TestUsersBatchType_Valid(t *testing.T) {
 	}{
 		{
 			name: "valid batch type",
-			i:    models.UsersBatchTypeBusinessAccounts,
+			i:    models.UsersBatchTypeUselessFollowers,
 			want: true,
 		},
 		{

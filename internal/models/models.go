@@ -43,8 +43,8 @@ const (
 	UsersBatchTypeFollowings
 	// UsersBatchTypeNotMutual represents users that not following back.
 	UsersBatchTypeNotMutual
-	// UsersBatchTypeBusinessAccounts represents business accounts.
-	UsersBatchTypeBusinessAccounts
+	// UsersBatchTypeUselessFollowers represents business accounts, bots and mass followers.
+	UsersBatchTypeUselessFollowers
 	// UsersBatchTypeLostFollowers represents lost followers.
 	UsersBatchTypeLostFollowers
 	// UsersBatchTypeNewFollowers represents new followers.
