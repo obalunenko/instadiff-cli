@@ -223,6 +223,37 @@ func cmdUnfollowUsers(c *cli.Context, svc *service.Service) error {
 	}
 }
 
+func cmdFollowUsers(c *cli.Context, svc *service.Service) error {
+	ctx := c.Context
+
+	followings := c.StringSlice(users)
+
+	log.WithField(ctx, "count", len(followings)).Info("Removing followings...")
+
+	count, err := svc.UnfollowUsers(ctx, followings)
+	switch {
+	case errors.Is(err, service.ErrNoUsers):
+		log.Info(ctx, "There is no followings to unfollow")
+
+		return nil
+	case errors.Is(err, service.ErrCorrupted):
+		log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
+
+		return fmt.Errorf("remove followers: %w", err)
+	case errors.Is(err, service.ErrLimitExceed):
+		log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
+
+		return nil
+	case errors.Is(err, nil):
+		log.WithField(ctx, "count", count).Info("Total unfollowed")
+
+		return nil
+
+	default:
+		return fmt.Errorf("unfollow users: %w", err)
+	}
+}
+
 func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
 	ctx := c.Context
 

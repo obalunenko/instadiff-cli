@@ -13,12 +13,13 @@ func _() {
 	_ = x[UserActionUnfollow-2]
 	_ = x[UserActionBlock-3]
 	_ = x[UserActionUnblock-4]
-	_ = x[userActionSentinel-5]
+	_ = x[UserActionRemove-5]
+	_ = x[userActionSentinel-6]
 }
 
-const _UserAction_name = "UnknownFollowUnfollowBlockUnblockSentinel"
+const _UserAction_name = "UnknownFollowUnfollowBlockUnblockRemoveSentinel"
 
-var _UserAction_index = [...]uint8{0, 7, 13, 21, 26, 33, 41}
+var _UserAction_index = [...]uint8{0, 7, 13, 21, 26, 33, 39, 47}
 
 func (i UserAction) String() string {
 	if i >= UserAction(len(_UserAction_index)-1) {

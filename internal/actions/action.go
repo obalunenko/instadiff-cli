@@ -17,6 +17,8 @@ const (
 	UserActionBlock // Block
 	// UserActionUnblock action.
 	UserActionUnblock // Unblock
+	// UserActionRemove action.
+	UserActionRemove // Remove
 
 	userActionSentinel
 )
