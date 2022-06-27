@@ -346,7 +346,7 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 // UnfollowUsers unfollows users by the name passed.
 func (svc *Service) UnfollowUsers(ctx context.Context, usernames []string) (int, error) {
 	if len(usernames) == 0 {
-		return 0, errors.New("no usernames passed")
+		return 0, ErrNoUsernamesPassed
 	}
 
 	uslist, err := svc.getUsersByUsername(ctx, usernames)
@@ -360,7 +360,7 @@ func (svc *Service) UnfollowUsers(ctx context.Context, usernames []string) (int,
 // FollowUsers follows users by the name passed.
 func (svc *Service) FollowUsers(ctx context.Context, usernames []string) (int, error) {
 	if len(usernames) == 0 {
-		return 0, errors.New("no usernames passed")
+		return 0, ErrNoUsernamesPassed
 	}
 
 	uslist, err := svc.getUsersByUsername(ctx, usernames)
@@ -408,7 +408,7 @@ func (svc *Service) getUsersByUsername(ctx context.Context, usernames []string) 
 // RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
 func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []string) (int, error) {
 	if len(usernames) == 0 {
-		return 0, errors.New("no usernames passed")
+		return 0, ErrNoUsernamesPassed
 	}
 
 	uslist, err := svc.getUsersByUsername(ctx, usernames)
