@@ -43,11 +43,11 @@ USAGE:
 VERSION:
 
 | app_name:     instadiff-cli                            |
-| version:      v1.4.0                                   |
+| version:      v1.6.0                                   |
 | go_version:   go1.18.3                                 |
-| commit:       1f073e67df08d7c78e2734d762b9ac7a7283d804 |
-| short_commit: 1f073e67                                 |
-| build_date:   2022-06-17T19:59:18Z                     |
+| commit:       e03384f8050cd48b3c824a562c248ed952333f4d |
+| short_commit: e03384f8                                 |
+| build_date:   2022-06-27T15:59:12Z                     |
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
@@ -64,6 +64,7 @@ COMMANDS:
    clean-followings, clean, unfollow-untmutual, remove-untmutual, rm-unmutual  Un follow not mutual followings, except of whitelisted
    remove-followers, rm, remove                                                Remove a list of followers, by username.
    unfollow-users, unfollow, remove-followings                                 Unfollow a list of followings, by username.
+   follow-users, follow, add-followings                                        Follow a list of followings, by username.
    list-unmutual, unmutual                                                     List all not mutual followings
    list-useless, useless, bots                                                 List all statistic-useless accounts (bots, business accounts or mass-followers) (alpha)
    list-diff, diff                                                             List diff for account (lost and new followers and followings)
