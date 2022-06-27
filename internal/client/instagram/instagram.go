@@ -13,7 +13,8 @@ import (
 	log "github.com/obalunenko/logger"
 	"github.com/tcnksm/go-input"
 
-	"github.com/obalunenko/instadiff-cli/internal/client/actions"
+	"github.com/obalunenko/instadiff-cli/internal/actions"
+
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
@@ -310,17 +311,17 @@ func (i *Client) Unfollow(ctx context.Context, user models.User) error {
 }
 
 // Followers returns list of followers.
-func (i Client) Followers(ctx context.Context) ([]models.User, error) {
+func (i *Client) Followers(ctx context.Context) ([]models.User, error) {
 	return makeUsersList(ctx, i.client.Account.Followers())
 }
 
 // Followings returns list of followings.
-func (i Client) Followings(ctx context.Context) ([]models.User, error) {
+func (i *Client) Followings(ctx context.Context) ([]models.User, error) {
 	return makeUsersList(ctx, i.client.Account.Following())
 }
 
 // Username returns current account username.
-func (i Client) Username(_ context.Context) string {
+func (i *Client) Username(_ context.Context) string {
 	return i.client.Account.Username
 }
 

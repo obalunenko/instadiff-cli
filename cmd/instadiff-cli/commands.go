@@ -43,6 +43,13 @@ func commands(ctx context.Context) []*cli.Command {
 			Flags:   []cli.Flag{addUsersFlag()},
 		},
 		{
+			Name:    "follow-users",
+			Aliases: []string{"follow", "add-followings"},
+			Usage:   "Follow a list of followings, by username.",
+			Action:  executeCmd(ctx, cmdFollowUsers),
+			Flags:   []cli.Flag{addUsersFlag()},
+		},
+		{
 			Name:    "list-unmutual",
 			Aliases: []string{"unmutual"},
 			Usage:   "List all not mutual followings",

@@ -1,6 +1,5 @@
 {
   "instagram":{
-    "save": true,
     "whitelist":[
       "user1",
       "user2",
@@ -18,6 +17,5 @@
       "db": "testing",
       "collection": "users"
     }
-  },
-  "debug": "false"
+  }
 }
