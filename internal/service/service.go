@@ -345,30 +345,20 @@ func (svc *Service) UnFollowAllNotMutualExceptWhitelisted(ctx context.Context) (
 
 // UnfollowUsers unfollows users by the name passed.
 func (svc *Service) UnfollowUsers(ctx context.Context, usernames []string) (int, error) {
-	if len(usernames) == 0 {
-		return 0, ErrNoUsernamesPassed
+	var f userListProcessFunc = func(ctx context.Context, uslist []models.User) (int, error) {
+		return svc.unfollowUsers(ctx, uslist, false)
 	}
 
-	uslist, err := svc.getUsersByUsername(ctx, usernames)
-	if err != nil {
-		return 0, fmt.Errorf("get users by usernames: %w", err)
-	}
-
-	return svc.unfollowUsers(ctx, uslist, false)
+	return svc.processByUsernames(ctx, usernames, f)
 }
 
 // FollowUsers follows users by the name passed.
 func (svc *Service) FollowUsers(ctx context.Context, usernames []string) (int, error) {
-	if len(usernames) == 0 {
-		return 0, ErrNoUsernamesPassed
+	var f userListProcessFunc = func(ctx context.Context, uslist []models.User) (int, error) {
+		return svc.followUsers(ctx, uslist)
 	}
 
-	uslist, err := svc.getUsersByUsername(ctx, usernames)
-	if err != nil {
-		return 0, fmt.Errorf("get users by usernames: %w", err)
-	}
-
-	return svc.followUsers(ctx, uslist)
+	return svc.processByUsernames(ctx, usernames, f)
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
@@ -391,6 +381,10 @@ func (svc *Service) getUsersByUsername(ctx context.Context, usernames []string) 
 	stop := spinner.Set("Fetching users by names", "", "yellow")
 	defer stop()
 
+	if len(usernames) == 0 {
+		return nil, ErrNoUsernamesPassed
+	}
+
 	users := make([]models.User, 0, len(usernames))
 
 	for _, un := range usernames {
@@ -407,16 +401,22 @@ func (svc *Service) getUsersByUsername(ctx context.Context, usernames []string) 
 
 // RemoveFollowersByUsername removes all provided users by blocking and unblocking them to bypass Instagram limits.
 func (svc *Service) RemoveFollowersByUsername(ctx context.Context, usernames []string) (int, error) {
-	if len(usernames) == 0 {
-		return 0, ErrNoUsernamesPassed
+	f := func(ctx context.Context, uslist []models.User) (int, error) {
+		return svc.removeFollowers(ctx, uslist)
 	}
 
+	return svc.processByUsernames(ctx, usernames, f)
+}
+
+type userListProcessFunc func(ctx context.Context, uslist []models.User) (int, error)
+
+func (svc *Service) processByUsernames(ctx context.Context, usernames []string, f userListProcessFunc) (int, error) {
 	uslist, err := svc.getUsersByUsername(ctx, usernames)
 	if err != nil {
 		return 0, fmt.Errorf("get users by usernames: %w", err)
 	}
 
-	return svc.removeFollowers(ctx, uslist)
+	return f(ctx, uslist)
 }
 
 func makeProgressBar(ctx context.Context, capacity int) bar.Bar {
