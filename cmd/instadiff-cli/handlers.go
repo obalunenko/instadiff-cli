@@ -140,7 +140,7 @@ func cmdCleanFollowings(c *cli.Context, svc *service.Service) error {
 		return svc.UnFollowAllNotMutualExceptWhitelisted(ctx)
 	}
 
-	return cmdHandleCount(c, svc, f, c.Command.Name)
+	return cmdHandleCount(c, svc, f, "clean not mutual followings")
 }
 
 type cmdWithCountFunc func(c *cli.Context, svc *service.Service) (int, error)
@@ -185,7 +185,7 @@ func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
 		return svc.RemoveFollowersByUsername(ctx, followers)
 	}
 
-	return cmdHandleCount(c, svc, f, c.Command.Name)
+	return cmdHandleCount(c, svc, f, "remove followers")
 }
 
 func cmdUnfollowUsers(c *cli.Context, svc *service.Service) error {
@@ -199,7 +199,7 @@ func cmdUnfollowUsers(c *cli.Context, svc *service.Service) error {
 		return svc.UnfollowUsers(ctx, usrs)
 	}
 
-	return cmdHandleCount(c, svc, f, c.Command.Name)
+	return cmdHandleCount(c, svc, f, "unfollow users")
 }
 
 func cmdFollowUsers(c *cli.Context, svc *service.Service) error {
@@ -213,7 +213,7 @@ func cmdFollowUsers(c *cli.Context, svc *service.Service) error {
 		return svc.FollowUsers(ctx, usrs)
 	}
 
-	return cmdHandleCount(c, svc, f, c.Command.Name)
+	return cmdHandleCount(c, svc, f, "follow users")
 }
 
 func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
