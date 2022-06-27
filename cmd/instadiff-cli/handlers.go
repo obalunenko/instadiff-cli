@@ -132,126 +132,88 @@ func cmdListFollowings(c *cli.Context, svc *service.Service) error {
 }
 
 func cmdCleanFollowings(c *cli.Context, svc *service.Service) error {
+	var f cmdWithCountFunc = func(c *cli.Context, svc *service.Service) (int, error) {
+		ctx := c.Context
+
+		log.Info(ctx, "Cleaning from not mutual followings...")
+
+		return svc.UnFollowAllNotMutualExceptWhitelisted(ctx)
+	}
+
+	return cmdHandleCount(c, svc, f, c.Command.Name)
+}
+
+type cmdWithCountFunc func(c *cli.Context, svc *service.Service) (int, error)
+
+func cmdHandleCount(c *cli.Context, svc *service.Service, f cmdWithCountFunc, operation string) error {
 	ctx := c.Context
 
-	log.Info(ctx, "Cleaning from not mutual followings...")
+	count, err := f(c, svc)
 
-	count, err := svc.UnFollowAllNotMutualExceptWhitelisted(ctx)
+	l := log.WithField(ctx, "operation", operation).WithField("count", count)
 
 	switch {
 	case errors.Is(err, service.ErrNoUsers):
-		log.Info(ctx, "There is no users to unfollow")
+		l.Info("There is no users to process")
 
 		return nil
 	case errors.Is(err, service.ErrCorrupted):
-		log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
+		l.Info("Processed before corrupted")
 
-		return fmt.Errorf("clean notmutual: %w", err)
+		return err
 	case errors.Is(err, service.ErrLimitExceed):
-		log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
+		l.Info("Processed before limit exceeded")
 
 		return nil
 	case errors.Is(err, nil):
-		log.WithField(ctx, "count", count).Info("Total unfollowed")
+		l.Info("Total processed")
 
 		return nil
-
 	default:
-		return fmt.Errorf("clean notmutual: %w", err)
+		return err
 	}
 }
 
 func cmdRemoveFollowers(c *cli.Context, svc *service.Service) error {
-	ctx := c.Context
+	var f cmdWithCountFunc = func(c *cli.Context, svc *service.Service) (int, error) {
+		ctx := c.Context
 
-	followers := c.StringSlice(users)
+		followers := c.StringSlice(users)
 
-	log.WithField(ctx, "count", len(followers)).Info("Removing followers...")
+		log.WithField(ctx, "count", len(followers)).Info("Removing followers...")
 
-	count, err := svc.RemoveFollowersByUsername(ctx, followers)
-	switch {
-	case errors.Is(err, service.ErrNoUsers):
-		log.Info(ctx, "There is no followers to remove")
-
-		return nil
-	case errors.Is(err, service.ErrCorrupted):
-		log.WithField(ctx, "count", count).Info("Removed before corrupted")
-
-		return fmt.Errorf("remove followers: %w", err)
-	case errors.Is(err, service.ErrLimitExceed):
-		log.WithField(ctx, "count", count).Info("Removed before limit exceeded")
-
-		return nil
-	case errors.Is(err, nil):
-		log.WithField(ctx, "count", count).Info("Total removed")
-
-		return nil
-
-	default:
-		return fmt.Errorf("remove followers: %w", err)
+		return svc.RemoveFollowersByUsername(ctx, followers)
 	}
+
+	return cmdHandleCount(c, svc, f, c.Command.Name)
 }
 
 func cmdUnfollowUsers(c *cli.Context, svc *service.Service) error {
-	ctx := c.Context
+	var f cmdWithCountFunc = func(c *cli.Context, svc *service.Service) (int, error) {
+		ctx := c.Context
 
-	followings := c.StringSlice(users)
+		usrs := c.StringSlice(users)
 
-	log.WithField(ctx, "count", len(followings)).Info("Removing followings...")
+		log.WithField(ctx, "count", len(usrs)).Info("Unfollow users...")
 
-	count, err := svc.UnfollowUsers(ctx, followings)
-	switch {
-	case errors.Is(err, service.ErrNoUsers):
-		log.Info(ctx, "There is no followings to unfollow")
-
-		return nil
-	case errors.Is(err, service.ErrCorrupted):
-		log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
-
-		return fmt.Errorf("remove followers: %w", err)
-	case errors.Is(err, service.ErrLimitExceed):
-		log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
-
-		return nil
-	case errors.Is(err, nil):
-		log.WithField(ctx, "count", count).Info("Total unfollowed")
-
-		return nil
-
-	default:
-		return fmt.Errorf("unfollow users: %w", err)
+		return svc.UnfollowUsers(ctx, usrs)
 	}
+
+	return cmdHandleCount(c, svc, f, c.Command.Name)
 }
 
 func cmdFollowUsers(c *cli.Context, svc *service.Service) error {
-	ctx := c.Context
+	var f cmdWithCountFunc = func(c *cli.Context, svc *service.Service) (int, error) {
+		ctx := c.Context
 
-	followings := c.StringSlice(users)
+		usrs := c.StringSlice(users)
 
-	log.WithField(ctx, "count", len(followings)).Info("Removing followings...")
+		log.WithField(ctx, "count", len(usrs)).Info("Following users...")
 
-	count, err := svc.UnfollowUsers(ctx, followings)
-	switch {
-	case errors.Is(err, service.ErrNoUsers):
-		log.Info(ctx, "There is no followings to unfollow")
-
-		return nil
-	case errors.Is(err, service.ErrCorrupted):
-		log.WithField(ctx, "count", count).Info("Unfollowed before corrupted")
-
-		return fmt.Errorf("remove followers: %w", err)
-	case errors.Is(err, service.ErrLimitExceed):
-		log.WithField(ctx, "count", count).Info("Unfollowed before limit exceeded")
-
-		return nil
-	case errors.Is(err, nil):
-		log.WithField(ctx, "count", count).Info("Total unfollowed")
-
-		return nil
-
-	default:
-		return fmt.Errorf("unfollow users: %w", err)
+		return svc.FollowUsers(ctx, usrs)
 	}
+
+	return cmdHandleCount(c, svc, f, c.Command.Name)
 }
 
 func cmdListNotMutual(c *cli.Context, svc *service.Service) error {
