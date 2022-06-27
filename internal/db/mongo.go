@@ -49,6 +49,10 @@ func newMongoDB(ctx context.Context, params MongoParams) (*mongoDB, error) {
 		return nil, fmt.Errorf("connect: %w", err)
 	}
 
+	if err = cl.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("ping: %w", err)
+	}
+
 	database := cl.Database(params.Database)
 	collection := database.Collection(params.Collection)
 
@@ -59,7 +63,7 @@ func newMongoDB(ctx context.Context, params MongoParams) (*mongoDB, error) {
 	}, nil
 }
 
-func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) error {
+func (m *mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) error {
 	if _, err := m.collection.InsertOne(ctx, users); err != nil {
 		return fmt.Errorf("insert batch: %w", err)
 	}
@@ -67,7 +71,7 @@ func (m mongoDB) InsertUsersBatch(ctx context.Context, users models.UsersBatch) 
 	return nil
 }
 
-func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBatchType) (models.UsersBatch, error) {
+func (m *mongoDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBatchType) (models.UsersBatch, error) {
 	filter := bson.M{"batch_type": bt}
 
 	resp := m.collection.FindOne(ctx, filter, &options.FindOneOptions{
@@ -91,7 +95,7 @@ func (m mongoDB) GetLastUsersBatchByType(ctx context.Context, bt models.UsersBat
 	return ub, nil
 }
 
-func (m mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBatchType) ([]models.UsersBatch, error) {
+func (m *mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBatchType) ([]models.UsersBatch, error) {
 	filter := bson.M{"batch_type": bt}
 
 	resp, err := m.collection.Find(ctx, filter, &options.FindOptions{
