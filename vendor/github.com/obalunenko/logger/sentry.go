@@ -44,7 +44,7 @@ func setupSentry(ctx context.Context, p SentryParams) error {
 		levels = append(levels, l.String())
 	}
 
-	WithField(ctx, "levels", strings.Join(levels, " ")).Info("sentry enabled")
+	WithField(ctx, "levels", strings.Join(levels, " ")).Debug("sentry enabled")
 
 	logInstance.AddHook(hook)
 

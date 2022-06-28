@@ -6,7 +6,7 @@ require (
 	github.com/Davincible/goinsta/v3 v3.1.2
 	github.com/briandowns/spinner v1.18.1
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/obalunenko/logger v0.4.0
+	github.com/obalunenko/logger v0.4.1
 	github.com/obalunenko/version v1.1.0
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/schollz/progressbar/v3 v3.8.6
