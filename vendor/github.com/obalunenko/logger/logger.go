@@ -126,5 +126,5 @@ func makeLogInstance(ctx context.Context, p Params) {
 		}
 	}
 
-	WithField(ctx, "levels", strings.Join(levels, " ")).Info("logging enabled")
+	WithField(ctx, "levels", strings.Join(levels, " ")).Debug("logging enabled")
 }
