@@ -440,20 +440,13 @@ func (svc *Service) followUsers(ctx context.Context, users []models.User) (int, 
 }
 
 func (svc *Service) actUsers(ctx context.Context, users []models.User, act actions.UserAction, useWhitelist bool) (int, error) {
-	if ctx.Err() != nil {
-		return 0, ctx.Err()
-	}
-
-	if len(users) == 0 {
-		return 0, fmt.Errorf("no users passed: %w", ErrNoUsers)
-	}
-
-	const double = 2
+	const (
+		double    = 2
+		errsLimit = 3
+	)
 
 	pBar := makeProgressBar(ctx, len(users)*double)
 	defer pBar.Finish()
-
-	const errsLimit = 3
 
 	var (
 		skipped bool
@@ -525,7 +518,9 @@ func (svc *Service) actUser(ctx context.Context, u models.User, act actions.User
 			return ErrUserInWhitelist
 		}
 
-		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
+		const base = 10
+
+		if _, exist := whitelist[strconv.FormatInt(u.ID, base)]; exist {
 			return ErrUserInWhitelist
 		}
 	}
