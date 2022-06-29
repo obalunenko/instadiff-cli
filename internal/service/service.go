@@ -440,77 +440,59 @@ func (svc *Service) followUsers(ctx context.Context, users []models.User) (int, 
 }
 
 func (svc *Service) actUsers(ctx context.Context, users []models.User, act actions.UserAction, useWhitelist bool) (int, error) {
-	if ctx.Err() != nil {
-		return 0, ctx.Err()
-	}
-
-	if len(users) == 0 {
-		return 0, fmt.Errorf("no users passed: %w", ErrNoUsers)
-	}
-
-	const double = 2
+	const (
+		double    = 2
+		errsLimit = 3
+	)
 
 	pBar := makeProgressBar(ctx, len(users)*double)
 	defer pBar.Finish()
 
-	var count int
+	var (
+		skipped bool
+		count   int
+		errsNum int
+	)
 
-	ticker := time.NewTicker(svc.instagram.sleep)
-	defer ticker.Stop()
-
-	const errsLimit = 3
-
-	var errsNum int
-
-LOOP:
 	for i, u := range users {
-		if errsNum >= errsLimit {
-			return count, ErrCorrupted
+		if i != 0 && !skipped {
+			time.Sleep(svc.instagram.Sleep())
 		}
 
-		if i == 0 {
-			pBar.Progress() <- struct{}{}
+		skipped = false
 
-			err := svc.actUser(ctx, u, act, useWhitelist)
+		if ctx.Err() != nil {
+			break
+		}
 
-			pBar.Progress() <- struct{}{}
+		pBar.Progress() <- struct{}{}
 
-			if err != nil {
-				log.WithError(ctx, err).
-					WithField("username", u.UserName).
-					WithField("action", act.String()).
-					Error("Failed to make action")
+		err := svc.actUser(ctx, u, act, useWhitelist)
 
-				errsNum++
+		pBar.Progress() <- struct{}{}
+
+		if err != nil {
+			if errors.Is(err, ErrUserInWhitelist) {
+				skipped = true
 
 				continue
 			}
 
-			count++
-		}
+			log.WithError(ctx, err).
+				WithField("username", u.UserName).
+				WithField("action", act.String()).
+				Error("Failed to make action")
 
-		select {
-		case <-ctx.Done():
-			break LOOP
-		case <-ticker.C:
-			pBar.Progress() <- struct{}{}
+			errsNum++
 
-			err := svc.actUser(ctx, u, act, useWhitelist)
-
-			pBar.Progress() <- struct{}{}
-			if err != nil {
-				log.WithError(ctx, err).
-					WithField("username", u.UserName).
-					WithField("action", act.String()).
-					Error("Failed to make action")
-
-				errsNum++
-
-				continue
+			if errsNum >= errsLimit {
+				return count, ErrCorrupted
 			}
 
-			count++
+			continue
 		}
+
+		count++
 
 		if count >= svc.instagram.limits.unFollow {
 			return count, ErrLimitExceed
@@ -533,11 +515,13 @@ func (svc *Service) actUser(ctx context.Context, u models.User, act actions.User
 
 	if canUseWhitelist && useWhitelist {
 		if _, exist := whitelist[u.UserName]; exist {
-			return nil
+			return ErrUserInWhitelist
 		}
 
-		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-			return nil
+		const base = 10
+
+		if _, exist := whitelist[strconv.FormatInt(u.ID, base)]; exist {
+			return ErrUserInWhitelist
 		}
 	}
 

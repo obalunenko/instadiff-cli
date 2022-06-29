@@ -15,6 +15,6 @@ checkInstalled golangci-lint
 
 echo "Linting..."
 
-golangci-lint run --config .golangci.yml > linters.out
+golangci-lint run --out-format=checkstyle --config .golangci.yml > linters.out
 
 echo "${SCRIPT_NAME} done."
