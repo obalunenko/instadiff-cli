@@ -453,64 +453,53 @@ func (svc *Service) actUsers(ctx context.Context, users []models.User, act actio
 	pBar := makeProgressBar(ctx, len(users)*double)
 	defer pBar.Finish()
 
-	var count int
-
-	ticker := time.NewTicker(svc.instagram.sleep)
-	defer ticker.Stop()
-
 	const errsLimit = 3
 
-	var errsNum int
+	var (
+		skipped bool
+		count   int
+		errsNum int
+	)
 
-LOOP:
 	for i, u := range users {
-		if errsNum >= errsLimit {
-			return count, ErrCorrupted
+		if i != 0 && !skipped {
+			time.Sleep(svc.instagram.Sleep())
 		}
 
-		if i == 0 {
-			pBar.Progress() <- struct{}{}
+		skipped = false
 
-			err := svc.actUser(ctx, u, act, useWhitelist)
+		if ctx.Err() != nil {
+			break
+		}
 
-			pBar.Progress() <- struct{}{}
+		pBar.Progress() <- struct{}{}
 
-			if err != nil {
-				log.WithError(ctx, err).
-					WithField("username", u.UserName).
-					WithField("action", act.String()).
-					Error("Failed to make action")
+		err := svc.actUser(ctx, u, act, useWhitelist)
 
-				errsNum++
+		pBar.Progress() <- struct{}{}
+
+		if err != nil {
+			if errors.Is(err, ErrUserInWhitelist) {
+				skipped = true
 
 				continue
 			}
 
-			count++
-		}
+			log.WithError(ctx, err).
+				WithField("username", u.UserName).
+				WithField("action", act.String()).
+				Error("Failed to make action")
 
-		select {
-		case <-ctx.Done():
-			break LOOP
-		case <-ticker.C:
-			pBar.Progress() <- struct{}{}
+			errsNum++
 
-			err := svc.actUser(ctx, u, act, useWhitelist)
-
-			pBar.Progress() <- struct{}{}
-			if err != nil {
-				log.WithError(ctx, err).
-					WithField("username", u.UserName).
-					WithField("action", act.String()).
-					Error("Failed to make action")
-
-				errsNum++
-
-				continue
+			if errsNum >= errsLimit {
+				return count, ErrCorrupted
 			}
 
-			count++
+			continue
 		}
+
+		count++
 
 		if count >= svc.instagram.limits.unFollow {
 			return count, ErrLimitExceed
@@ -533,11 +522,11 @@ func (svc *Service) actUser(ctx context.Context, u models.User, act actions.User
 
 	if canUseWhitelist && useWhitelist {
 		if _, exist := whitelist[u.UserName]; exist {
-			return nil
+			return ErrUserInWhitelist
 		}
 
 		if _, exist := whitelist[strconv.FormatInt(u.ID, 10)]; exist {
-			return nil
+			return ErrUserInWhitelist
 		}
 	}
 

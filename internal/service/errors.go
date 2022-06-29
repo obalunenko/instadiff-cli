@@ -17,6 +17,8 @@ var (
 	ErrNoUsers = errors.New("no users")
 	// ErrNoUsernamesPassed returns when usernames list is empty.
 	ErrNoUsernamesPassed = errors.New("no usernames passed")
+	// ErrUserInWhitelist means that user skipped.
+	ErrUserInWhitelist = errors.New("user in whitelist")
 )
 
 func makeNoUsersError(t models.UsersBatchType) error {
