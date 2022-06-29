@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
+	"time"
 
 	"github.com/urfave/cli/v2"
 
@@ -308,6 +310,7 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 		minWidth int  = 0
 		tabWidth int  = 0
 		padChar  byte = ' '
+		tLayout       = "02-01-2006 15:04:05"
 	)
 
 	w := tabwriter.NewWriter(os.Stdout, minWidth, tabWidth, padding, padChar, tabwriter.TabIndent|tabwriter.Debug)
@@ -322,7 +325,21 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 
 	const recnum = 2
 
-	for date, records := range dh.History {
+	var dates = make([]time.Time, 0, len(dh.History))
+
+	for date := range dh.History {
+		d := date
+
+		dates = append(dates, d)
+	}
+
+	sort.Slice(dates, func(i, j int) bool {
+		return dates[i].After(dates[j])
+	})
+
+	for _, date := range dates {
+		records := dh.History[date]
+
 		if len(records) > recnum {
 			return errors.New("wrong diff history data")
 		}
@@ -342,7 +359,7 @@ func printDiffHistory(ctx context.Context, dh models.DiffHistory) error {
 			}
 		}
 
-		if _, err := fmt.Fprintf(w, "%s \t %d \t %d \n", date.String(), len(l.Users), len(n.Users)); err != nil {
+		if _, err := fmt.Fprintf(w, "%s \t %d \t %d \n", date.Format(tLayout), len(l.Users), len(n.Users)); err != nil {
 			return fmt.Errorf("write user details line: %w", err)
 		}
 	}
