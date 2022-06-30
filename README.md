@@ -41,13 +41,12 @@ USAGE:
    instadiff-cli [global options] command [command options] [arguments...]
 
 VERSION:
-
 | app_name:     instadiff-cli                            |
-| version:      v1.6.0                                   |
+| version:      v1.6.3                                   |
 | go_version:   go1.18.3                                 |
-| commit:       e03384f8050cd48b3c824a562c248ed952333f4d |
-| short_commit: e03384f8                                 |
-| build_date:   2022-06-27T15:59:12Z                     |
+| commit:       5364e5d3ac3a6178d5d841b6bcefaf714ab02b20 |
+| short_commit: 5364e5d3                                 |
+| build_date:   2022-06-29T20:51:47Z                     |
         \   ^__^
          \  (oo)\_______
             (__)\       )\/\
