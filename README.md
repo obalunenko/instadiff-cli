@@ -93,17 +93,18 @@ Example of config file:
     "whitelist":[
       "user1",
       "user2",
-      "user3"
+      "user3",
+      "1234567"
     ],
     "limits":{
       "unfollow":100
     },
-    "sleep": 1
+    "sleep": 7
   },
   "storage": {
-    "local": true,
+    "local": false,
     "mongo": {
-      "url": "mongoURL:test",
+      "url": "mongodb://127.0.0.1:27017",
       "db": "testing"
     }
   }
