@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apex/log"
+	"github.com/caarlos0/log"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/gio"
 	"github.com/goreleaser/goreleaser/internal/ids"
@@ -418,7 +418,7 @@ const (
 
 func push(ctx *context.Context, snap *artifact.Artifact) error {
 	log := log.WithField("snap", snap.Name)
-	releases := snap.Extra[releasesExtra].([]string)
+	releases := artifact.ExtraOr(*snap, releasesExtra, []string{})
 	/* #nosec */
 	cmd := exec.CommandContext(ctx, "snapcraft", "upload", "--release="+strings.Join(releases, ","), snap.Path)
 	log.WithField("args", cmd.Args).Info("pushing snap")
