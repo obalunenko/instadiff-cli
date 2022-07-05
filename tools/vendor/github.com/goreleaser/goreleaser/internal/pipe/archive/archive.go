@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/apex/log"
+	"github.com/caarlos0/log"
 	"github.com/goreleaser/goreleaser/internal/archivefiles"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/ids"
@@ -236,7 +236,7 @@ func skip(ctx *context.Context, archive config.Archive, binaries []*artifact.Art
 		if err != nil {
 			return err
 		}
-		finalName := name + binary.ExtraOr(artifact.ExtraExt, "").(string)
+		finalName := name + artifact.ExtraOr(*binary, artifact.ExtraExt, "")
 		log.WithField("binary", binary.Name).
 			WithField("name", finalName).
 			Info("skip archiving")

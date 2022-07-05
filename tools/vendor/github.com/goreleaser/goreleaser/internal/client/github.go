@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apex/log"
-	"github.com/google/go-github/v44/github"
+	"github.com/caarlos0/log"
+	"github.com/google/go-github/v45/github"
 	"github.com/goreleaser/goreleaser/internal/artifact"
 	"github.com/goreleaser/goreleaser/internal/tmpl"
 	"github.com/goreleaser/goreleaser/pkg/config"

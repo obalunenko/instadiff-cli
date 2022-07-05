@@ -321,18 +321,22 @@ type APKScripts struct {
 
 // Deb is custom configs that are only available on deb packages.
 type Deb struct {
-	Arch        string       `yaml:"arch,omitempty" jsonschema:"title=architecture in deb nomenclature"`
-	Scripts     DebScripts   `yaml:"scripts,omitempty" jsonschema:"title=scripts"`
-	Triggers    DebTriggers  `yaml:"triggers,omitempty" jsonschema:"title=triggers"`
-	Breaks      []string     `yaml:"breaks,omitempty" jsonschema:"title=breaks"`
-	Signature   DebSignature `yaml:"signature,omitempty" jsonschema:"title=signature"`
-	Compression string       `yaml:"compression,omitempty" jsonschema:"title=compression algorithm to be used,enum=gzip,enum=xz,enum=none,default=gzip"`
+	Arch        string            `yaml:"arch,omitempty" jsonschema:"title=architecture in deb nomenclature"`
+	Scripts     DebScripts        `yaml:"scripts,omitempty" jsonschema:"title=scripts"`
+	Triggers    DebTriggers       `yaml:"triggers,omitempty" jsonschema:"title=triggers"`
+	Breaks      []string          `yaml:"breaks,omitempty" jsonschema:"title=breaks"`
+	Signature   DebSignature      `yaml:"signature,omitempty" jsonschema:"title=signature"`
+	Compression string            `yaml:"compression,omitempty" jsonschema:"title=compression algorithm to be used,enum=gzip,enum=xz,enum=none,default=gzip"`
+	Fields      map[string]string `yaml:"fields,omitempty" jsonschema:"title=fields"`
 }
 
 type DebSignature struct {
 	PackageSignature `yaml:",inline"`
+	// debsign, or dpkg-sig (defaults to debsign)
+	Method string `yaml:"method,omitempty" jsonschema:"title=method role,enum=debsign,enum=dpkg-sig,default=debsign"`
 	// origin, maint or archive (defaults to origin)
-	Type string `yaml:"type,omitempty" jsonschema:"title=signer role,enum=origin,enum=maint,enum=archive,default=origin"`
+	Type   string `yaml:"type,omitempty" jsonschema:"title=signer role,enum=origin,enum=maint,enum=archive,default=origin"`
+	Signer string `yaml:"signer,omitempty" jsonschema:"title=signer"`
 }
 
 // DebTriggers contains triggers only available for deb packages.
