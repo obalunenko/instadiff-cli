@@ -465,9 +465,6 @@ func (f File) JSONSchema() *jsonschema.Schema {
 		ExpandedStruct: true,
 	}
 	schema := reflector.Reflect(&t{})
-	// jsonschema would just refer to FileInfo in the definition. It doesn't get included there, as we override the
-	// generated schema with JSONSchema here. So we need to include it directly in the schema of File.
-	schema.Properties.Set("info", reflector.Reflect(&FileInfo{}).Type)
 	return &jsonschema.Schema{
 		OneOf: []*jsonschema.Schema{
 			{
