@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/axw/gocov v1.1.0
 	github.com/golangci/golangci-lint v1.46.2
-	github.com/goreleaser/goreleaser v1.10.2
+	github.com/goreleaser/goreleaser v1.10.3
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
 	github.com/obalunenko/coverbadger v1.2.0
