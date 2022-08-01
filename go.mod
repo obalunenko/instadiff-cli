@@ -9,7 +9,7 @@ require (
 	github.com/obalunenko/logger v0.5.0
 	github.com/obalunenko/version v1.1.0
 	github.com/ory/dockertest/v3 v3.9.1
-	github.com/schollz/progressbar/v3 v3.8.7
+	github.com/schollz/progressbar/v3 v3.9.0
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8

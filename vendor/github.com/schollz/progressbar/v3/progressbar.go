@@ -76,6 +76,10 @@ type config struct {
 	showIterationsPerSecond bool
 	showIterationsCount     bool
 
+	// whether the progress bar should show elapsed time.
+	// always enabled if predictTime is true.
+	elapsedTime bool
+
 	// whether the progress bar should attempt to predict the finishing
 	// time of the progress based on the start time and the average
 	// number of seconds between  increments.
@@ -179,6 +183,13 @@ func OptionEnableColorCodes(colorCodes bool) Option {
 	}
 }
 
+// OptionSetElapsedTime will enable elapsed time. always enabled if OptionSetPredictTime is true.
+func OptionSetElapsedTime(elapsedTime bool) Option {
+	return func(p *ProgressBar) {
+		p.config.elapsedTime = elapsedTime
+	}
+}
+
 // OptionSetPredictTime will also attempt to predict the time remaining.
 func OptionSetPredictTime(predictTime bool) Option {
 	return func(p *ProgressBar) {
@@ -264,6 +275,7 @@ func NewOptions64(max int64, options ...Option) *ProgressBar {
 			width:            40,
 			max:              max,
 			throttleDuration: 0 * time.Nanosecond,
+			elapsedTime:      true,
 			predictTime:      true,
 			spinnerType:      9,
 			invisible:        false,
@@ -317,7 +329,7 @@ func DefaultBytes(maxBytes int64, description ...string) *ProgressBar {
 	if len(description) > 0 {
 		desc = description[0]
 	}
-	bar := NewOptions64(
+	return NewOptions64(
 		maxBytes,
 		OptionSetDescription(desc),
 		OptionSetWriter(os.Stderr),
@@ -330,9 +342,8 @@ func DefaultBytes(maxBytes int64, description ...string) *ProgressBar {
 		}),
 		OptionSpinnerType(14),
 		OptionFullWidth(),
+		OptionSetRenderBlankState(true),
 	)
-	bar.RenderBlank()
-	return bar
 }
 
 // DefaultBytesSilent is the same as DefaultBytes, but does not output anywhere.
@@ -344,7 +355,7 @@ func DefaultBytesSilent(maxBytes int64, description ...string) *ProgressBar {
 	if len(description) > 0 {
 		desc = description[0]
 	}
-	bar := NewOptions64(
+	return NewOptions64(
 		maxBytes,
 		OptionSetDescription(desc),
 		OptionSetWriter(ioutil.Discard),
@@ -355,8 +366,6 @@ func DefaultBytesSilent(maxBytes int64, description ...string) *ProgressBar {
 		OptionSpinnerType(14),
 		OptionFullWidth(),
 	)
-	bar.RenderBlank()
-	return bar
 }
 
 // Default provides a progressbar with recommended defaults.
@@ -366,7 +375,7 @@ func Default(max int64, description ...string) *ProgressBar {
 	if len(description) > 0 {
 		desc = description[0]
 	}
-	bar := NewOptions64(
+	return NewOptions64(
 		max,
 		OptionSetDescription(desc),
 		OptionSetWriter(os.Stderr),
@@ -379,9 +388,8 @@ func Default(max int64, description ...string) *ProgressBar {
 		}),
 		OptionSpinnerType(14),
 		OptionFullWidth(),
+		OptionSetRenderBlankState(true),
 	)
-	bar.RenderBlank()
-	return bar
 }
 
 // DefaultSilent is the same as Default, but does not output anywhere.
@@ -393,7 +401,7 @@ func DefaultSilent(max int64, description ...string) *ProgressBar {
 	if len(description) > 0 {
 		desc = description[0]
 	}
-	bar := NewOptions64(
+	return NewOptions64(
 		max,
 		OptionSetDescription(desc),
 		OptionSetWriter(ioutil.Discard),
@@ -404,8 +412,6 @@ func DefaultSilent(max int64, description ...string) *ProgressBar {
 		OptionSpinnerType(14),
 		OptionFullWidth(),
 	)
-	bar.RenderBlank()
-	return bar
 }
 
 // String returns the current rendered version of the progress bar.
@@ -418,6 +424,9 @@ func (p *ProgressBar) String() string {
 func (p *ProgressBar) RenderBlank() error {
 	if p.config.invisible {
 		return nil
+	}
+	if p.state.currentNum == 0 {
+		p.state.lastShown = time.Time{}
 	}
 	return p.render()
 }
@@ -517,7 +526,10 @@ func (p *ProgressBar) Clear() error {
 // can be changed on the fly (as for a slow running process).
 func (p *ProgressBar) Describe(description string) {
 	p.config.description = description
-	p.RenderBlank()
+	if p.config.invisible {
+		return
+	}
+	p.render()
 }
 
 // New64 returns a new ProgressBar
@@ -557,7 +569,7 @@ func (p *ProgressBar) ChangeMax64(newMax int64) {
 	p.Add(0) // re-render
 }
 
-// IsFinished returns true if progreess bar is completed
+// IsFinished returns true if progress bar is completed
 func (p *ProgressBar) IsFinished() bool {
 	return p.state.finished
 }
@@ -671,7 +683,11 @@ func renderProgressBar(c config, s *state) (int, error) {
 	if len(s.counterLastTenRates) == 0 || s.finished {
 		// if no average samples, or if finished,
 		// then average rate should be the total rate
-		averageRate = s.currentBytes / time.Since(s.startTime).Seconds()
+		if t := time.Since(s.startTime).Seconds(); t > 0 {
+			averageRate = s.currentBytes / t
+		} else {
+			averageRate = 0
+		}
 	}
 
 	// show iteration count in "current/total" iterations format
@@ -702,19 +718,15 @@ func renderProgressBar(c config, s *state) (int, error) {
 		}
 	}
 
-	// show rolling average rate in kB/sec or MB/sec
-	if c.showBytes {
+	// show rolling average rate
+	if c.showBytes && averageRate > 0 && !math.IsInf(averageRate, 1) {
 		if bytesString == "" {
 			bytesString += "("
 		} else {
 			bytesString += ", "
 		}
-		kbPerSecond := averageRate / 1024.0
-		if kbPerSecond > 1024.0 {
-			bytesString += fmt.Sprintf("%0.3f MB/s", kbPerSecond/1024.0)
-		} else if kbPerSecond > 0 {
-			bytesString += fmt.Sprintf("%0.3f kB/s", kbPerSecond)
-		}
+		currentHumanize, currentSuffix := humanizeBytes(averageRate)
+		bytesString += fmt.Sprintf("%s%s/s", currentHumanize, currentSuffix)
 	}
 
 	// show iterations rate
@@ -735,13 +747,16 @@ func renderProgressBar(c config, s *state) (int, error) {
 	}
 
 	// show time prediction in "current/total" seconds format
-	if c.predictTime {
-		leftBrac = (time.Duration(time.Since(s.startTime).Seconds()) * time.Second).String()
+	switch {
+	case c.predictTime:
 		rightBracNum := (time.Duration((1/averageRate)*(float64(c.max)-float64(s.currentNum))) * time.Second)
 		if rightBracNum.Seconds() < 0 {
 			rightBracNum = 0 * time.Second
 		}
 		rightBrac = rightBracNum.String()
+		fallthrough
+	case c.elapsedTime:
+		leftBrac = (time.Duration(time.Since(s.startTime).Seconds()) * time.Second).String()
 	}
 
 	if c.fullWidth && !c.ignoreLength {
@@ -787,12 +802,21 @@ func renderProgressBar(c config, s *state) (int, error) {
 		repeatAmount = 0
 	}
 	if c.ignoreLength {
-		str = fmt.Sprintf("\r%s %s %s ",
-			spinners[c.spinnerType][int(math.Round(math.Mod(float64(time.Since(s.startTime).Milliseconds()/100), float64(len(spinners[c.spinnerType])))))],
-			c.description,
-			bytesString,
-		)
-	} else if leftBrac == "" {
+		if c.elapsedTime {
+			str = fmt.Sprintf("\r%s %s %s [%s] ",
+				spinners[c.spinnerType][int(math.Round(math.Mod(float64(time.Since(s.startTime).Milliseconds()/100), float64(len(spinners[c.spinnerType])))))],
+				c.description,
+				bytesString,
+				leftBrac,
+			)
+		} else {
+			str = fmt.Sprintf("\r%s %s %s ",
+				spinners[c.spinnerType][int(math.Round(math.Mod(float64(time.Since(s.startTime).Milliseconds()/100), float64(len(spinners[c.spinnerType])))))],
+				c.description,
+				bytesString,
+			)
+		}
+	} else if rightBrac == "" {
 		str = fmt.Sprintf("\r%s%4d%% %s%s%s%s %s ",
 			c.description,
 			s.currentPercent,
@@ -839,6 +863,9 @@ func renderProgressBar(c config, s *state) (int, error) {
 }
 
 func clearProgressBar(c config, s state) error {
+	if s.maxLineWidth == 0 {
+		return nil
+	}
 	if c.useANSICodes {
 		// write the "clear current line" ANSI escape sequence
 		return writeString(c, "\033[2K\r")
@@ -846,7 +873,7 @@ func clearProgressBar(c config, s state) error {
 	// fill the empty content
 	// to overwrite the progress bar and jump
 	// back to the beginning of the line
-	str := fmt.Sprintf("\r%s\r", strings.Repeat(" ", s.maxLineWidth))
+	str := fmt.Sprintf("\r%s", strings.Repeat(" ", s.maxLineWidth))
 	return writeString(c, str)
 	// the following does not show correctly if the previous line is longer than subsequent line
 	// return writeString(c, "\r")
@@ -928,7 +955,7 @@ func humanizeBytes(s float64) (string, string) {
 	sizes := []string{" B", " kB", " MB", " GB", " TB", " PB", " EB"}
 	base := 1024.0
 	if s < 10 {
-		return fmt.Sprintf("%2.0f", s), "B"
+		return fmt.Sprintf("%2.0f", s), sizes[0]
 	}
 	e := math.Floor(logn(float64(s), base))
 	suffix := sizes[int(e)]
