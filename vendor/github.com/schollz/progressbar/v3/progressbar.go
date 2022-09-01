@@ -14,7 +14,7 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/mitchellh/colorstring"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // ProgressBar is a thread-safe, simple
@@ -79,6 +79,8 @@ type config struct {
 	// whether the progress bar should show elapsed time.
 	// always enabled if predictTime is true.
 	elapsedTime bool
+
+	showElapsedTimeOnFinish bool
 
 	// whether the progress bar should attempt to predict the finishing
 	// time of the progress based on the start time and the average
@@ -211,7 +213,14 @@ func OptionShowIts() Option {
 	}
 }
 
-// OptionSetItsString sets what's displayed for interations a second. The default is "it" which would display: "it/s"
+// OptionShowElapsedOnFinish will keep the display of elapsed time on finish
+func OptionShowElapsedTimeOnFinish() Option {
+	return func(p *ProgressBar) {
+		p.config.showElapsedTimeOnFinish = true
+	}
+}
+
+// OptionSetItsString sets what's displayed for iterations a second. The default is "it" which would display: "it/s"
 func OptionSetItsString(iterationString string) Option {
 	return func(p *ProgressBar) {
 		p.config.iterationString = iterationString
@@ -760,9 +769,9 @@ func renderProgressBar(c config, s *state) (int, error) {
 	}
 
 	if c.fullWidth && !c.ignoreLength {
-		width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+		width, _, err := term.GetSize(int(os.Stdout.Fd()))
 		if err != nil {
-			width, _, err = terminal.GetSize(int(os.Stderr.Fd()))
+			width, _, err = term.GetSize(int(os.Stderr.Fd()))
 			if err != nil {
 				width = 80
 			}
@@ -837,6 +846,9 @@ func renderProgressBar(c config, s *state) (int, error) {
 				c.theme.BarEnd,
 				bytesString,
 			)
+			if c.showElapsedTimeOnFinish {
+				str = fmt.Sprintf("%s [%s]", str, leftBrac)
+			}
 		} else {
 			str = fmt.Sprintf("\r%s%4d%% %s%s%s%s %s [%s:%s]",
 				c.description,
@@ -873,7 +885,7 @@ func clearProgressBar(c config, s state) error {
 	// fill the empty content
 	// to overwrite the progress bar and jump
 	// back to the beginning of the line
-	str := fmt.Sprintf("\r%s", strings.Repeat(" ", s.maxLineWidth))
+	str := fmt.Sprintf("\r%s\r", strings.Repeat(" ", s.maxLineWidth))
 	return writeString(c, str)
 	// the following does not show correctly if the previous line is longer than subsequent line
 	// return writeString(c, "\r")
