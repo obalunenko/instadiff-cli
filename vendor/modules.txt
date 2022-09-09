@@ -313,7 +313,7 @@ github.com/subosito/gotenv
 # github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 ## explicit
 github.com/tcnksm/go-input
-# github.com/urfave/cli/v2 v2.14.1
+# github.com/urfave/cli/v2 v2.15.0
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xdg-go/pbkdf2 v1.0.0
