@@ -2,7 +2,7 @@
 ## explicit
 github.com/Azure/go-ansiterm
 github.com/Azure/go-ansiterm/winterm
-# github.com/Davincible/goinsta/v3 v3.1.3
+# github.com/Davincible/goinsta/v3 v3.2.1
 ## explicit; go 1.18
 github.com/Davincible/goinsta/v3
 github.com/Davincible/goinsta/v3/utilities
@@ -22,7 +22,7 @@ github.com/cenkalti/backoff/v4
 # github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d
 ## explicit; go 1.12
 github.com/certifi/gocertifi
-# github.com/chromedp/cdproto v0.0.0-20220530001853-c0f376d894d1
+# github.com/chromedp/cdproto v0.0.0-20220901095120-1a01299a2163
 ## explicit; go 1.18
 github.com/chromedp/cdproto
 github.com/chromedp/cdproto/accessibility
@@ -70,7 +70,7 @@ github.com/chromedp/cdproto/tethering
 github.com/chromedp/cdproto/tracing
 github.com/chromedp/cdproto/webaudio
 github.com/chromedp/cdproto/webauthn
-# github.com/chromedp/chromedp v0.8.2
+# github.com/chromedp/chromedp v0.8.5
 ## explicit; go 1.18
 github.com/chromedp/chromedp
 github.com/chromedp/chromedp/device
@@ -388,7 +388,7 @@ golang.org/x/net/context
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20220829200755-d48e67d00261
+# golang.org/x/sys v0.0.0-20220908164124-27713097b956
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/plan9
