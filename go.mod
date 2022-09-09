@@ -3,7 +3,7 @@ module github.com/obalunenko/instadiff-cli
 go 1.18
 
 require (
-	github.com/Davincible/goinsta/v3 v3.1.3
+	github.com/Davincible/goinsta/v3 v3.2.1
 	github.com/briandowns/spinner v1.19.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/logger v0.5.0
@@ -23,8 +23,8 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
-	github.com/chromedp/cdproto v0.0.0-20220530001853-c0f376d894d1 // indirect
-	github.com/chromedp/chromedp v0.8.2 // indirect
+	github.com/chromedp/cdproto v0.0.0-20220901095120-1a01299a2163 // indirect
+	github.com/chromedp/chromedp v0.8.5 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
@@ -83,7 +83,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

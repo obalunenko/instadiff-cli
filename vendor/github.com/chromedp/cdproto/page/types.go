@@ -7,10 +7,20 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
 )
+
+// AdScriptID identifies the bottom-most script which caused the frame to be
+// labelled as an ad.
+//
+// See: https://chromedevtools.github.io/devtools-protocol/tot/Page#type-AdScriptId
+type AdScriptID struct {
+	ScriptID   runtime.ScriptID         `json:"scriptId"`   // Script Id of the bottom-most script which caused the frame to be labelled as an ad.
+	DebuggerID runtime.UniqueDebuggerID `json:"debuggerId"` // Id of adScriptId's debugger.
+}
 
 // PermissionsPolicyFeature all Permissions Policy features. This enum should
 // match the one defined in
@@ -64,6 +74,7 @@ const (
 	PermissionsPolicyFeatureEncryptedMedia              PermissionsPolicyFeature = "encrypted-media"
 	PermissionsPolicyFeatureExecutionWhileOutOfViewport PermissionsPolicyFeature = "execution-while-out-of-viewport"
 	PermissionsPolicyFeatureExecutionWhileNotRendered   PermissionsPolicyFeature = "execution-while-not-rendered"
+	PermissionsPolicyFeatureFederatedCredentials        PermissionsPolicyFeature = "federated-credentials"
 	PermissionsPolicyFeatureFocusWithoutUserActivation  PermissionsPolicyFeature = "focus-without-user-activation"
 	PermissionsPolicyFeatureFullscreen                  PermissionsPolicyFeature = "fullscreen"
 	PermissionsPolicyFeatureFrobulate                   PermissionsPolicyFeature = "frobulate"
@@ -87,9 +98,11 @@ const (
 	PermissionsPolicyFeatureScreenWakeLock              PermissionsPolicyFeature = "screen-wake-lock"
 	PermissionsPolicyFeatureSerial                      PermissionsPolicyFeature = "serial"
 	PermissionsPolicyFeatureSharedAutofill              PermissionsPolicyFeature = "shared-autofill"
-	PermissionsPolicyFeatureStorageAccessAPI            PermissionsPolicyFeature = "storage-access-api"
+	PermissionsPolicyFeatureSharedStorage               PermissionsPolicyFeature = "shared-storage"
+	PermissionsPolicyFeatureStorageAccess               PermissionsPolicyFeature = "storage-access"
 	PermissionsPolicyFeatureSyncXhr                     PermissionsPolicyFeature = "sync-xhr"
 	PermissionsPolicyFeatureTrustTokenRedemption        PermissionsPolicyFeature = "trust-token-redemption"
+	PermissionsPolicyFeatureUnload                      PermissionsPolicyFeature = "unload"
 	PermissionsPolicyFeatureUsb                         PermissionsPolicyFeature = "usb"
 	PermissionsPolicyFeatureVerticalScroll              PermissionsPolicyFeature = "vertical-scroll"
 	PermissionsPolicyFeatureWebShare                    PermissionsPolicyFeature = "web-share"
@@ -186,6 +199,8 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureExecutionWhileOutOfViewport
 	case PermissionsPolicyFeatureExecutionWhileNotRendered:
 		*t = PermissionsPolicyFeatureExecutionWhileNotRendered
+	case PermissionsPolicyFeatureFederatedCredentials:
+		*t = PermissionsPolicyFeatureFederatedCredentials
 	case PermissionsPolicyFeatureFocusWithoutUserActivation:
 		*t = PermissionsPolicyFeatureFocusWithoutUserActivation
 	case PermissionsPolicyFeatureFullscreen:
@@ -232,12 +247,16 @@ func (t *PermissionsPolicyFeature) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyFeatureSerial
 	case PermissionsPolicyFeatureSharedAutofill:
 		*t = PermissionsPolicyFeatureSharedAutofill
-	case PermissionsPolicyFeatureStorageAccessAPI:
-		*t = PermissionsPolicyFeatureStorageAccessAPI
+	case PermissionsPolicyFeatureSharedStorage:
+		*t = PermissionsPolicyFeatureSharedStorage
+	case PermissionsPolicyFeatureStorageAccess:
+		*t = PermissionsPolicyFeatureStorageAccess
 	case PermissionsPolicyFeatureSyncXhr:
 		*t = PermissionsPolicyFeatureSyncXhr
 	case PermissionsPolicyFeatureTrustTokenRedemption:
 		*t = PermissionsPolicyFeatureTrustTokenRedemption
+	case PermissionsPolicyFeatureUnload:
+		*t = PermissionsPolicyFeatureUnload
 	case PermissionsPolicyFeatureUsb:
 		*t = PermissionsPolicyFeatureUsb
 	case PermissionsPolicyFeatureVerticalScroll:
@@ -275,6 +294,7 @@ const (
 	PermissionsPolicyBlockReasonHeader            PermissionsPolicyBlockReason = "Header"
 	PermissionsPolicyBlockReasonIframeAttribute   PermissionsPolicyBlockReason = "IframeAttribute"
 	PermissionsPolicyBlockReasonInFencedFrameTree PermissionsPolicyBlockReason = "InFencedFrameTree"
+	PermissionsPolicyBlockReasonInIsolatedApp     PermissionsPolicyBlockReason = "InIsolatedApp"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -296,6 +316,8 @@ func (t *PermissionsPolicyBlockReason) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PermissionsPolicyBlockReasonIframeAttribute
 	case PermissionsPolicyBlockReasonInFencedFrameTree:
 		*t = PermissionsPolicyBlockReasonInFencedFrameTree
+	case PermissionsPolicyBlockReasonInIsolatedApp:
+		*t = PermissionsPolicyBlockReasonInIsolatedApp
 
 	default:
 		in.AddError(errors.New("unknown PermissionsPolicyBlockReason value"))
@@ -958,7 +980,6 @@ const (
 	BackForwardCacheNotRestoredReasonContentMediaDevicesDispatcherHost                        BackForwardCacheNotRestoredReason = "ContentMediaDevicesDispatcherHost"
 	BackForwardCacheNotRestoredReasonContentWebBluetooth                                      BackForwardCacheNotRestoredReason = "ContentWebBluetooth"
 	BackForwardCacheNotRestoredReasonContentWebUSB                                            BackForwardCacheNotRestoredReason = "ContentWebUSB"
-	BackForwardCacheNotRestoredReasonContentMediaSession                                      BackForwardCacheNotRestoredReason = "ContentMediaSession"
 	BackForwardCacheNotRestoredReasonContentMediaSessionService                               BackForwardCacheNotRestoredReason = "ContentMediaSessionService"
 	BackForwardCacheNotRestoredReasonContentScreenReader                                      BackForwardCacheNotRestoredReason = "ContentScreenReader"
 	BackForwardCacheNotRestoredReasonEmbedderPopupBlockerTabHelper                            BackForwardCacheNotRestoredReason = "EmbedderPopupBlockerTabHelper"
@@ -1201,8 +1222,6 @@ func (t *BackForwardCacheNotRestoredReason) UnmarshalEasyJSON(in *jlexer.Lexer) 
 		*t = BackForwardCacheNotRestoredReasonContentWebBluetooth
 	case BackForwardCacheNotRestoredReasonContentWebUSB:
 		*t = BackForwardCacheNotRestoredReasonContentWebUSB
-	case BackForwardCacheNotRestoredReasonContentMediaSession:
-		*t = BackForwardCacheNotRestoredReasonContentMediaSession
 	case BackForwardCacheNotRestoredReasonContentMediaSessionService:
 		*t = BackForwardCacheNotRestoredReasonContentMediaSessionService
 	case BackForwardCacheNotRestoredReasonContentScreenReader:
@@ -1358,7 +1377,10 @@ const (
 	PrerenderFinalStatusTriggerBackgrounded                       PrerenderFinalStatus = "TriggerBackgrounded"
 	PrerenderFinalStatusEmbedderTriggeredAndSameOriginRedirected  PrerenderFinalStatus = "EmbedderTriggeredAndSameOriginRedirected"
 	PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected PrerenderFinalStatus = "EmbedderTriggeredAndCrossOriginRedirected"
-	PrerenderFinalStatusEmbedderTriggeredAndDestroyed             PrerenderFinalStatus = "EmbedderTriggeredAndDestroyed"
+	PrerenderFinalStatusMemoryLimitExceeded                       PrerenderFinalStatus = "MemoryLimitExceeded"
+	PrerenderFinalStatusFailToGetMemoryUsage                      PrerenderFinalStatus = "FailToGetMemoryUsage"
+	PrerenderFinalStatusDataSaverEnabled                          PrerenderFinalStatus = "DataSaverEnabled"
+	PrerenderFinalStatusHasEffectiveURL                           PrerenderFinalStatus = "HasEffectiveUrl"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -1438,8 +1460,14 @@ func (t *PrerenderFinalStatus) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = PrerenderFinalStatusEmbedderTriggeredAndSameOriginRedirected
 	case PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected:
 		*t = PrerenderFinalStatusEmbedderTriggeredAndCrossOriginRedirected
-	case PrerenderFinalStatusEmbedderTriggeredAndDestroyed:
-		*t = PrerenderFinalStatusEmbedderTriggeredAndDestroyed
+	case PrerenderFinalStatusMemoryLimitExceeded:
+		*t = PrerenderFinalStatusMemoryLimitExceeded
+	case PrerenderFinalStatusFailToGetMemoryUsage:
+		*t = PrerenderFinalStatusFailToGetMemoryUsage
+	case PrerenderFinalStatusDataSaverEnabled:
+		*t = PrerenderFinalStatusDataSaverEnabled
+	case PrerenderFinalStatusHasEffectiveURL:
+		*t = PrerenderFinalStatusHasEffectiveURL
 
 	default:
 		in.AddError(errors.New("unknown PrerenderFinalStatus value"))
