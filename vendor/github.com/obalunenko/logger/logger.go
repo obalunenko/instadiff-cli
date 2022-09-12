@@ -60,7 +60,7 @@ type logrusWrapper struct {
 }
 
 func (l logrusWrapper) LogLevel() Level {
-	return Level{Level: l.le.Level}
+	return Level{Level: logInstance.GetLevel()}
 }
 
 func (l logrusWrapper) Debug(msg string) {
