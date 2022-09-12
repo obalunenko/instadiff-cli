@@ -390,12 +390,22 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 		return nil, ctx.Err()
 	}
 
+	seen := make(map[int64]bool, len(users.Users))
+
 	usersList := make([]models.User, 0, len(users.Users))
 
 	for users.Next() {
 		for i := range users.Users {
+			u := users.Users[i]
+
+			if seen[u.ID] {
+				continue
+			}
+
 			usersList = append(usersList,
-				models.MakeUser(users.Users[i].ID, users.Users[i].Username, users.Users[i].FullName))
+				models.MakeUser(u.ID, u.Username, u.FullName))
+
+			seen[u.ID] = true
 		}
 	}
 
