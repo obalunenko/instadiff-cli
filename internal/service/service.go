@@ -67,7 +67,6 @@ type StopFunc func() error
 // // handle error
 // }
 // defer svc.Stop().
-//
 func New(ctx context.Context, cfg config.Config, cfgPath string, isIncognito bool) (*Service, error) {
 	cl, err := client.New(ctx, cfgPath)
 	if err != nil {
@@ -362,7 +361,7 @@ func (svc *Service) FollowUsers(ctx context.Context, usernames []string) (int, e
 }
 
 func (svc *Service) whitelistNotMutual(notMutual []models.User) []models.User {
-	result := notMutual[:0]
+	result := make([]models.User, 0, len(notMutual))
 
 	whitelist := svc.instagram.Whitelist()
 
