@@ -502,9 +502,13 @@ func (svc *Service) actUsers(ctx context.Context, users []models.User, act actio
 }
 
 func (svc *Service) actUser(ctx context.Context, u models.User, act actions.UserAction, useWhitelist bool) error {
-	log.WithField(ctx, "action", act.String()).Debug("Action in progress")
+	log.WithField(ctx, "action", act.String()).
+		WithField("user_id", u.ID).
+		Debug("Action in progress")
 
-	defer log.WithField(ctx, "action", act.String()).Debug("Action finished")
+	defer log.WithField(ctx, "action", act.String()).
+		WithField("user_id", u.ID).
+		Debug("Action finished")
 
 	whitelist := svc.instagram.Whitelist()
 
