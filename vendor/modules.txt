@@ -2,7 +2,7 @@
 ## explicit
 github.com/Azure/go-ansiterm
 github.com/Azure/go-ansiterm/winterm
-# github.com/Davincible/goinsta/v3 v3.2.1
+# github.com/Davincible/goinsta/v3 v3.2.2
 ## explicit; go 1.18
 github.com/Davincible/goinsta/v3
 github.com/Davincible/goinsta/v3/utilities
