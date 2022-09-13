@@ -415,7 +415,7 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 			return nil, fmt.Errorf("users iterate: %w", err)
 		}
 	}
-	
+
 	sort.Slice(usersList, func(i, j int) bool {
 		return usersList[i].ID > usersList[j].ID
 	})
