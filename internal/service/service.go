@@ -270,7 +270,7 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 		followersMap[fu.ID] = struct{}{}
 	}
 
-	var notmutual []models.User
+	var notmutual = make([]models.User, 0, len(followings))
 
 	for _, fu := range followings {
 		if _, mutual := followersMap[fu.ID]; !mutual {
