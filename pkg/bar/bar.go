@@ -14,6 +14,7 @@ import (
 )
 
 // BType represents kind of progress bar.
+//
 //go:generate stringer -type=BType -trimprefix=BType
 type BType uint
 
@@ -52,14 +53,14 @@ type Bar interface {
 // pBar := bar.New(len(notMutual), log.GetLevel())
 //
 // go pBar.Run(ctx)
-// defer func() {
-//	pBar.Finish()
-// }()
 //
-// for i := range 100{
-// 	pBar.Progress() <- struct{}{}
-// }.
+//	defer func() {
+//		pBar.Finish()
+//	}()
 //
+//	for i := range 100{
+//		pBar.Progress() <- struct{}{}
+//	}.
 func New(max int, barType BType) Bar {
 	switch barType { //nolint:exhaustive // this is expected behavior.
 	case BTypeRendered:
