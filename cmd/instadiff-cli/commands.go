@@ -24,7 +24,7 @@ func commands(ctx context.Context) []*cli.Command {
 		},
 		{
 			Name:    "clean-followings",
-			Aliases: []string{"clean", "unfollow-untmutual", "remove-untmutual", "rm-unmutual"},
+			Aliases: []string{"clean", "unfollow-unmutual", "remove-unmutual", "rm-unmutual"},
 			Usage:   "Un follow not mutual followings, except of whitelisted",
 			Action:  executeCmd(ctx, cmdCleanFollowings),
 		},
