@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/Davincible/goinsta/v3"
@@ -266,7 +265,7 @@ func (i *Client) UserFollowers(ctx context.Context, user models.User) ([]models.
 
 	u.SetInstagram(i.client)
 
-	return makeUsersList(ctx, u.Followers())
+	return makeUsersList(ctx, u.Followers(""))
 }
 
 // UserFollowings returns user followings.
@@ -278,7 +277,7 @@ func (i *Client) UserFollowings(ctx context.Context, user models.User) ([]models
 
 	u.SetInstagram(i.client)
 
-	return makeUsersList(ctx, u.Following())
+	return makeUsersList(ctx, u.Following("", goinsta.LatestOrder))
 }
 
 // GetUserByName finds user by username.
@@ -313,12 +312,12 @@ func (i *Client) Unfollow(ctx context.Context, user models.User) error {
 
 // Followers returns list of followers.
 func (i *Client) Followers(ctx context.Context) ([]models.User, error) {
-	return makeUsersList(ctx, i.client.Account.Followers())
+	return makeUsersList(ctx, i.client.Account.Followers(""))
 }
 
 // Followings returns list of followings.
 func (i *Client) Followings(ctx context.Context) ([]models.User, error) {
-	return makeUsersList(ctx, i.client.Account.Following())
+	return makeUsersList(ctx, i.client.Account.Following("", goinsta.LatestOrder))
 }
 
 // Username returns current account username.
@@ -416,9 +415,9 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 		}
 	}
 
-	sort.Slice(usersList, func(i, j int) bool {
-		return usersList[i].ID > usersList[j].ID
-	})
+	// sort.Slice(usersList, func(i, j int) bool {
+	//	return usersList[i].ID > usersList[j].ID
+	// })
 
 	return usersList, nil
 }
