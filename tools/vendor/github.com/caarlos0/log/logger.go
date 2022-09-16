@@ -11,11 +11,11 @@ import (
 
 // Styles mapping.
 var Styles = [...]lipgloss.Style{
-	DebugLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("15")),
-	InfoLevel:  lipgloss.NewStyle().Foreground(lipgloss.Color("12")),
-	WarnLevel:  lipgloss.NewStyle().Foreground(lipgloss.Color("11")),
-	ErrorLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("9")),
-	FatalLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("9")),
+	DebugLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("15")).Bold(true),
+	InfoLevel:  lipgloss.NewStyle().Foreground(lipgloss.Color("12")).Bold(true),
+	WarnLevel:  lipgloss.NewStyle().Foreground(lipgloss.Color("11")).Bold(true),
+	ErrorLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true),
+	FatalLevel: lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true),
 }
 
 // Strings mapping.
@@ -94,9 +94,7 @@ func (l *Logger) handleLog(e *Entry) {
 	fmt.Fprintf(
 		l.Writer,
 		"%s %-*s",
-		style.Bold(true).Render(
-			fmt.Sprintf("%*s", 1+l.Padding, level),
-		),
+		style.Render(fmt.Sprintf("%*s", 1+l.Padding, level)),
 		l.rightPadding(names),
 		e.Message,
 	)
