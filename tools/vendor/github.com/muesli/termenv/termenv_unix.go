@@ -150,8 +150,8 @@ func readNextByte(f File) (byte, error) {
 }
 
 // readNextResponse reads either an OSC response or a cursor position response:
-//  * OSC response: "\x1b]11;rgb:1111/1111/1111\x1b\\"
-//  * cursor position response: "\x1b[42;1R"
+//   - OSC response: "\x1b]11;rgb:1111/1111/1111\x1b\\"
+//   - cursor position response: "\x1b[42;1R"
 func readNextResponse(fd File) (response string, isOSC bool, err error) {
 	start, err := readNextByte(fd)
 	if err != nil {
@@ -219,7 +219,7 @@ func (o Output) termStatusReport(sequence int) (string, error) {
 	// screen/tmux can't support OSC, because they can be connected to multiple
 	// terminals concurrently.
 	term := o.environ.Getenv("TERM")
-	if strings.HasPrefix(term, "screen") {
+	if strings.HasPrefix(term, "screen") || strings.HasPrefix(term, "tmux") {
 		return "", ErrStatusReport
 	}
 

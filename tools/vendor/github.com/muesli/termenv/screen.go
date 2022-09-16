@@ -49,6 +49,13 @@ const (
 	AltScreenSeq     = "?1049h"
 	ExitAltScreenSeq = "?1049l"
 
+	// Bracketed paste.
+	// https://en.wikipedia.org/wiki/Bracketed-paste
+	EnableBracketedPasteSeq  = "?2004h"
+	DisableBracketedPasteSeq = "?2004l"
+	StartBracketedPasteSeq   = "200~"
+	EndBracketedPasteSeq     = "201~"
+
 	// Session.
 	SetWindowTitleSeq     = "2;%s\007"
 	SetForegroundColorSeq = "10;%s\007"
@@ -255,6 +262,16 @@ func (o Output) DisableMouseAllMotion() {
 // SetWindowTitle sets the terminal window title.
 func (o Output) SetWindowTitle(title string) {
 	fmt.Fprintf(o.tty, OSC+SetWindowTitleSeq, title)
+}
+
+// EnableBracketedPaste enables bracketed paste.
+func (o Output) EnableBracketedPaste() {
+	fmt.Fprintf(o.tty, CSI+EnableBracketedPasteSeq)
+}
+
+// DisableBracketedPaste disables bracketed paste.
+func (o Output) DisableBracketedPaste() {
+	fmt.Fprintf(o.tty, CSI+DisableBracketedPasteSeq)
 }
 
 // Legacy functions.
@@ -529,4 +546,18 @@ func DisableMouseAllMotion() {
 // Deprecated: please use termenv.Output instead.
 func SetWindowTitle(title string) {
 	output.SetWindowTitle(title)
+}
+
+// EnableBracketedPaste enables bracketed paste.
+//
+// Deprecated: please use termenv.Output instead.
+func EnableBracketedPaste() {
+	output.EnableBracketedPaste()
+}
+
+// DisableBracketedPaste disables bracketed paste.
+//
+// Deprecated: please use termenv.Output instead.
+func DisableBracketedPaste() {
+	output.DisableBracketedPaste()
 }

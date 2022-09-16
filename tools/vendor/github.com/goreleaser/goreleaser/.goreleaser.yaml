@@ -223,7 +223,7 @@ nfpms:
         file_info:
           mode: 0644
       - src: ./completions/goreleaser.fish
-        dst: /usr/share/fish/completions/goreleaser.fish
+        dst: /usr/share/fish/vendor_completions.d/goreleaser.fish
         file_info:
           mode: 0644
       - src: ./completions/goreleaser.zsh
@@ -318,3 +318,8 @@ announce:
   discord:
     enabled: true
     message_template: 'GoReleaser {{ .Tag }} is out! Check it out: https://github.com/goreleaser/goreleaser/releases/tag/{{ .Tag }}'
+
+
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=jcroql
+

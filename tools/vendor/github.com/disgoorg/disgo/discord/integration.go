@@ -77,7 +77,7 @@ func (i *UnmarshalIntegration) UnmarshalJSON(data []byte) error {
 		integration = v
 
 	default:
-		err = fmt.Errorf("unkown integration with type %s received", cType.Type)
+		err = fmt.Errorf("unknown integration with type %s received", cType.Type)
 	}
 
 	if err != nil {
@@ -171,6 +171,7 @@ type BotIntegration struct {
 	Enabled       bool                   `json:"enabled"`
 	Account       IntegrationAccount     `json:"account"`
 	Application   IntegrationApplication `json:"application"`
+	Scopes        []OAuth2Scope          `json:"scopes"`
 }
 
 func (i BotIntegration) MarshalJSON() ([]byte, error) {
