@@ -176,6 +176,12 @@ func (svc *Service) getUsers(ctx context.Context, bt models.UsersBatchType) ([]m
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
+		if errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).Warn("Failed to store users")
+
+			return users, nil
+		}
+
 		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
 	}
 
