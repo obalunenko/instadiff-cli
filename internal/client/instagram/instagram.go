@@ -317,7 +317,7 @@ func (i *Client) Followers(ctx context.Context) ([]models.User, error) {
 
 // Followings returns list of followings.
 func (i *Client) Followings(ctx context.Context) ([]models.User, error) {
-	return makeUsersList(ctx, i.client.Account.Following("", goinsta.EarliestOrder))
+	return makeUsersList(ctx, i.client.Account.Following("", goinsta.LatestOrder))
 }
 
 // Username returns current account username.
@@ -414,10 +414,6 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 			return nil, fmt.Errorf("users iterate: %w", err)
 		}
 	}
-
-	// sort.Slice(usersList, func(i, j int) bool {
-	//	return usersList[i].ID > usersList[j].ID
-	// })
 
 	return usersList, nil
 }
