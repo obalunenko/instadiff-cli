@@ -9,10 +9,6 @@ TOOLS_DIR=${REPO_ROOT}/tools
 
 echo "${SCRIPT_NAME} is running... "
 
-go env -w GOPROXY=https://goproxy.io,https://proxy.golang.org
-go env -w GOPRIVATE=github.com/melsoft-games/bitech-go-shared
-go env -w GONOSUMDB=github.com/melsoft-games/*
-
 sync_vendor() {
   go mod tidy -v
   go mod vendor
