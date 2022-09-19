@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/axw/gocov v1.1.0
 	github.com/golangci/golangci-lint v1.49.0
-	github.com/goreleaser/goreleaser v1.11.3
+	github.com/goreleaser/goreleaser v1.11.4
 	github.com/matm/gocov-html v0.0.0-20200509184451-71874e2e203b
 	github.com/mattn/goveralls v0.0.11
 	github.com/obalunenko/coverbadger v1.2.0
