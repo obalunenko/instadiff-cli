@@ -75,7 +75,11 @@ type Params struct {
 // }
 // defer svc.Stop().
 func New(ctx context.Context, cfg config.Config, params Params) (*Service, error) {
-	cl, err := client.New(ctx, params.SessionPath, params.Username)
+	cl, err := client.New(ctx, client.Params{
+		SessionPath: params.SessionPath,
+		Sleep:       cfg.Sleep(),
+		Username:    params.Username,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("make client: %w", err)
 	}
