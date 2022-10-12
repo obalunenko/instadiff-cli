@@ -24,6 +24,7 @@ const (
 	cfgPath   = "config_path"
 	incognito = "incognito"
 	users     = "users"
+	username  = "username"
 )
 
 func main() {
@@ -80,7 +81,11 @@ func serviceSetUp(c *cli.Context) (*service.Service, error) {
 		os.Exit(1)
 	}()
 
-	return service.New(cancelCtx, cfg, cfgDir, c.Bool(incognito))
+	return service.New(cancelCtx, cfg, service.Params{
+		SessionPath: cfgDir,
+		IsIncognito: c.Bool(incognito),
+		Username:    c.String(username),
+	})
 }
 
 func setLogger(c *cli.Context) {

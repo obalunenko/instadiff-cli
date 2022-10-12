@@ -30,20 +30,24 @@ type Client struct {
 }
 
 // New Client constructor.
-func New(ctx context.Context, cfgPath string) (*Client, error) {
-	uname, err := username()
-	if err != nil {
-		return nil, fmt.Errorf("username: %w", err)
+func New(ctx context.Context, sessPath, uname string) (*Client, error) {
+	var err error
+
+	if uname == "" {
+		uname, err = usernameInput()
+		if err != nil {
+			return nil, fmt.Errorf("username: %w", err)
+		}
 	}
 
-	sessFile := filepath.Join(cfgPath, fmt.Sprintf("%s.sess", uname))
+	sessFile := filepath.Join(sessPath, fmt.Sprintf("%s.sess", uname))
 
 	cl, err := importFromFile(ctx, sessFile)
 	if err == nil {
 		return cl, nil
 	}
 
-	pwd, err := password()
+	pwd, err := passwordInput()
 	if err != nil {
 		return nil, fmt.Errorf("password: %w", err)
 	}
@@ -152,14 +156,14 @@ func maybeChallengeRequired(insta *goinsta.Instagram, err error) (*goinsta.Insta
 	return insta, nil
 }
 
-func username() (string, error) {
+func usernameInput() (string, error) {
 	ask := "What is your username?"
 	key := "username"
 
 	return getPrompt(ask, key)
 }
 
-func password() (string, error) {
+func passwordInput() (string, error) {
 	ask := "What is your password?"
 	key := "password"
 
@@ -394,6 +398,7 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 
 	usersList := make([]models.User, 0, len(users.Users))
 
+	// TODO(@obalunenko): Add sleep here to prevent too many requests blocking.
 	for users.Next() {
 		for i := range users.Users {
 			u := users.Users[i]
