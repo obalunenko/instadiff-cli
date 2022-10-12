@@ -59,6 +59,12 @@ type limits struct {
 // StopFunc closure func that will stop service.
 type StopFunc func() error
 
+type Params struct {
+	SessionPath string
+	IsIncognito bool
+	Username    string
+}
+
 // New creates new instance of Service instance and returns closure func that will stop service.
 //
 // Usage:
@@ -67,8 +73,8 @@ type StopFunc func() error
 // // handle error
 // }
 // defer svc.Stop().
-func New(ctx context.Context, cfg config.Config, cfgPath string, isIncognito bool) (*Service, error) {
-	cl, err := client.New(ctx, cfgPath)
+func New(ctx context.Context, cfg config.Config, params Params) (*Service, error) {
+	cl, err := client.New(ctx, params.SessionPath, params.Username)
 	if err != nil {
 		return nil, fmt.Errorf("make client: %w", err)
 	}
@@ -102,7 +108,7 @@ func New(ctx context.Context, cfg config.Config, cfgPath string, isIncognito boo
 			sleep: cfg.Sleep(),
 		},
 		storage:   dbc,
-		incognito: isIncognito,
+		incognito: params.IsIncognito,
 	}
 
 	return &svc, nil

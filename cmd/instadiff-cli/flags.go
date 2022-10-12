@@ -18,6 +18,12 @@ func globalFlags() []cli.Flag {
 			Required: false,
 			Value:    "INFO",
 		},
+		&cli.StringFlag{
+			Name:     username,
+			Usage:    "Username (optional parameter to avoid manual input during cli run)",
+			Required: false,
+			Value:    "",
+		},
 		&cli.BoolFlag{
 			Name:     incognito,
 			Usage:    "Incognito removes session on application exit.",
