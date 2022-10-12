@@ -59,6 +59,7 @@ type limits struct {
 // StopFunc closure func that will stop service.
 type StopFunc func() error
 
+// Params holds Service constructor parameters.
 type Params struct {
 	SessionPath string
 	IsIncognito bool
