@@ -30,7 +30,7 @@ type Client struct {
 }
 
 // New Client constructor.
-func New(ctx context.Context, sessPath string, uname string) (*Client, error) {
+func New(ctx context.Context, sessPath, uname string) (*Client, error) {
 	var err error
 
 	if uname == "" {

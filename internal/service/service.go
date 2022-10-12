@@ -69,7 +69,7 @@ type Params struct {
 // New creates new instance of Service instance and returns closure func that will stop service.
 //
 // Usage:
-// svc, err := New(config.Config{})
+// svc, err := New(context.Background(), config.Config{}, Params{})
 // if err != nil{
 // // handle error
 // }

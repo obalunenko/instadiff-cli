@@ -25,7 +25,7 @@ type Client interface {
 }
 
 // New creates Client. Also returns logout func.
-func New(ctx context.Context, sessPath string, username string) (Client, error) {
+func New(ctx context.Context, sessPath, username string) (Client, error) {
 	cl, err := makeInstagramClient(ctx, sessPath, username)
 	if err != nil {
 		return nil, err
@@ -34,6 +34,6 @@ func New(ctx context.Context, sessPath string, username string) (Client, error) 
 	return cl, nil
 }
 
-func makeInstagramClient(ctx context.Context, sessPath string, username string) (Client, error) {
+func makeInstagramClient(ctx context.Context, sessPath, username string) (Client, error) {
 	return instagram.New(ctx, sessPath, username)
 }
