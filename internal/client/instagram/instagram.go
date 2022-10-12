@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Davincible/goinsta/v3"
 	log "github.com/obalunenko/logger"
@@ -27,11 +28,24 @@ var ErrEmptyInput = errors.New("should not be empty")
 type Client struct {
 	client   *goinsta.Instagram
 	sessFile string
+	sleep    time.Duration
+}
+
+// Params holds Client constructor parameters.
+type Params struct {
+	Sleep       time.Duration
+	SessionPath string
+	Username    string
 }
 
 // New Client constructor.
-func New(ctx context.Context, sessPath, uname string) (*Client, error) {
-	var err error
+func New(ctx context.Context, p Params) (*Client, error) {
+	var (
+		err   error
+		uname string
+	)
+
+	uname = p.Username
 
 	if uname == "" {
 		uname, err = usernameInput()
@@ -40,7 +54,7 @@ func New(ctx context.Context, sessPath, uname string) (*Client, error) {
 		}
 	}
 
-	sessFile := filepath.Join(sessPath, fmt.Sprintf("%s.sess", uname))
+	sessFile := filepath.Join(p.SessionPath, fmt.Sprintf("%s.sess", uname))
 
 	cl, err := importFromFile(ctx, sessFile)
 	if err == nil {
@@ -234,18 +248,18 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 }
 
 // IsUseless reports where user is useless for statistics.
-func (i *Client) IsUseless(ctx context.Context, user models.User, threshold int) (bool, error) {
-	u, err := i.client.Profiles.ByName(user.UserName)
+func (c *Client) IsUseless(ctx context.Context, user models.User, threshold int) (bool, error) {
+	u, err := c.client.Profiles.ByName(user.UserName)
 	if err != nil {
 		return false, err
 	}
 
-	followings, err := i.UserFollowings(ctx, user)
+	followings, err := c.UserFollowings(ctx, user)
 	if err != nil {
 		return false, err
 	}
 
-	u.SetInstagram(i.client)
+	u.SetInstagram(c.client)
 
 	if err := u.Info(); err != nil {
 		return false, fmt.Errorf("update info: %w", err)
@@ -261,32 +275,32 @@ func (i *Client) IsUseless(ctx context.Context, user models.User, threshold int)
 }
 
 // UserFollowers returns user followers.
-func (i *Client) UserFollowers(ctx context.Context, user models.User) ([]models.User, error) {
-	u, err := i.client.Profiles.ByName(user.UserName)
+func (c *Client) UserFollowers(ctx context.Context, user models.User) ([]models.User, error) {
+	u, err := c.client.Profiles.ByName(user.UserName)
 	if err != nil {
 		return nil, err
 	}
 
-	u.SetInstagram(i.client)
+	u.SetInstagram(c.client)
 
-	return makeUsersList(ctx, u.Followers(""))
+	return c.makeUsersList(ctx, u.Followers(""))
 }
 
 // UserFollowings returns user followings.
-func (i *Client) UserFollowings(ctx context.Context, user models.User) ([]models.User, error) {
-	u, err := i.client.Profiles.ByName(user.UserName)
+func (c *Client) UserFollowings(ctx context.Context, user models.User) ([]models.User, error) {
+	u, err := c.client.Profiles.ByName(user.UserName)
 	if err != nil {
 		return nil, err
 	}
 
-	u.SetInstagram(i.client)
+	u.SetInstagram(c.client)
 
-	return makeUsersList(ctx, u.Following("", goinsta.EarliestOrder))
+	return c.makeUsersList(ctx, u.Following("", goinsta.EarliestOrder))
 }
 
 // GetUserByName finds user by username.
-func (i *Client) GetUserByName(_ context.Context, username string) (models.User, error) {
-	u, err := i.client.Profiles.ByName(username)
+func (c *Client) GetUserByName(_ context.Context, username string) (models.User, error) {
+	u, err := c.client.Profiles.ByName(username)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -295,41 +309,41 @@ func (i *Client) GetUserByName(_ context.Context, username string) (models.User,
 }
 
 // Block user.
-func (i *Client) Block(ctx context.Context, user models.User) error {
-	return i.actUser(ctx, user, actions.UserActionBlock)
+func (c *Client) Block(ctx context.Context, user models.User) error {
+	return c.actUser(ctx, user, actions.UserActionBlock)
 }
 
 // Unblock user.
-func (i *Client) Unblock(ctx context.Context, user models.User) error {
-	return i.actUser(ctx, user, actions.UserActionUnblock)
+func (c *Client) Unblock(ctx context.Context, user models.User) error {
+	return c.actUser(ctx, user, actions.UserActionUnblock)
 }
 
 // Follow user.
-func (i *Client) Follow(ctx context.Context, user models.User) error {
-	return i.actUser(ctx, user, actions.UserActionFollow)
+func (c *Client) Follow(ctx context.Context, user models.User) error {
+	return c.actUser(ctx, user, actions.UserActionFollow)
 }
 
 // Unfollow user.
-func (i *Client) Unfollow(ctx context.Context, user models.User) error {
-	return i.actUser(ctx, user, actions.UserActionUnfollow)
+func (c *Client) Unfollow(ctx context.Context, user models.User) error {
+	return c.actUser(ctx, user, actions.UserActionUnfollow)
 }
 
 // Followers returns list of followers.
-func (i *Client) Followers(ctx context.Context) ([]models.User, error) {
-	return makeUsersList(ctx, i.client.Account.Followers(""))
+func (c *Client) Followers(ctx context.Context) ([]models.User, error) {
+	return c.makeUsersList(ctx, c.client.Account.Followers(""))
 }
 
 // Followings returns list of followings.
-func (i *Client) Followings(ctx context.Context) ([]models.User, error) {
-	return makeUsersList(ctx, i.client.Account.Following("", goinsta.EarliestOrder))
+func (c *Client) Followings(ctx context.Context) ([]models.User, error) {
+	return c.makeUsersList(ctx, c.client.Account.Following("", goinsta.EarliestOrder))
 }
 
 // Username returns current account username.
-func (i *Client) Username(_ context.Context) string {
-	return i.client.Account.Username
+func (c *Client) Username(_ context.Context) string {
+	return c.client.Account.Username
 }
 
-func (i *Client) actUser(ctx context.Context, user models.User, act actions.UserAction) error {
+func (c *Client) actUser(ctx context.Context, user models.User, act actions.UserAction) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -339,7 +353,7 @@ func (i *Client) actUser(ctx context.Context, user models.User, act actions.User
 		Username: user.UserName,
 	}
 
-	us.SetInstagram(i.client)
+	us.SetInstagram(c.client)
 
 	var f func() error
 
@@ -366,14 +380,14 @@ func (i *Client) actUser(ctx context.Context, user models.User, act actions.User
 }
 
 // Logout clean session and send logout request.
-func (i *Client) Logout(ctx context.Context) error {
-	cl := i.client
+func (c *Client) Logout(ctx context.Context) error {
+	cl := c.client
 
-	if err := os.Remove(i.sessFile); err != nil {
+	if err := os.Remove(c.sessFile); err != nil {
 		return fmt.Errorf("remove ssession file: %w", err)
 	}
 
-	log.WithField(ctx, "file_path", i.sessFile).Info("Session file removed")
+	log.WithField(ctx, "file_path", c.sessFile).Info("Session file removed")
 
 	if err := cl.Logout(); err != nil {
 		// weird error - just ignore it.
@@ -389,7 +403,7 @@ func (i *Client) Logout(ctx context.Context) error {
 	return nil
 }
 
-func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, error) {
+func (c *Client) makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -398,8 +412,13 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 
 	usersList := make([]models.User, 0, len(users.Users))
 
-	// TODO(@obalunenko): Add sleep here to prevent too many requests blocking.
+	var itr int
+
 	for users.Next() {
+		if itr != 0 {
+			time.Sleep(c.sleep)
+		}
+
 		for i := range users.Users {
 			u := users.Users[i]
 
@@ -412,6 +431,8 @@ func makeUsersList(ctx context.Context, users *goinsta.Users) ([]models.User, er
 
 			seen[u.ID] = true
 		}
+
+		itr++
 	}
 
 	if err := users.Error(); err != nil {
