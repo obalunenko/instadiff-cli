@@ -2,6 +2,7 @@ package snowflake
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -9,6 +10,11 @@ import (
 
 // Epoch is the discord epoch in milliseconds.
 const Epoch = 1420070400000
+
+var (
+	nullBytes = []byte("null")
+	zeroBytes = []byte("0")
+)
 
 // Parse parses a string into a snowflake ID.
 // returns ID(0) if the string is "null"
@@ -66,16 +72,16 @@ func (id ID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON unmarshals the snowflake ID from a JSON string.
 func (id *ID) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, []byte("null")) {
+	if bytes.Equal(data, nullBytes) || bytes.Equal(data, zeroBytes) {
 		return nil
 	}
 	snowflake, err := strconv.Unquote(string(data))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to unquote snowflake: %w", err)
 	}
 	i, err := strconv.ParseUint(snowflake, 10, 64)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse snowflake as uint64: %w", err)
 	}
 	*id = ID(i)
 	return nil

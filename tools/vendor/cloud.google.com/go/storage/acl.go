@@ -20,9 +20,9 @@ import (
 	"reflect"
 
 	"cloud.google.com/go/internal/trace"
+	storagepb "cloud.google.com/go/storage/internal/apiv2/stubs"
 	"google.golang.org/api/googleapi"
 	raw "google.golang.org/api/storage/v1"
-	storagepb "google.golang.org/genproto/googleapis/storage/v2"
 )
 
 // ACLRole is the level of access to grant.
@@ -67,6 +67,8 @@ type ProjectTeam struct {
 }
 
 // ACLHandle provides operations on an access control list for a Google Cloud Storage bucket or object.
+// ACLHandle on an object operates on the latest generation of that object by default.
+// Selecting a specific generation of an object is not currently supported by the client.
 type ACLHandle struct {
 	c           *Client
 	bucket      string

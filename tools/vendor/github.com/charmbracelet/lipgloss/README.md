@@ -59,7 +59,7 @@ lipgloss.Color("#04B575") // a green
 lipgloss.Color("#3C3C3C") // a dark gray
 ```
 
-...as well as a 1-bit Ascii profile, which is black and white only.
+...as well as a 1-bit ASCII profile, which is black and white only.
 
 The terminal's color profile will be automatically detected, and colors outside
 the gamut of the current palette will be automatically coerced to their closest
@@ -386,6 +386,15 @@ the stylesheet-based Markdown renderer.
 [glamour]: https://github.com/charmbracelet/glamour
 
 
+## Whatcha think?
+
+We’d love to hear your thoughts on this project. Feel free to drop us a note.
+
+* [Twitter](https://twitter.com/charmcli)
+* [The Fediverse](https://mastodon.technology/@charm)
+* [Slack](https://charm.sh/slack)
+
+
 ## License
 
 [MIT](https://github.com/charmbracelet/lipgloss/raw/master/LICENSE)
@@ -395,7 +404,7 @@ the stylesheet-based Markdown renderer.
 
 Part of [Charm](https://charm.sh).
 
-<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge-unrounded.jpg" width="400"></a>
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
 
 Charm热爱开源 • Charm loves open source
 
