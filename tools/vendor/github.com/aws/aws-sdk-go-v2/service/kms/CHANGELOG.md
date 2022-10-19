@@ -1,3 +1,36 @@
+# v1.18.1 (2022-08-01)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.18.0 (2022-07-18)
+
+* **Feature**: Added support for the SM2 KeySpec in China Partition Regions
+
+# v1.17.5 (2022-07-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.4 (2022-06-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.3 (2022-06-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.2 (2022-05-17)
+
+* **Documentation**: Add HMAC best practice tip, annual rotation of AWS managed keys.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.1 (2022-04-25)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.17.0 (2022-04-19)
+
+* **Feature**: Adds support for KMS keys and APIs that generate and verify HMAC codes
+
 # v1.16.3 (2022-03-30)
 
 * **Dependency Update**: Updated to the latest SDK module versions

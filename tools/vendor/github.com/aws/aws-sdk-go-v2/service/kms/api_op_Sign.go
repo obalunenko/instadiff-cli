@@ -12,10 +12,10 @@ import (
 )
 
 // Creates a digital signature (https://en.wikipedia.org/wiki/Digital_signature)
-// for a message or message digest by using the private key in an asymmetric KMS
-// key. To verify the signature, use the Verify operation, or use the public key in
-// the same asymmetric KMS key outside of KMS. For information about symmetric and
-// asymmetric KMS keys, see Using Symmetric and Asymmetric KMS keys
+// for a message or message digest by using the private key in an asymmetric
+// signing KMS key. To verify the signature, use the Verify operation, or use the
+// public key in the same asymmetric KMS key outside of KMS. For information about
+// asymmetric KMS keys, see Asymmetric KMS keys
 // (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
 // in the Key Management Service Developer Guide. Digital signatures are generated
 // and verified by using asymmetric key pair, such as an RSA or ECC pair that is
@@ -41,11 +41,16 @@ import (
 //
 // When signing a message, be sure to record the KMS
 // key and the signing algorithm. This information is required to verify the
+// signature. Best practices recommend that you limit the time during which any
+// signature is effective. This deters an attack where the actor uses a signed
+// message to establish validity repeatedly or long after the message is
+// superseded. Signatures do not include a timestamp, but you can include a
+// timestamp in the signed message to help you detect when its time to refresh the
 // signature. To verify the signature that this operation generates, use the Verify
 // operation. Or use the GetPublicKey operation to download the public key and then
 // use the public key to verify the signature outside of KMS. The KMS key that you
 // use for this operation must be in a compatible key state. For details, see Key
-// state: Effect on your KMS key
+// states of KMS keys
 // (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html) in the
 // Key Management Service Developer Guide. Cross-account use: Yes. To perform this
 // operation with a KMS key in a different Amazon Web Services account, specify the

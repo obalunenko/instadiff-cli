@@ -15,8 +15,8 @@ import (
 // asymmetric KMS key, which never leaves KMS unencrypted, callers with
 // kms:GetPublicKey permission can download the public key of an asymmetric KMS
 // key. You can share the public key to allow others to encrypt messages and verify
-// signatures outside of KMS. For information about symmetric and asymmetric KMS
-// keys, see Using Symmetric and Asymmetric KMS keys
+// signatures outside of KMS. For information about asymmetric KMS keys, see
+// Asymmetric KMS keys
 // (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
 // in the Key Management Service Developer Guide. You do not need to download the
 // public key. Instead, you can use the public key within KMS by calling the
@@ -24,9 +24,11 @@ import (
 // KMS key. When you use the public key within KMS, you benefit from the
 // authentication, authorization, and logging that are part of every KMS operation.
 // You also reduce of risk of encrypting data that cannot be decrypted. These
-// features are not effective outside of KMS. For details, see Special
-// Considerations for Downloading Public Keys
-// (https://docs.aws.amazon.com/kms/latest/developerguide/download-public-key.html#download-public-key-considerations).
+// features are not effective outside of KMS. To verify a signature outside of KMS
+// with an SM2 public key (China Regions only), you must specify the distinguishing
+// ID. By default, KMS uses 1234567812345678 as the distinguishing ID. For more
+// information, see Offline verification with SM2 key pairs
+// (https://docs.aws.amazon.com/kms/latest/developerguide/asymmetric-key-specs.html#key-spec-sm-offline-verification).
 // To help you use the public key safely outside of KMS, GetPublicKey returns
 // important information about the public key in the response, including:
 //
@@ -54,7 +56,7 @@ import (
 // algorithm that is not supported by KMS. You can also avoid errors, such as using
 // the wrong signing algorithm in a verification operation. The KMS key that you
 // use for this operation must be in a compatible key state. For details, see Key
-// state: Effect on your KMS key
+// states of KMS keys
 // (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html) in the
 // Key Management Service Developer Guide. Cross-account use: Yes. To perform this
 // operation with a KMS key in a different Amazon Web Services account, specify the

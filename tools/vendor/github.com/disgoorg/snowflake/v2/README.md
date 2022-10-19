@@ -1,4 +1,5 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/disgoorg/snowflake.svg)](https://pkg.go.dev/github.com/disgoorg/disgo)
+[![Go Report](https://goreportcard.com/badge/github.com/disgoorg/snowflake)](https://goreportcard.com/report/github.com/disgoorg/snowflake)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/disgoorg/snowflake)](https://golang.org/doc/devel/release.html)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/disgoorg/disgo/blob/master/LICENSE)
 [![Disgo Version](https://img.shields.io/github/v/tag/disgoorg/snowflake?label=release)](https://github.com/disgoorg/snowflake/releases/latest)
