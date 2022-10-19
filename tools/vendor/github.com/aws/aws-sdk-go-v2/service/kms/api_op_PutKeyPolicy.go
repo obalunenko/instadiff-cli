@@ -77,11 +77,26 @@ type PutKeyPolicyInput struct {
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency)
 	// in the Amazon Web Services Identity and Access Management User Guide.
 	//
-	// The key
-	// policy cannot exceed 32 kilobytes (32768 bytes). For more information, see
-	// Resource Quotas
-	// (https://docs.aws.amazon.com/kms/latest/developerguide/resource-limits.html) in
-	// the Key Management Service Developer Guide.
+	// A key
+	// policy document can include only the following characters:
+	//
+	// * Printable ASCII
+	// characters from the space character (\u0020) through the end of the ASCII
+	// character range.
+	//
+	// * Printable characters in the Basic Latin and Latin-1
+	// Supplement character set (through \u00FF).
+	//
+	// * The tab (\u0009), line feed
+	// (\u000A), and carriage return (\u000D) special characters
+	//
+	// For information about
+	// key policies, see Key policies in KMS
+	// (https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html) in the
+	// Key Management Service Developer Guide. For help writing and formatting a JSON
+	// policy document, see the IAM JSON Policy Reference
+	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies.html) in
+	// the Identity and Access Management User Guide .
 	//
 	// This member is required.
 	Policy *string

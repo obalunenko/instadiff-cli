@@ -127,9 +127,11 @@ s.Bold().Underline()
 
 ## Template Helpers
 
+`termenv` provides a set of helper functions to style your Go templates:
+
 ```go
 // load template helpers
-f := termenv.TemplateFuncs(output.Profile)
+f := output.TemplateFuncs()
 tpl := template.New("tpl").Funcs(f)
 
 // apply bold style in a template
@@ -338,12 +340,16 @@ terminal applications on Unix support ANSI styling out-of-the-box, on Windows
 you need to enable ANSI processing in your application first:
 
 ```go
-    mode, err := termenv.EnableWindowsANSIConsole()
+    restoreConsole, err := termenv.EnableVirtualTerminalProcessing(termenv.DefaultOutput())
     if err != nil {
         panic(err)
     }
-    defer termenv.RestoreWindowsConsole(mode)
+    defer restoreConsole()
 ```
+
+The above code is safe to include on non-Windows systems or when os.Stdout does
+not refer to a terminal (e.g. in tests).
+
 
 ## Color Chart
 

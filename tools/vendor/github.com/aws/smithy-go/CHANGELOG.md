@@ -1,3 +1,15 @@
+# Release (v1.12.0)
+
+## Module Highlights
+* `github.com/aws/smithy-go`: v1.12.0
+  * **Feature**: `transport/http`: Add utility for setting context metadata when operation serializer automatically assigns content-type default value.
+
+# Release (v1.11.3)
+
+## Module Highlights
+* `github.com/aws/smithy-go`: v1.11.3
+  * **Dependency Update**: Updates smithy-go unit test dependency go-cmp to 0.5.8.
+
 # Release (v1.11.2)
 
 * No change notes available for this release.

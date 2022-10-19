@@ -36,7 +36,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"io/ioutil"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -100,6 +99,11 @@ func (a *Apk) ConventionalFileName(info *nfpm.Info) string {
 	}
 
 	return fmt.Sprintf("%s_%s_%s.apk", info.Name, version, info.Arch)
+}
+
+// ConventionalExtension returns the file name conventionally used for Apk packages
+func (*Apk) ConventionalExtension() string {
+	return ".apk"
 }
 
 // Package writes a new apk package to the given writer using the given info.
@@ -171,11 +175,7 @@ func writeFile(tw *tar.Writer, header *tar.Header, file io.Reader) error {
 	}
 
 	_, err = io.Copy(tw, file)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 type tarKind int
@@ -358,7 +358,7 @@ func newScriptInsideTarGz(out *tar.Writer, path, dest string) error {
 	if err != nil {
 		return err
 	}
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -478,7 +478,7 @@ func createSymlinkInsideTarGz(file *files.Content, out *tar.Writer) error {
 }
 
 func copyToTarAndDigest(file *files.Content, tw *tar.Writer, sizep *int64) error {
-	contents, err := ioutil.ReadFile(file.Source)
+	contents, err := os.ReadFile(file.Source)
 	if err != nil {
 		return err
 	}

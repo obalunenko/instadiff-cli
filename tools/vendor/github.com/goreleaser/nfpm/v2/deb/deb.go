@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,6 +82,11 @@ func (*Deb) ConventionalFileName(info *nfpm.Info) string {
 
 	// package_version_architecture.package-type
 	return fmt.Sprintf("%s_%s_%s.deb", info.Name, version, info.Arch)
+}
+
+// ConventionalExtension returns the file name conventionally used for Deb packages
+func (*Deb) ConventionalExtension() string {
+	return ".deb"
 }
 
 // ErrInvalidSignatureType happens if the signature type of a deb is not one of
@@ -491,7 +495,7 @@ func createChangelogInsideDataTar(tarw *tar.Writer, md5w io.Writer,
 		return 0, err
 	}
 
-	if _, err = out.Write([]byte(changelogContent)); err != nil {
+	if _, err = io.WriteString(out, changelogContent); err != nil {
 		return 0, err
 	}
 
@@ -664,7 +668,7 @@ func newFilePathInsideTar(out *tar.Writer, path, dest string, mode int64) error 
 	if err != nil {
 		return err
 	}
-	content, err := ioutil.ReadAll(file)
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return err
 	}
