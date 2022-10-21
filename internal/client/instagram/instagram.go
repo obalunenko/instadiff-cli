@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
+
 	"github.com/Davincible/goinsta/v3"
 	log "github.com/obalunenko/logger"
 	"github.com/tcnksm/go-input"
@@ -20,9 +22,6 @@ import (
 
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
-
-// ErrEmptyInput returned in case when user input is empty.
-var ErrEmptyInput = errors.New("should not be empty")
 
 // Client represents instagram client.
 type Client struct {
@@ -95,10 +94,6 @@ func syncInstagram(ctx context.Context, cli *goinsta.Instagram, sessFile string)
 
 	if err := cli.OpenApp(); err != nil {
 		log.WithError(ctx, err).Error("Failed to refresh app info")
-	}
-
-	if err := cli.Account.Sync(); err != nil {
-		log.WithError(ctx, err).Error("Failed to sync account info")
 	}
 
 	stop()
@@ -211,7 +206,7 @@ func getPrompt(ask, key string) (string, error) {
 			ValidateFunc: func(s string) error {
 				s = strings.TrimSpace(s)
 				if s == "" {
-					return ErrEmptyInput
+					return clientErrors.ErrEmptyInput
 				}
 
 				return nil
@@ -302,10 +297,18 @@ func (c *Client) UserFollowings(ctx context.Context, user models.User) ([]models
 func (c *Client) GetUserByName(_ context.Context, username string) (models.User, error) {
 	u, err := c.client.Profiles.ByName(username)
 	if err != nil {
+		if isErrUserNotFound(err) {
+			return models.User{}, clientErrors.ErrUserNotFound
+		}
+
 		return models.User{}, err
 	}
 
 	return models.MakeUser(u.ID, u.Username, u.FullName), nil
+}
+
+func isErrUserNotFound(err error) bool {
+	return strings.Contains(err.Error(), "user_not_found")
 }
 
 // Block user.

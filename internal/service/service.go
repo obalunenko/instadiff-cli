@@ -6,8 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
+
+	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
 
 	"github.com/hashicorp/go-multierror"
 	log "github.com/obalunenko/logger"
@@ -403,13 +406,27 @@ func (svc *Service) getUsersByUsername(ctx context.Context, usernames []string) 
 
 	users := make([]models.User, 0, len(usernames))
 
-	for _, un := range usernames {
+	notFoundUsers := make([]string, 0, len(usernames))
+
+	for i := range usernames {
+		un := usernames[i]
+
 		u, err := svc.instagram.client.GetUserByName(ctx, un)
 		if err != nil {
+			if errors.Is(err, clientErrors.ErrUserNotFound) {
+				notFoundUsers = append(notFoundUsers, un)
+
+				continue
+			}
+
 			return nil, fmt.Errorf("get user profile by name[%s]: %w", un, err)
 		}
 
 		users = append(users, u)
+	}
+
+	if len(notFoundUsers) != 0 {
+		return users, fmt.Errorf("[ %s ]: %w", strings.Join(notFoundUsers, ","), ErrUserNotFound)
 	}
 
 	return users, nil
@@ -429,7 +446,11 @@ type userListProcessFunc func(ctx context.Context, uslist []models.User) (int, e
 func (svc *Service) processByUsernames(ctx context.Context, usernames []string, f userListProcessFunc) (int, error) {
 	uslist, err := svc.getUsersByUsername(ctx, usernames)
 	if err != nil {
-		return 0, fmt.Errorf("get users by usernames: %w", err)
+		if !errors.Is(err, ErrUserNotFound) {
+			return 0, fmt.Errorf("get users by usernames: %w", err)
+		}
+
+		log.WithError(ctx, err).Warn("Some users from list failed to fetch")
 	}
 
 	return f(ctx, uslist)
