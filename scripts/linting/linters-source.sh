@@ -80,7 +80,7 @@ function go-group() {
 
   checkInstalled 'goimports'
 
-  declare -a lints=$(goimports -l -local=github.com/obalunenko/instadiff-cli $(find . -type f -name "*.go" | grep -v "vendor/"))
+  declare -a lints=$(goimports -l -local=$(go list -m) $(find . -type f -name "*.go" | grep -v "vendor/"))
 
   if [[ ${lints} ]]; then
     echo "fix it:"
