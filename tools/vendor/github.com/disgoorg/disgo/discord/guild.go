@@ -27,6 +27,42 @@ const (
 	SystemChannelFlagSuppressPremiumSubscriptions
 )
 
+// Add allows you to add multiple bits together, producing a new bit
+func (f SystemChannelFlags) Add(bits ...SystemChannelFlags) SystemChannelFlags {
+	for _, bit := range bits {
+		f |= bit
+	}
+	return f
+}
+
+// Remove allows you to subtract multiple bits from the first, producing a new bit
+func (f SystemChannelFlags) Remove(bits ...SystemChannelFlags) SystemChannelFlags {
+	for _, bit := range bits {
+		f &^= bit
+	}
+	return f
+}
+
+// Has will ensure that the bit includes all the bits entered
+func (f SystemChannelFlags) Has(bits ...SystemChannelFlags) bool {
+	for _, bit := range bits {
+		if (f & bit) != bit {
+			return false
+		}
+	}
+	return true
+}
+
+// Missing will check whether the bit is missing any one of the bits
+func (f SystemChannelFlags) Missing(bits ...SystemChannelFlags) bool {
+	for _, bit := range bits {
+		if (f & bit) != bit {
+			return true
+		}
+	}
+	return false
+}
+
 // The VerificationLevel of a Guild that members must be to send messages
 type VerificationLevel int
 
@@ -72,11 +108,12 @@ type GuildFeature string
 
 // Constants for GuildFeature
 const (
-	GuildFeatureAnimatedIcon                  GuildFeature = "ANIMATED_ICON"
 	GuildFeatureAnimatedBanner                GuildFeature = "ANIMATED_BANNER"
+	GuildFeatureAnimatedIcon                  GuildFeature = "ANIMATED_ICON"
+	GuildFeatureAutoModeration                GuildFeature = "AUTO_MODERATION"
 	GuildFeatureBanner                        GuildFeature = "BANNER"
-	GuildFeatureCommerce                      GuildFeature = "COMMERCE"
 	GuildFeatureCommunity                     GuildFeature = "COMMUNITY"
+	GuildFeatureDeveloperSupportServer        GuildFeature = "DEVELOPER_SUPPORT_SERVER"
 	GuildFeatureDiscoverable                  GuildFeature = "DISCOVERABLE"
 	GuildFeatureFeaturable                    GuildFeature = "FEATURABLE"
 	GuildFeatureInvitesDisabled               GuildFeature = "INVITES_DISABLED"
@@ -89,8 +126,6 @@ const (
 	GuildFeaturePreviewEnabled                GuildFeature = "PREVIEW_ENABLED"
 	GuildFeaturePrivateThreads                GuildFeature = "PRIVATE_THREADS"
 	GuildFeatureRoleIcons                     GuildFeature = "ROLE_ICONS"
-	GuildFeatureSevenDayThreadArchive         GuildFeature = "SEVEN_DAY_THREAD_ARCHIVE"
-	GuildFeatureThreeDayThreadArchive         GuildFeature = "THREE_DAY_THREAD_ARCHIVE"
 	GuildFeatureTicketedEventsEnabled         GuildFeature = "TICKETED_EVENTS_ENABLED"
 	GuildFeatureVanityURL                     GuildFeature = "VANITY_URL"
 	GuildFeatureVerified                      GuildFeature = "VERIFIED"

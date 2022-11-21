@@ -12,11 +12,13 @@ import (
 	"github.com/goreleaser/goreleaser/internal/pipe/brew"
 	"github.com/goreleaser/goreleaser/internal/pipe/build"
 	"github.com/goreleaser/goreleaser/internal/pipe/checksums"
+	"github.com/goreleaser/goreleaser/internal/pipe/chocolatey"
 	"github.com/goreleaser/goreleaser/internal/pipe/discord"
 	"github.com/goreleaser/goreleaser/internal/pipe/docker"
 	"github.com/goreleaser/goreleaser/internal/pipe/gomod"
 	"github.com/goreleaser/goreleaser/internal/pipe/krew"
 	"github.com/goreleaser/goreleaser/internal/pipe/linkedin"
+	"github.com/goreleaser/goreleaser/internal/pipe/mastodon"
 	"github.com/goreleaser/goreleaser/internal/pipe/mattermost"
 	"github.com/goreleaser/goreleaser/internal/pipe/milestone"
 	"github.com/goreleaser/goreleaser/internal/pipe/nfpm"
@@ -79,9 +81,11 @@ var Defaulters = []Defaulter{
 	teams.Pipe{},
 	twitter.Pipe{},
 	smtp.Pipe{},
+	mastodon.Pipe{},
 	mattermost.Pipe{},
 	milestone.Pipe{},
 	linkedin.Pipe{},
 	telegram.Pipe{},
 	webhook.Pipe{},
+	chocolatey.Pipe{},
 }

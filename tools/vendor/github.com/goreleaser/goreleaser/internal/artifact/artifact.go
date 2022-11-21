@@ -66,6 +66,14 @@ const (
 	ScoopManifest
 	// SBOM is a Software Bill of Materials file.
 	SBOM
+	// PublishableChocolatey is a chocolatey package yet to be published.
+	PublishableChocolatey
+	// Header is a C header file, generated for CGo library builds.
+	Header
+	// CArchive is a C static library, generated via a CGo build with buildmode=c-archive.
+	CArchive
+	// CShared is a C shared library, generated via a CGo build with buildmode=c-shared.
+	CShared
 )
 
 func (t Type) String() string {
@@ -78,8 +86,10 @@ func (t Type) String() string {
 		return "Binary"
 	case LinuxPackage:
 		return "Linux Package"
-	case PublishableDockerImage, DockerImage:
+	case PublishableDockerImage:
 		return "Docker Image"
+	case DockerImage:
+		return "Published Docker Image"
 	case DockerManifest:
 		return "Docker Manifest"
 	case PublishableSnapcraft, Snapcraft:
@@ -104,6 +114,14 @@ func (t Type) String() string {
 		return "PKGBUILD"
 	case SrcInfo:
 		return "SRCINFO"
+	case PublishableChocolatey:
+		return "Chocolatey"
+	case Header:
+		return "C Header"
+	case CArchive:
+		return "C Archive Library"
+	case CShared:
+		return "C Shared Library"
 	default:
 		return "unknown"
 	}
@@ -119,6 +137,7 @@ const (
 	ExtraBinaries  = "Binaries"
 	ExtraRefresh   = "Refresh"
 	ExtraReplaces  = "Replaces"
+	ExtraDigest    = "Digest"
 )
 
 // Extras represents the extra fields in an artifact.

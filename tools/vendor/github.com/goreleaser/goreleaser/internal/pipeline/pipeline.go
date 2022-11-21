@@ -12,6 +12,7 @@ import (
 	"github.com/goreleaser/goreleaser/internal/pipe/build"
 	"github.com/goreleaser/goreleaser/internal/pipe/changelog"
 	"github.com/goreleaser/goreleaser/internal/pipe/checksums"
+	"github.com/goreleaser/goreleaser/internal/pipe/chocolatey"
 	"github.com/goreleaser/goreleaser/internal/pipe/defaults"
 	"github.com/goreleaser/goreleaser/internal/pipe/dist"
 	"github.com/goreleaser/goreleaser/internal/pipe/docker"
@@ -68,8 +69,6 @@ var BuildPipeline = []Piper{
 	gomod.ProxyPipe{},
 	// writes the actual config (with defaults et al set) to dist
 	effectiveconfig.Pipe{},
-	// builds the release changelog
-	changelog.Pipe{},
 	// build
 	build.Pipe{},
 	// universal binary handling
@@ -84,6 +83,8 @@ var BuildCmdPipeline = append(BuildPipeline, metadata.Pipe{})
 // nolint: gochecknoglobals
 var Pipeline = append(
 	BuildPipeline,
+	// builds the release changelog
+	changelog.Pipe{},
 	// archive in tar.gz, zip or binary (which does no archiving at all)
 	archive.Pipe{},
 	// archive the source code using git-archive
@@ -106,12 +107,14 @@ var Pipeline = append(
 	krew.Pipe{},
 	// create scoop buckets
 	scoop.Pipe{},
+	// create chocolatey pkg and publish
+	chocolatey.Pipe{},
 	// create and push docker images
 	docker.Pipe{},
-	// creates a metadata.json and an artifacts.json files in the dist folder
-	metadata.Pipe{},
 	// publishes artifacts
 	publish.Pipe{},
+	// creates a metadata.json and an artifacts.json files in the dist folder
+	metadata.Pipe{},
 	// announce releases
 	announce.Pipe{},
 )
