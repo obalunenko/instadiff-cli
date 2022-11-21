@@ -46,6 +46,9 @@ func (Pipe) Default(ctx *context.Context) error {
 		if docker.Goarch == "" {
 			docker.Goarch = "amd64"
 		}
+		if docker.Goarm == "" {
+			docker.Goarm = "6"
+		}
 		if docker.Goamd64 == "" {
 			docker.Goamd64 = "v1"
 		}
@@ -100,10 +103,12 @@ func (Pipe) Publish(ctx *context.Context) error {
 // Run the pipe.
 func (Pipe) Run(ctx *context.Context) error {
 	g := semerrgroup.NewSkipAware(semerrgroup.New(ctx.Parallelism))
-	for _, docker := range ctx.Config.Dockers {
+	for i, docker := range ctx.Config.Dockers {
+		i := i
 		docker := docker
 		g.Go(func() error {
-			log.WithField("docker", docker).Debug("looking for artifacts matching")
+			log := log.WithField("index", i)
+			log.Debug("looking for artifacts matching")
 			filters := []artifact.Filter{
 				artifact.ByGoos(docker.Goos),
 				artifact.ByGoarch(docker.Goarch),
@@ -124,6 +129,9 @@ func (Pipe) Run(ctx *context.Context) error {
 			}
 			artifacts := ctx.Artifacts.Filter(artifact.And(filters...))
 			log.WithField("artifacts", artifacts.Paths()).Debug("found artifacts")
+			if len(artifacts.Paths()) == 0 {
+				log.Warn("not binaries or packages found for the given platform - COPY/ADD may not work")
+			}
 			return process(ctx, docker, artifacts.List())
 		})
 	}
@@ -248,7 +256,8 @@ func dockerPush(ctx *context.Context, image *artifact.Artifact) error {
 		return pipe.Skip("prerelease detected with 'auto' push, skipping docker publish: " + image.Name)
 	}
 
-	if err := imagers[docker.Use].Push(ctx, image.Name, docker.PushFlags); err != nil {
+	digest, err := imagers[docker.Use].Push(ctx, image.Name, docker.PushFlags)
+	if err != nil {
 		return err
 	}
 
@@ -264,6 +273,8 @@ func dockerPush(ctx *context.Context, image *artifact.Artifact) error {
 	if docker.ID != "" {
 		art.Extra[artifact.ExtraID] = docker.ID
 	}
+	art.Extra[artifact.ExtraDigest] = digest
+
 	ctx.Artifacts.Add(art)
 	return nil
 }

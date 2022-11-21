@@ -1054,6 +1054,7 @@ type GuildForumChannel struct {
 	AvailableTags                 []ForumTag
 	DefaultReactionEmoji          *DefaultReactionEmoji
 	DefaultThreadRateLimitPerUser int
+	DefaultSortOrder              *DefaultSortOrder
 }
 
 func (c *GuildForumChannel) UnmarshalJSON(data []byte) error {
@@ -1076,6 +1077,7 @@ func (c *GuildForumChannel) UnmarshalJSON(data []byte) error {
 	c.AvailableTags = v.AvailableTags
 	c.DefaultReactionEmoji = v.DefaultReactionEmoji
 	c.DefaultThreadRateLimitPerUser = v.DefaultThreadRateLimitPerUser
+	c.DefaultSortOrder = v.DefaultSortOrder
 	return nil
 }
 
@@ -1096,6 +1098,7 @@ func (c GuildForumChannel) MarshalJSON() ([]byte, error) {
 		AvailableTags:                 c.AvailableTags,
 		DefaultReactionEmoji:          c.DefaultReactionEmoji,
 		DefaultThreadRateLimitPerUser: c.DefaultThreadRateLimitPerUser,
+		DefaultSortOrder:              c.DefaultSortOrder,
 	})
 }
 
@@ -1181,6 +1184,13 @@ type DefaultReactionEmoji struct {
 	EmojiName *string       `json:"emoji_name"`
 }
 
+type DefaultSortOrder int
+
+const (
+	LatestActivity DefaultSortOrder = iota
+	CreationDate
+)
+
 type AutoArchiveDuration int
 
 const (
@@ -1217,6 +1227,9 @@ func ApplyGuildIDToChannel(channel GuildChannel, guildID snowflake.ID) GuildChan
 		c.guildID = guildID
 		return c
 	case GuildThread:
+		c.guildID = guildID
+		return c
+	case GuildForumChannel:
 		c.guildID = guildID
 		return c
 	default:

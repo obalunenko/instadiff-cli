@@ -103,8 +103,10 @@ type GuildForumChannelUpdate struct {
 	ParentID                      *snowflake.ID                        `json:"parent_id,omitempty"`
 	RateLimitPerUser              *int                                 `json:"rate_limit_per_user"`
 	AvailableTags                 *[]ForumTag                          `json:"available_tags,omitempty"`
+	Flags                         *ChannelFlags                        `json:"flags,omitempty"`
 	DefaultReactionEmoji          *json.Nullable[DefaultReactionEmoji] `json:"default_reaction_emoji,omitempty"`
 	DefaultThreadRateLimitPerUser *int                                 `json:"default_thread_rate_limit_per_user,omitempty"`
+	DefaultSortOrder              *json.Nullable[DefaultSortOrder]     `json:"default_sort_order,omitempty"`
 }
 
 func (GuildForumChannelUpdate) channelUpdate()      {}

@@ -132,7 +132,7 @@ type AUR struct {
 	Description           string       `yaml:"description,omitempty" json:"description,omitempty"`
 	Homepage              string       `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 	License               string       `yaml:"license,omitempty" json:"license,omitempty"`
-	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty"`
+	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty" jsonschema:"oneof_type=string;boolean"`
 	URLTemplate           string       `yaml:"url_template,omitempty" json:"url_template,omitempty"`
 	Maintainers           []string     `yaml:"maintainers,omitempty" json:"maintainers,omitempty"`
 	Contributors          []string     `yaml:"contributors,omitempty" json:"contributors,omitempty"`
@@ -166,13 +166,13 @@ type Homebrew struct {
 	Description           string               `yaml:"description,omitempty" json:"description,omitempty"`
 	Homepage              string               `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 	License               string               `yaml:"license,omitempty" json:"license,omitempty"`
-	SkipUpload            string               `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty"`
+	SkipUpload            string               `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty" jsonschema:"oneof_type=string;boolean"`
 	DownloadStrategy      string               `yaml:"download_strategy,omitempty" json:"download_strategy,omitempty"`
 	URLTemplate           string               `yaml:"url_template,omitempty" json:"url_template,omitempty"`
 	CustomRequire         string               `yaml:"custom_require,omitempty" json:"custom_require,omitempty"`
 	CustomBlock           string               `yaml:"custom_block,omitempty" json:"custom_block,omitempty"`
 	IDs                   []string             `yaml:"ids,omitempty" json:"ids,omitempty"`
-	Goarm                 string               `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Goarm                 string               `yaml:"goarm,omitempty" json:"goarm,omitempty" jsonschema:"oneof_type=string;integer"`
 	Goamd64               string               `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
 	Service               string               `yaml:"service,omitempty" json:"service,omitempty"`
 }
@@ -189,9 +189,9 @@ type Krew struct {
 	Description           string       `yaml:"description,omitempty" json:"description,omitempty"`
 	Homepage              string       `yaml:"homepage,omitempty" json:"homepage,omitempty"`
 	URLTemplate           string       `yaml:"url_template,omitempty" json:"url_template,omitempty"`
-	Goarm                 string       `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Goarm                 string       `yaml:"goarm,omitempty" json:"goarm,omitempty" jsonschema:"oneof_type=string;integer"`
 	Goamd64               string       `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
-	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty"`
+	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty" jsonschema:"oneof_type=string;boolean"`
 }
 
 // Scoop contains the scoop.sh section.
@@ -206,7 +206,7 @@ type Scoop struct {
 	License               string       `yaml:"license,omitempty" json:"license,omitempty"`
 	URLTemplate           string       `yaml:"url_template,omitempty" json:"url_template,omitempty"`
 	Persist               []string     `yaml:"persist,omitempty" json:"persist,omitempty"`
-	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty"`
+	SkipUpload            string       `yaml:"skip_upload,omitempty" json:"skip_upload,omitempty" jsonschema:"oneof_type=string;boolean"`
 	PreInstall            []string     `yaml:"pre_install,omitempty" json:"pre_install,omitempty"`
 	PostInstall           []string     `yaml:"post_install,omitempty" json:"post_install,omitempty"`
 	Goamd64               string       `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
@@ -228,7 +228,7 @@ type BuildHooks struct { // renamed on pro
 type IgnoredBuild struct {
 	Goos    string `yaml:"goos,omitempty" json:"goos,omitempty"`
 	Goarch  string `yaml:"goarch,omitempty" json:"goarch,omitempty"`
-	Goarm   string `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Goarm   string `yaml:"goarm,omitempty" json:"goarm,omitempty" jsonschema:"oneof_type=string;integer"`
 	Gomips  string `yaml:"gomips,omitempty" json:"gomips,omitempty"`
 	Goamd64 string `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
 }
@@ -311,7 +311,7 @@ type Build struct {
 	Hooks           BuildHookConfig `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 	Builder         string          `yaml:"builder,omitempty" json:"builder,omitempty"`
 	ModTimestamp    string          `yaml:"mod_timestamp,omitempty" json:"mod_timestamp,omitempty"`
-	Skip            bool            `yaml:"skip,omitempty" json:"skip,omitempty"`
+	Skip            bool            `yaml:"skip,omitempty" json:"skip,omitempty" jsonschema:"oneof_type=string;boolean"`
 	GoBinary        string          `yaml:"gobinary,omitempty" json:"gobinary,omitempty"`
 	Command         string          `yaml:"command,omitempty" json:"command,omitempty"`
 	NoUniqueDistDir bool            `yaml:"no_unique_dist_dir,omitempty" json:"no_unique_dist_dir,omitempty"`
@@ -326,19 +326,20 @@ type Build struct {
 type BuildDetailsOverride struct {
 	Goos         string                          `yaml:"goos,omitempty" json:"goos,omitempty"`
 	Goarch       string                          `yaml:"goarch,omitempty" json:"goarch,omitempty"`
-	Goarm        string                          `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Goarm        string                          `yaml:"goarm,omitempty" json:"goarm,omitempty" jsonschema:"oneof_type=string;integer"`
 	Gomips       string                          `yaml:"gomips,omitempty" json:"gomips,omitempty"`
 	Goamd64      string                          `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
 	BuildDetails `yaml:",inline" json:",inline"` // nolint: tagliatelle
 }
 
 type BuildDetails struct {
-	Ldflags  StringArray `yaml:"ldflags,omitempty" json:"ldflags,omitempty"`
-	Tags     FlagArray   `yaml:"tags,omitempty" json:"tags,omitempty"`
-	Flags    FlagArray   `yaml:"flags,omitempty" json:"flags,omitempty"`
-	Asmflags StringArray `yaml:"asmflags,omitempty" json:"asmflags,omitempty"`
-	Gcflags  StringArray `yaml:"gcflags,omitempty" json:"gcflags,omitempty"`
-	Env      []string    `yaml:"env,omitempty" json:"env,omitempty"`
+	Buildmode string      `yaml:"buildmode,omitempty" json:"buildmode,omitempty"`
+	Ldflags   StringArray `yaml:"ldflags,omitempty" json:"ldflags,omitempty"`
+	Tags      FlagArray   `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Flags     FlagArray   `yaml:"flags,omitempty" json:"flags,omitempty"`
+	Asmflags  StringArray `yaml:"asmflags,omitempty" json:"asmflags,omitempty"`
+	Gcflags   StringArray `yaml:"gcflags,omitempty" json:"gcflags,omitempty"`
+	Env       []string    `yaml:"env,omitempty" json:"env,omitempty"`
 }
 
 type BuildHookConfig struct {
@@ -634,6 +635,17 @@ type NFPMAPK struct {
 	Signature NFPMAPKSignature `yaml:"signature,omitempty" json:"signature,omitempty"`
 }
 
+type NFPMArchLinuxScripts struct {
+	PreUpgrade  string `yaml:"preupgrade,omitempty" json:"preupgrade,omitempty"`
+	PostUpgrade string `yaml:"postupgrade,omitempty" json:"postupgrade,omitempty"`
+}
+
+type NFPMArchLinux struct {
+	Pkgbase  string               `yaml:"pkgbase,omitempty" json:"pkgbase,omitempty"`
+	Packager string               `yaml:"packager,omitempty" json:"packager,omitempty"`
+	Scripts  NFPMArchLinuxScripts `yaml:"scripts,omitempty" json:"scripts,omitempty"`
+}
+
 // NFPMOverridables is used to specify per package format settings.
 type NFPMOverridables struct {
 	FileNameTemplate string            `yaml:"file_name_template,omitempty" json:"file_name_template,omitempty"`
@@ -654,6 +666,7 @@ type NFPMOverridables struct {
 	RPM              NFPMRPM           `yaml:"rpm,omitempty" json:"rpm,omitempty"`
 	Deb              NFPMDeb           `yaml:"deb,omitempty" json:"deb,omitempty"`
 	APK              NFPMAPK           `yaml:"apk,omitempty" json:"apk,omitempty"`
+	ArchLinux        NFPMArchLinux     `yaml:"archlinux,omitempty" json:"archlinux,omitempty"`
 }
 
 // SBOM config.
@@ -775,11 +788,11 @@ type Docker struct {
 	IDs                []string `yaml:"ids,omitempty" json:"ids,omitempty"`
 	Goos               string   `yaml:"goos,omitempty" json:"goos,omitempty"`
 	Goarch             string   `yaml:"goarch,omitempty" json:"goarch,omitempty"`
-	Goarm              string   `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Goarm              string   `yaml:"goarm,omitempty" json:"goarm,omitempty" jsonschema:"oneof_type=string;integer"`
 	Goamd64            string   `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
 	Dockerfile         string   `yaml:"dockerfile,omitempty" json:"dockerfile,omitempty"`
 	ImageTemplates     []string `yaml:"image_templates,omitempty" json:"image_templates,omitempty"`
-	SkipPush           string   `yaml:"skip_push,omitempty" json:"skip_push,omitempty"`
+	SkipPush           string   `yaml:"skip_push,omitempty" json:"skip_push,omitempty" jsonschema:"oneof_type=string;boolean"`
 	Files              []string `yaml:"extra_files,omitempty" json:"extra_files,omitempty"`
 	BuildFlagTemplates []string `yaml:"build_flag_templates,omitempty" json:"build_flag_templates,omitempty"`
 	PushFlags          []string `yaml:"push_flags,omitempty" json:"push_flags,omitempty"`
@@ -790,7 +803,7 @@ type Docker struct {
 type DockerManifest struct {
 	ID             string   `yaml:"id,omitempty" json:"id,omitempty"`
 	NameTemplate   string   `yaml:"name_template,omitempty" json:"name_template,omitempty"`
-	SkipPush       string   `yaml:"skip_push,omitempty" json:"skip_push,omitempty"`
+	SkipPush       string   `yaml:"skip_push,omitempty" json:"skip_push,omitempty" jsonschema:"oneof_type=string;boolean"`
 	ImageTemplates []string `yaml:"image_templates,omitempty" json:"image_templates,omitempty"`
 	CreateFlags    []string `yaml:"create_flags,omitempty" json:"create_flags,omitempty"`
 	PushFlags      []string `yaml:"push_flags,omitempty" json:"push_flags,omitempty"`
@@ -917,6 +930,7 @@ type Project struct {
 	GoMod           GoMod            `yaml:"gomod,omitempty" json:"gomod,omitempty"`
 	Announce        Announce         `yaml:"announce,omitempty" json:"announce,omitempty"`
 	SBOMs           []SBOM           `yaml:"sboms,omitempty" json:"sboms,omitempty"`
+	Chocolateys     []Chocolatey     `yaml:"chocolateys,omitempty" json:"chocolatey,omitempty"`
 
 	UniversalBinaries []UniversalBinary `yaml:"universal_binaries,omitempty" json:"universal_binaries,omitempty"`
 
@@ -941,8 +955,9 @@ type GoMod struct {
 }
 
 type Announce struct {
-	Skip       string     `yaml:"skip,omitempty" json:"skip,omitempty"`
+	Skip       string     `yaml:"skip,omitempty" json:"skip,omitempty" jsonschema:"oneof_type=string;boolean"`
 	Twitter    Twitter    `yaml:"twitter,omitempty" json:"twitter,omitempty"`
+	Mastodon   Mastodon   `yaml:"mastodon,omitempty" json:"mastodon,omitempty"`
 	Reddit     Reddit     `yaml:"reddit,omitempty" json:"reddit,omitempty"`
 	Slack      Slack      `yaml:"slack,omitempty" json:"slack,omitempty"`
 	Discord    Discord    `yaml:"discord,omitempty" json:"discord,omitempty"`
@@ -966,6 +981,12 @@ type Webhook struct {
 type Twitter struct {
 	Enabled         bool   `yaml:"enabled,omitempty" json:"enabled,omitempty"`
 	MessageTemplate string `yaml:"message_template,omitempty" json:"message_template,omitempty"`
+}
+
+type Mastodon struct {
+	Enabled         bool   `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	MessageTemplate string `yaml:"message_template,omitempty" json:"message_template,omitempty"`
+	Server          string `yaml:"server" json:"server"`
 }
 
 type Reddit struct {
@@ -1102,4 +1123,38 @@ func (a *SlackAttachment) UnmarshalYAML(unmarshal func(interface{}) error) error
 // MarshalJSON marshals a slack attachment as JSON.
 func (a SlackAttachment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.Internal)
+}
+
+// Chocolatey contains the chocolatey section.
+type Chocolatey struct {
+	Name                     string                 `yaml:"name,omitempty" json:"name,omitempty"`
+	IDs                      []string               `yaml:"ids,omitempty" json:"ids,omitempty"`
+	PackageSourceURL         string                 `yaml:"package_source_url,omitempty" json:"package_source_url,omitempty"`
+	Owners                   string                 `yaml:"owners,omitempty" json:"authoers,omitempty"`
+	Title                    string                 `yaml:"title,omitempty" json:"title,omitempty"`
+	Authors                  string                 `yaml:"authors,omitempty" json:"authors,omitempty"`
+	ProjectURL               string                 `yaml:"project_url,omitempty" json:"project_url,omitempty"`
+	URLTemplate              string                 `yaml:"url_template,omitempty" json:"url_template,omitempty"`
+	IconURL                  string                 `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
+	Copyright                string                 `yaml:"copyright,omitempty" json:"copyright,omitempty"`
+	LicenseURL               string                 `yaml:"license_url,omitempty" json:"license_url,omitempty"`
+	RequireLicenseAcceptance bool                   `yaml:"require_license_acceptance,omitempty" json:"require_license_acceptance,omitempty"`
+	ProjectSourceURL         string                 `yaml:"project_source_url,omitempty" json:"project_source_url,omitempty"`
+	DocsURL                  string                 `yaml:"docs_url,omitempty" json:"docs_url,omitempty"`
+	BugTrackerURL            string                 `yaml:"bug_tracker_url,omitempty" json:"bug_tracker_url,omitempty"`
+	Tags                     string                 `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Summary                  string                 `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Description              string                 `yaml:"description,omitempty" json:"description,omitempty"`
+	ReleaseNotes             string                 `yaml:"release_notes,omitempty" json:"release_notes,omitempty"`
+	Dependencies             []ChocolateyDependency `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
+	SkipPublish              bool                   `yaml:"skip_publish,omitempty" json:"skip_publish,omitempty"`
+	APIKey                   string                 `yaml:"api_key,omitempty" json:"api_key,omitempty"`
+	SourceRepo               string                 `yaml:"source_repo,omitempty" json:"source_repo,omitempty"`
+	Goamd64                  string                 `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
+}
+
+// ChcolateyDependency represents Chocolatey dependency.
+type ChocolateyDependency struct {
+	ID      string `yaml:"id,omitempty" json:"id,omitempty"`
+	Version string `yaml:"version,omitempty" json:"version,omitempty"`
 }
