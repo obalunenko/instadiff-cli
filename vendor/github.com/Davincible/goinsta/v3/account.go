@@ -275,36 +275,28 @@ func (account *Account) changePublic(endpoint string) error {
 
 // Followers returns a list of user followers.
 //
-// Query can be used to search for a specific user.
-// Be aware that it only matches from the start, e.g.
-// "theprimeagen" will only match "theprime" not "prime".
-// To fetch all user an empty string "".
-//
 // Users.Next can be used to paginate
-func (account *Account) Followers(query string) *Users {
-	user := &User{
-		insta: account.insta,
-		ID:    account.ID,
-	}
-
-	return user.Followers(query)
+//
+// See example: examples/account/followers.go
+func (account *Account) Followers() *Users {
+	endpoint := fmt.Sprintf(urlFollowers, account.ID)
+	users := &Users{}
+	users.insta = account.insta
+	users.endpoint = endpoint
+	return users
 }
 
 // Following returns a list of user following.
 //
-// Query can be used to search for a specific user.
-// Be aware that it only matches from the start, e.g.
-// "theprimeagen" will only match "theprime" not "prime".
-// To fetch all user an empty string "".
-//
 // Users.Next can be used to paginate
-func (account *Account) Following(query string, order FollowOrder) *Users {
-	user := &User{
-		insta: account.insta,
-		ID:    account.ID,
-	}
-
-	return user.Following(query, order)
+//
+// See example: examples/account/following.go
+func (account *Account) Following() *Users {
+	endpoint := fmt.Sprintf(urlFollowing, account.ID)
+	users := &Users{}
+	users.insta = account.insta
+	users.endpoint = endpoint
+	return users
 }
 
 // Feed returns current account feed
@@ -377,6 +369,31 @@ func (account *Account) Saved() *SavedMedia {
 	return &SavedMedia{
 		insta:    account.insta,
 		endpoint: urlFeedSavedPosts,
+	}
+}
+
+type editResp struct {
+	Status  string  `json:"status"`
+	Account Account `json:"user"`
+}
+
+func (account *Account) edit() {
+	insta := account.insta
+	acResp := editResp{}
+	body, _, err := insta.sendRequest(
+		&reqOptions{
+			Endpoint: urlCurrentUser,
+			Query: map[string]string{
+				"edit": "true",
+			},
+		},
+	)
+	if err == nil {
+		err = json.Unmarshal(body, &acResp)
+		if err == nil {
+			acResp.Account.insta = insta
+			*account = acResp.Account
+		}
 	}
 }
 
@@ -495,6 +512,9 @@ func (account *Account) PendingFollowRequests() (*PendingRequests, error) {
 	for _, u := range result.Users {
 		u.insta = insta
 		users = append(users, toString(u.ID))
+	}
+	for _, u := range result.SuggestedUsers.Suggestions {
+		u.User.insta = insta
 	}
 
 	friendships, err := account.FriendhipsShowMany(users)

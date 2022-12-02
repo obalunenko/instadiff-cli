@@ -5,16 +5,15 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type reqOptions struct {
@@ -242,7 +241,7 @@ func (insta *Instagram) sendRequest(o *reqOptions) (body []byte, h http.Header, 
 	defer resp.Body.Close()
 
 	insta.extractHeaders(resp.Header)
-	body, err = io.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -258,12 +257,10 @@ func (insta *Instagram) sendRequest(o *reqOptions) (body []byte, h http.Header, 
 		if err != nil {
 			return nil, nil, err
 		}
-
-		body, err = io.ReadAll(zr)
+		body, err = ioutil.ReadAll(zr)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if err := zr.Close(); err != nil {
 			return nil, nil, err
 		}
@@ -302,18 +299,10 @@ func (insta *Instagram) sendRequest(o *reqOptions) (body []byte, h http.Header, 
 }
 
 func (insta *Instagram) checkXmidExpiry() {
-	insta.xmidMu.RLock()
-	expiry := insta.xmidExpiry
-	insta.xmidMu.RUnlock()
-
 	t := time.Now().Unix()
-	if expiry != -1 && t > expiry-10 {
-		insta.xmidMu.Lock()
+	if insta.xmidExpiry != -1 && t > insta.xmidExpiry-10 {
 		insta.xmidExpiry = -1
-		insta.xmidMu.Unlock()
-		if err := insta.zrToken(); err != nil {
-			insta.warnHandler(errors.Wrap(err, "failed to refresh xmid cookie"))
-		}
+		insta.zrToken()
 	}
 }
 
@@ -456,13 +445,46 @@ func (insta *Instagram) isError(code int, body []byte, status, endpoint string) 
 			Message:   string(body),
 			ErrorType: status,
 		}
-		json.Unmarshal(body, &ierr)
+		err = json.Unmarshal(body, &ierr)
 		if ierr.Message == "Transcode not finished yet." {
 			return nil
 		}
 		return ierr
 	}
 	return nil
+}
+
+func (insta *Instagram) prepareData(other ...map[string]interface{}) (string, error) {
+	data := map[string]interface{}{
+		"_uuid": insta.uuid,
+	}
+	if insta.Account != nil && insta.Account.ID != 0 {
+		data["_uid"] = strconv.FormatInt(insta.Account.ID, 10)
+	}
+
+	for i := range other {
+		for key, value := range other[i] {
+			data[key] = value
+		}
+	}
+	b, err := json.Marshal(data)
+	if err == nil {
+		return string(b), err
+	}
+	return "", err
+}
+
+func (insta *Instagram) prepareDataQuery(other ...map[string]interface{}) map[string]string {
+	data := map[string]string{
+		"_uuid":     insta.uuid,
+		"device_id": insta.dID,
+	}
+	for i := range other {
+		for key, value := range other[i] {
+			data[key] = toString(value)
+		}
+	}
+	return data
 }
 
 func random(min, max int64) int64 {

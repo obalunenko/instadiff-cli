@@ -30,9 +30,7 @@ func RSADecodePublicKeyFromBase64(pubKeyBase64 string) (*rsa.PublicKey, error) {
 
 func AESGCMEncrypt(key, data, additionalData []byte) (iv, encrypted, tag []byte, err error) {
 	iv = make([]byte, 12)
-	if _, err = rand.Read(iv); err != nil {
-		return
-	}
+	rand.Read(iv)
 
 	var block cipher.Block
 	block, err = aes.NewCipher(key)
@@ -72,9 +70,7 @@ func EncryptPassword(password, pubKeyEncoded string, pubKeyVersion int, t string
 
 	// Data to be encrypted by RSA PKCS1
 	randKey := make([]byte, 32)
-	if _, err := rand.Read(randKey); err != nil {
-		return "", err
-	}
+	rand.Read(randKey)
 
 	// Encrypt the random key that will be used to encrypt the password
 	randKeyEncrypted, err := RSAPublicKeyPKCS1Encrypt(publicKey, randKey)

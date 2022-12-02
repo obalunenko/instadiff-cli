@@ -2,6 +2,7 @@ package goinsta
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/Davincible/goinsta/v3/utilities"
@@ -121,16 +122,13 @@ func (info *TwoFactorInfo) Check2FATrusted() error {
 		return err
 	}
 
-	var stat struct {
+	stat := struct {
 		ReviewStatus int    `json:"review_status"`
 		Status       string `json:"status"`
-	}
-	if err = json.Unmarshal(body, &stat); err != nil {
-		return err
-	}
-
+	}{}
+	err = json.Unmarshal(body, &stat)
 	if stat.ReviewStatus == 0 {
-		return fmt.Errorf("two factor authentication not yet verified")
+		return errors.New("Two factor authentication not yet verified")
 	}
 
 	err = info.Login2FA("")

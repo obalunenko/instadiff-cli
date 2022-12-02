@@ -3,6 +3,7 @@ package goinsta
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	neturl "net/url"
@@ -10,8 +11,6 @@ import (
 	"path"
 	"regexp"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Media interface defines methods for both StoryMedia and FeedMedia.
@@ -379,10 +378,6 @@ func (item *Item) Reply(text string) error {
 			},
 		},
 	)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -666,10 +661,7 @@ func (item *Item) changeLike(endpoint string) error {
 func (item *Item) DownloadTo(dst string) error {
 	insta := item.insta
 	folder, file := path.Split(dst)
-
-	if err := os.MkdirAll(folder, 0o777); err != nil {
-		return err
-	}
+	os.MkdirAll(folder, 0o777)
 
 	switch item.MediaType {
 	case 1:
@@ -801,14 +793,6 @@ func (item *Item) PreviewComments() []Comment {
 		}
 
 		switch s[0].(type) {
-		case string:
-			comments := make([]Comment, 0)
-			for i := range s {
-				comments = append(comments, Comment{
-					Text: s[i].(string),
-				})
-			}
-			return comments
 		case interface{}:
 			comments := make([]Comment, 0)
 			for i := range s {
@@ -823,6 +807,14 @@ func (item *Item) PreviewComments() []Comment {
 						comments = append(comments, *comment)
 					}
 				}
+			}
+			return comments
+		case string:
+			comments := make([]Comment, 0)
+			for i := range s {
+				comments = append(comments, Comment{
+					Text: s[i].(string),
+				})
 			}
 			return comments
 		}
@@ -874,9 +866,7 @@ type FeedMedia struct {
 // See example: examples/media/mediaDelete.go
 func (media *FeedMedia) Delete() error {
 	for i := range media.Items {
-		if err := media.Items[i].Delete(); err != nil {
-			return errors.Wrap(err, "failed to delete item")
-		}
+		media.Items[i].Delete()
 	}
 	return nil
 }
