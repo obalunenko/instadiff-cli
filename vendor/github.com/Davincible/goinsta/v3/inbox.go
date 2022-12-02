@@ -22,7 +22,7 @@ type Inbox struct {
 	HasOlder            bool   `json:"has_older"`
 	Cursor              string `json:"oldest_cursor"`
 	UnseenCount         int    `json:"unseen_count"`
-	UnseenCountTS       int64  `json:"unseen_count_ts"`
+	UnseenCountTs       int64  `json:"unseen_count_ts"`
 	MostRecentInviter   User   `json:"most_recent_inviter"`
 	BlendedInboxEnabled bool   `json:"blended_inbox_enabled"`
 	NextCursor          struct {
@@ -44,6 +44,7 @@ type Inbox struct {
 type Conversation struct {
 	insta     *Instagram
 	err       error
+	firstRun  bool
 	isPending bool
 
 	ID   string `json:"thread_id"`
@@ -96,7 +97,7 @@ type InboxItem struct {
 	TqSeqID       int    `json:"tq_seq_id"`
 
 	// Type there are a few types:
-	// text, like, raven_media, action_log, media_share, reel_share, link, clip
+	// text, like, raven_media, action_log, media_share, reel_share, link
 	Type string `json:"item_type"`
 
 	// Text is message text.
@@ -107,7 +108,6 @@ type InboxItem struct {
 
 	Like string `json:"like"`
 
-	Clip          *clip          `json:"clip"`
 	Reel          *reelShare     `json:"reel_share"`
 	Media         *Item          `json:"media"`
 	MediaShare    *Item          `json:"media_share"`
@@ -118,10 +118,10 @@ type InboxItem struct {
 	Link          struct {
 		Text    string `json:"text"`
 		Context struct {
-			URL      string `json:"link_url"`
+			Url      string `json:"link_url"`
 			Title    string `json:"link_title"`
 			Summary  string `json:"link_summary"`
-			ImageURL string `json:"link_image_url"`
+			ImageUrl string `json:"link_image_url"`
 		} `json:"link_context"`
 	} `json:"link"`
 }
@@ -162,10 +162,6 @@ type reelShare struct {
 	Type        string `json:"type"`
 	ReelType    string `json:"reel_type"`
 	Media       Item   `json:"media"`
-}
-
-type clip struct {
-	Media Item `json:"clip"`
 }
 
 type actionLog struct {
@@ -307,7 +303,7 @@ func (inbox *Inbox) Sync() error {
 			"limit":                      "0",
 		})
 	} else {
-		if !inbox.InitialSnapshot() {
+		if inbox.InitialSnapshot() == false {
 			if inbox.err != ErrNoMore {
 				return inbox.err
 			}
@@ -455,14 +451,8 @@ func (c *Conversation) Approve() error {
 	// Add to conv list
 	insta.Inbox.updateConv(c)
 
-	if err := c.GetItems(); err != nil {
-		return err
-	}
-
-	if err := c.MarkAsSeen(*c.Items[len(c.Items)-1]); err != nil {
-		return err
-	}
-
+	c.GetItems()
+	c.MarkAsSeen(*c.Items[len(c.Items)-1])
 	return nil
 }
 
@@ -489,15 +479,10 @@ func (conv *Conversation) approve() error {
 	var resp struct {
 		Status string `json:"status"`
 	}
-
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return err
-	}
-
+	err = json.Unmarshal(body, &resp)
 	if resp.Status != "ok" {
-		return fmt.Errorf("failed to approve conversation with status: %s", resp.Status)
+		return fmt.Errorf("Failed to approve conversation with status: %s", resp.Status)
 	}
-
 	return nil
 }
 
@@ -523,15 +508,10 @@ func (conv *Conversation) Hide() error {
 	var resp struct {
 		Status string `json:"status"`
 	}
-
-	if err = json.Unmarshal(body, &resp); err != nil {
-		return err
-	}
-
+	err = json.Unmarshal(body, &resp)
 	if resp.Status != "ok" {
-		return fmt.Errorf("failed to hide conversation with status: %s", resp.Status)
+		return fmt.Errorf("Failed to hide conversation with status: %s", resp.Status)
 	}
-
 	return nil
 }
 
@@ -720,7 +700,7 @@ func (c *Conversation) MarkAsSeen(msg InboxItem) error {
 		return err
 	}
 	if resp.Status != "ok" {
-		return fmt.Errorf("status not ok while calling msg seen, '%s'", resp.Status)
+		return fmt.Errorf("Status not ok while calling msg seen, '%s'", resp.Status)
 	}
 	return nil
 }

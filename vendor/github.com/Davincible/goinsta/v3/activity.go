@@ -132,10 +132,7 @@ func (act *Activity) Next() bool {
 		*act = act2
 		act.insta = insta
 		if first {
-			if err := act.MarkAsSeen(); err != nil {
-				act.err = err
-				return false
-			}
+			act.MarkAsSeen()
 		}
 
 		if act.NextID == "" {
