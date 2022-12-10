@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-set -eu pipefail
+set -e
 
 SCRIPT_NAME="$(basename "$0")"
 

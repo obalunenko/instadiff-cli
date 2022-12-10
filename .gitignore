@@ -16,6 +16,7 @@
 
 bin/
 dist/
+*.tape
 .DS_Store
 coverage/
 tests-report.json

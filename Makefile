@@ -1,5 +1,13 @@
-NAME=instadiff-cli
 BIN_DIR=./bin
+
+SHELL := env VERSION=$(VERSION) $(SHELL)
+VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
+
+APP_NAME?=instadiff-cli
+SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
+
+
+COMPOSE_CMD=docker compose -f scripts/go-tools-docker-compose.yml up --exit-code-from
 
 # COLORS
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -44,9 +52,13 @@ compile-instadiff-cli: vet
 build: compile-instadiff-cli
 .PHONY: build
 
-## recreate all generated code.
-generate:
-	./scripts/codegen/generate.sh
+## recreate all generated code and documentation.
+codegen:
+	$(COMPOSE_CMD) go-generate go-generate
+.PHONY: codegen
+
+## recreate all generated code and swagger documentation and format code.
+generate: codegen format-project vet
 .PHONY: generate
 
 ## vet project
@@ -56,27 +68,27 @@ vet:
 
 ## Run full linting
 lint-full:
-	./scripts/linting/run-linters.sh
+	$(COMPOSE_CMD) lint-full lint-full
 .PHONY: lint-full
 
 ## Run linting for build pipeline
 lint-pipeline:
-	./scripts/linting/golangci-pipeline.sh
+	$(COMPOSE_CMD) lint-pipeline lint-pipeline
 .PHONY: lint-pipeline
 
 ## Run linting for sonar report
 lint-sonar:
-	./scripts/linting/golangci-sonar.sh
+	$(COMPOSE_CMD) lint-sonar lint-sonar
 .PHONY: lint-sonar
 
 ## Test all packages
 test:
-	./scripts/tests/run.sh
+	$(COMPOSE_CMD) run-tests run-tests
 .PHONY: test
 
 ## Test coverage report.
 test-cover:
-	./scripts/tests/coverage.sh
+	$(COMPOSE_CMD) run-tests-coverage run-tests-coverage
 .PHONY: test-cover
 
 ## Tests sonar report generate.
@@ -86,7 +98,7 @@ test-sonar-report:
 
 ## Installs tools from vendor.
 install-tools:
-	./scripts/install/vendored-tools.sh
+	docker compose -f scripts/go-tools-docker-compose.yml pull
 .PHONY: install-tools
 
 ## Sync vendor of root project and tools.
@@ -111,13 +123,13 @@ docker-down:
 ## Fix imports sorting.
 imports:
 	${call colored, fix-imports is running...}
-	./scripts/style/fix-imports.sh
+	$(COMPOSE_CMD) fix-imports fix-imports
 .PHONY: imports
 
 ## Format code.
 fmt:
 	${call colored, fmt is running...}
-	./scripts/style/fmt.sh
+	$(COMPOSE_CMD) fix-fmt fix-fmt
 .PHONY: fmt
 
 ## Format code and sort imports.
@@ -131,7 +143,7 @@ open-cover-report: test-cover
 
 ## Update readme coverage badge.
 update-readme-cover: test-cover
-	./scripts/update-readme-coverage.sh
+	$(COMPOSE_CMD) update-readme-coverage update-readme-coverage
 .PHONY: update-readme-cover
 
 ## Release
