@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
-
 	"github.com/Davincible/goinsta/v3"
 	log "github.com/obalunenko/logger"
 	"github.com/tcnksm/go-input"
@@ -23,6 +21,7 @@ import (
 
 	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
+	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 )
 
 // Client represents instagram client.

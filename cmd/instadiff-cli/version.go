@@ -6,10 +6,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/urfave/cli/v2"
-
 	log "github.com/obalunenko/logger"
 	"github.com/obalunenko/version"
+	"github.com/urfave/cli/v2"
 )
 
 func printVersion(ctx context.Context) string {

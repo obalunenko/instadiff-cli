@@ -61,6 +61,10 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 		log.WithError(ctx, err).Fatal(logPfx + "Could not connect to docker")
 	}
 
+	if err = pool.Client.Ping(); err != nil {
+		log.WithError(ctx, err).Fatal(logPfx + "Could not connect to Docker")
+	}
+
 	// pulls a repo, creates a container based on it and runs it
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: container.repo,
@@ -94,7 +98,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 
 		u, err = getTestURI()
 		if err != nil {
-			log.WithError(ctx, err).Fatal("Failed to get test uri")
+			log.WithError(ctx, err).Fatal(logPfx + "Failed to get test uri")
 		}
 
 		return func() error {
@@ -107,8 +111,9 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 				"uri":     u,
 			}).Info(logPfx + "Trying to connect to database in container")
 
-			cl, err = mongo.Connect(ctx, options.Client().ApplyURI(u))
+			cl, err = mongo.Connect(ctx, options.Client().ApplyURI(u), options.Client().SetDirect(true))
 			if err != nil {
+				log.WithError(ctx, err).Error(logPfx + "Failed to connect")
 				return fmt.Errorf("connect: %w", err)
 			}
 
@@ -117,6 +122,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 			}()
 
 			if err = cl.Ping(ctx, nil); err != nil {
+				log.WithError(ctx, err).Error(logPfx + "Failed to ping")
 				return fmt.Errorf("ping: %w", err)
 			}
 
@@ -125,7 +131,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 	}
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-	pool.MaxWait = 60 * time.Second
+	pool.MaxWait = 180 * time.Second
 	if err = pool.Retry(retryFn(ctx)); err != nil {
 		log.WithError(ctx, err).WithFields(log.Fields{
 			"container": resource.Container.Name,
