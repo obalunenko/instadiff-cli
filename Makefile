@@ -86,6 +86,9 @@ test:
 	./scripts/tests/run.sh
 .PHONY: test
 
+test-regression: test
+.PHONY: test-regression
+
 ## Test coverage report.
 test-cover:
 	./scripts/tests/coverage.sh
