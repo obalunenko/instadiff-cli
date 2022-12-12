@@ -83,12 +83,12 @@ lint-sonar:
 
 ## Test all packages
 test:
-	$(COMPOSE_CMD) run-tests run-tests
+	./scripts/tests/run.sh
 .PHONY: test
 
 ## Test coverage report.
 test-cover:
-	$(COMPOSE_CMD) run-tests-coverage run-tests-coverage
+	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
 ## Tests sonar report generate.
