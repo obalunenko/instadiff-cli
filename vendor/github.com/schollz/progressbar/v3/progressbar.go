@@ -188,7 +188,7 @@ func OptionEnableColorCodes(colorCodes bool) Option {
 	}
 }
 
-// OptionSetElapsedTime will enable elapsed time. always enabled if OptionSetPredictTime is true.
+// OptionSetElapsedTime will enable elapsed time. Always enabled if OptionSetPredictTime is true.
 func OptionSetElapsedTime(elapsedTime bool) Option {
 	return func(p *ProgressBar) {
 		p.config.elapsedTime = elapsedTime
@@ -484,12 +484,12 @@ func (p *ProgressBar) Add(num int) error {
 	return p.Add64(int64(num))
 }
 
-// Set wil set the bar to a current number
+// Set will set the bar to a current number
 func (p *ProgressBar) Set(num int) error {
 	return p.Set64(int64(num))
 }
 
-// Set64 wil set the bar to a current number
+// Set64 will set the bar to a current number
 func (p *ProgressBar) Set64(num int64) error {
 	p.lock.Lock()
 	toAdd := num - int64(p.state.currentBytes)
@@ -634,7 +634,6 @@ func (p *ProgressBar) render() error {
 		if !p.config.clearOnFinish {
 			renderProgressBar(p.config, &p.state)
 		}
-
 		if p.config.onCompletion != nil {
 			p.config.onCompletion()
 		}
@@ -776,7 +775,7 @@ func renderProgressBar(c config, s *state) (int, error) {
 			sb.WriteString(fmt.Sprintf("%0.0f %s/hr", 3600*averageRate, c.iterationString))
 		}
 	}
-	if sb.Len() != 0 {
+	if sb.Len() > 0 {
 		sb.WriteString(")")
 	}
 
@@ -796,15 +795,25 @@ func renderProgressBar(c config, s *state) (int, error) {
 	}
 
 	if c.fullWidth && !c.ignoreLength {
-		width, _, err := term.GetSize(int(os.Stdout.Fd()))
+		width, err := termWidth()
 		if err != nil {
-			width, _, err = term.GetSize(int(os.Stderr.Fd()))
-			if err != nil {
-				width = 80
-			}
+			width = 80
 		}
 
-		c.width = width - getStringWidth(c, c.description, true) - 14 - sb.Len() - len(leftBrac) - len(rightBrac)
+		amend := 1 // an extra space at eol
+		switch {
+		case leftBrac != "" && rightBrac != "":
+			amend = 4 // space, square brackets and colon
+		case leftBrac != "" && rightBrac == "":
+			amend = 4 // space and square brackets and another space
+		case leftBrac == "" && rightBrac != "":
+			amend = 3 // space and square brackets
+		}
+		if c.showDescriptionAtLineEnd {
+			amend += 1 // another space
+		}
+
+		c.width = width - getStringWidth(c, c.description, true) - 10 - amend - sb.Len() - len(leftBrac) - len(rightBrac)
 		s.currentSaucerSize = int(float64(s.currentPercent) / 100.0 * float64(c.width))
 	}
 	if s.currentSaucerSize > 0 {
@@ -882,10 +891,14 @@ func renderProgressBar(c config, s *state) (int, error) {
 			c.theme.BarEnd,
 			sb.String())
 
+		if s.currentPercent == 100 && c.showElapsedTimeOnFinish {
+			str = fmt.Sprintf("%s [%s]", str, leftBrac)
+		}
+
 		if c.showDescriptionAtLineEnd {
 			str = fmt.Sprintf("\r%s %s ", str, c.description)
 		} else {
-			str = fmt.Sprintf("\r%s %s ", c.description, str)
+			str = fmt.Sprintf("\r%s%s ", c.description, str)
 		}
 	} else {
 		if s.currentPercent == 100 {
@@ -897,6 +910,7 @@ func renderProgressBar(c config, s *state) (int, error) {
 				strings.Repeat(c.theme.SaucerPadding, repeatAmount),
 				c.theme.BarEnd,
 				sb.String())
+
 			if c.showElapsedTimeOnFinish {
 				str = fmt.Sprintf("%s [%s]", str, leftBrac)
 			}
@@ -1044,4 +1058,18 @@ func humanizeBytes(s float64) (string, string) {
 
 func logn(n, b float64) float64 {
 	return math.Log(n) / math.Log(b)
+}
+
+// termWidth function returns the visible width of the current terminal
+// and can be redefined for testing
+var termWidth = func() (width int, err error) {
+	width, _, err = term.GetSize(int(os.Stdout.Fd()))
+	if err == nil {
+		return width, nil
+	}
+	width, _, err = term.GetSize(int(os.Stderr.Fd()))
+	if err == nil {
+		return width, nil
+	}
+	return 0, err
 }
