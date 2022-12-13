@@ -1,0 +1,4 @@
+linguist-language=Go
+*.go -text diff=golang
+*.sh linguist-vendored
+Makefile linguist-vendored

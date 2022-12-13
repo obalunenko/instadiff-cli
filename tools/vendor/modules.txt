@@ -417,6 +417,9 @@ github.com/cavaliergopher/cpio
 # github.com/cenkalti/backoff/v4 v4.1.3
 ## explicit; go 1.13
 github.com/cenkalti/backoff/v4
+# github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d
+## explicit; go 1.12
+github.com/certifi/gocertifi
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
@@ -494,6 +497,9 @@ github.com/esimonov/ifshort/pkg/analyzer
 # github.com/ettle/strcase v0.1.1
 ## explicit; go 1.12
 github.com/ettle/strcase
+# github.com/evalphobia/logrus_sentry v0.8.2
+## explicit
+github.com/evalphobia/logrus_sentry
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
 github.com/fatih/color
@@ -509,6 +515,9 @@ github.com/fsnotify/fsnotify
 # github.com/fzipp/gocyclo v0.6.0
 ## explicit; go 1.18
 github.com/fzipp/gocyclo
+# github.com/getsentry/raven-go v0.2.0
+## explicit
+github.com/getsentry/raven-go
 # github.com/go-critic/go-critic v0.6.5
 ## explicit; go 1.16
 github.com/go-critic/go-critic/checkers
@@ -1077,10 +1086,13 @@ github.com/nishanths/exhaustive
 # github.com/nishanths/predeclared v0.2.2
 ## explicit; go 1.14
 github.com/nishanths/predeclared/passes/predeclared
-# github.com/obalunenko/coverbadger v1.2.0
-## explicit; go 1.18
+# github.com/obalunenko/coverbadger v1.3.1
+## explicit; go 1.19
 github.com/obalunenko/coverbadger/cmd/coverbadger
 github.com/obalunenko/coverbadger/internal/coverbadge
+# github.com/obalunenko/logger v0.5.1
+## explicit; go 1.18
+github.com/obalunenko/logger
 # github.com/obalunenko/version v1.1.0
 ## explicit; go 1.17
 github.com/obalunenko/version

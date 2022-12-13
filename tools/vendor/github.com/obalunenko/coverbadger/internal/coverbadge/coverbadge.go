@@ -1,15 +1,15 @@
 package coverbadge
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/obalunenko/logger"
 )
 
 type badge struct {
@@ -45,7 +45,7 @@ var (
 	regex = regexp.MustCompile(`!\[coverbadger-tag-do-not-edit]\(.*\)`)
 )
 
-func (badge badge) writeBadgeToMd(fpath string, cov float64) error {
+func (badge badge) writeBadgeToMd(ctx context.Context, fpath string, cov float64) error {
 	badgeURL, err := badge.generateBadgeBadgeURL(cov)
 	if err != nil {
 		return fmt.Errorf("generate badge URL: %w", err)
@@ -53,13 +53,13 @@ func (badge badge) writeBadgeToMd(fpath string, cov float64) error {
 
 	newImageTag := fmt.Sprintf("![coverbadger-tag-do-not-edit](%s)", badgeURL)
 
-	filedata, err := ioutil.ReadFile(filepath.Clean(fpath))
+	filedata, err := os.ReadFile(filepath.Clean(fpath))
 	if err != nil {
 		return fmt.Errorf("read file: %w", err)
 	}
 
 	var markdownData string
-	if string(filedata) == "" {
+	if len(filedata) == 0 {
 		markdownData = newImageTag
 	} else {
 		if !regex.MatchString(string(filedata)) {
@@ -70,12 +70,12 @@ func (badge badge) writeBadgeToMd(fpath string, cov float64) error {
 		}
 	}
 
-	err = ioutil.WriteFile(fpath, []byte(markdownData), os.ModePerm)
+	err = os.WriteFile(fpath, []byte(markdownData), os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("update markdown file: %w", err)
 	}
 
-	log.Info("Wrote badge image to markdown file")
+	log.Info(ctx, "Wrote badge image to markdown file")
 
 	return nil
 }
