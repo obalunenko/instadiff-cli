@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Davincible/goinsta/v3 v3.1.3
-	github.com/briandowns/spinner v1.19.0
+	github.com/briandowns/spinner v1.20.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/logger v0.5.1
 	github.com/obalunenko/version v1.1.0
