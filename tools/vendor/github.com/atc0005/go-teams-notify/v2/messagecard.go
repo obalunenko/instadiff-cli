@@ -9,55 +9,90 @@
 package goteamsnotify
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 )
+
+/////////////////////////////////////////////////////////////////////////
+// NOTE: The contents of this file are deprecated. See the Deprecated
+// indicators in this file for intended replacements.
+//
+// Please submit a bug report if you find exported code in this file which
+// does *not* already have a replacement elsewhere in this library.
+/////////////////////////////////////////////////////////////////////////
 
 const (
 	// PotentialActionOpenURIType is the type that must be used for OpenUri
 	// potential action.
+	//
+	// Deprecated: use messagecard.PotentialActionOpenURIType instead.
 	PotentialActionOpenURIType = "OpenUri"
 
 	// PotentialActionHTTPPostType is the type that must be used for HttpPOST
 	// potential action.
+	//
+	// Deprecated: use messagecard.PotentialActionHTTPPostType instead.
 	PotentialActionHTTPPostType = "HttpPOST"
 
 	// PotentialActionActionCardType is the type that must be used for
 	// ActionCard potential action.
+	//
+	// Deprecated: use messagecard.PotentialActionActionCardType instead.
 	PotentialActionActionCardType = "ActionCard"
 
 	// PotentialActionInvokeAddInCommandType is the type that must be used for
 	// InvokeAddInCommand potential action.
+	//
+	// Deprecated: use messagecard.PotentialActionInvokeAddInCommandType
+	// instead.
 	PotentialActionInvokeAddInCommandType = "InvokeAddInCommand"
 
 	// PotentialActionActionCardInputTextInputType is the type that must be
 	// used for ActionCard TextInput type.
+	//
+	// Deprecated: use messagecard.PotentialActionActionCardInputTextInputType
+	// instead.
 	PotentialActionActionCardInputTextInputType = "TextInput"
 
 	// PotentialActionActionCardInputDateInputType is the type that must be
 	// used for ActionCard DateInput type.
+	//
+	// Deprecated: use messagecard.PotentialActionActionCardInputDateInputType
+	// instead.
 	PotentialActionActionCardInputDateInputType = "DateInput"
 
 	// PotentialActionActionCardInputMultichoiceInput is the type that must be
 	// used for ActionCard MultichoiceInput type.
+	//
+	// Deprecated: use
+	// messagecard.PotentialActionActionCardInputMultichoiceInputType instead.
 	PotentialActionActionCardInputMultichoiceInput = "MultichoiceInput"
 )
 
 // PotentialActionMaxSupported is the maximum number of actions allowed in a
 // MessageCardPotentialAction collection.
 // https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference#actions
+//
+// Deprecated: use messagecard.PotentialActionMaxSupported instead.
 const PotentialActionMaxSupported = 4
 
 // ErrPotentialActionsLimitReached indicates that the maximum supported number
 // of potentialAction collection values has been reached for either a
 // MessageCard or a MessageCardSection.
+//
+// Deprecated: use messagecard.ErrPotentialActionsLimitReached instead.
 var ErrPotentialActionsLimitReached = errors.New("potential actions collection limit reached")
 
 // MessageCardPotentialAction represents potential actions an user can do in a
 // message card. See
 // https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference#actions
 // for more information.
+//
+// Deprecated: use messagecard.PotentialAction instead.
 type MessageCardPotentialAction struct {
 	// Type of the potential action. Can be OpenUri, HttpPOST, ActionCard or
 	// InvokeAddInCommand.
@@ -85,6 +120,8 @@ type MessageCardPotentialAction struct {
 }
 
 // MessageCardPotentialActionOpenURI represents a OpenUri potential action.
+//
+// Deprecated: use messagecard.PotentialActionOpenURI instead.
 type MessageCardPotentialActionOpenURI struct {
 	// Targets is a collection of name/value pairs that defines one URI per
 	// target operating system. Only used for OpenUri action type.
@@ -92,6 +129,8 @@ type MessageCardPotentialActionOpenURI struct {
 }
 
 // MessageCardPotentialActionHTTPPOST represents a HttpPOST potential action.
+//
+// Deprecated: use messagecard.PotentialActionHTTPPOST instead.
 type MessageCardPotentialActionHTTPPOST struct {
 	// Target defines the URL endpoint of the service that implements the
 	// action. Only used for HttpPOST action type.
@@ -113,6 +152,8 @@ type MessageCardPotentialActionHTTPPOST struct {
 
 // MessageCardPotentialActionActionCard represents an actionCard potential
 // action.
+//
+// Deprecated: use messagecard.PotentialActionActionCard instead.
 type MessageCardPotentialActionActionCard struct {
 	// Inputs is a collection of inputs an user can provide before processing
 	// the actions. Only used for ActionCard action type. Three types of
@@ -124,7 +165,11 @@ type MessageCardPotentialActionActionCard struct {
 	Actions []MessageCardPotentialActionActionCardAction `json:"actions,omitempty"`
 }
 
-// MessageCardPotentialActionActionCardAction is used for configuring ActionCard actions
+// MessageCardPotentialActionActionCardAction is used for configuring
+// ActionCard actions.
+//
+// Deprecated: use messagecard.PotentialActionActionCardAction
+// instead.
 type MessageCardPotentialActionActionCardAction struct {
 	// Type of the action. Can be OpenUri, HttpPOST, ActionCard or
 	// InvokeAddInCommand.
@@ -145,6 +190,9 @@ type MessageCardPotentialActionActionCardAction struct {
 
 // MessageCardPotentialActionInvokeAddInCommand represents an
 // invokeAddInCommand potential action.
+//
+// Deprecated: use messagecard.PotentialActionInvokeAddInCommand
+// instead.
 type MessageCardPotentialActionInvokeAddInCommand struct {
 	// AddInID specifies the add-in ID of the required add-in. Only used for
 	// InvokeAddInCommand action type.
@@ -165,6 +213,9 @@ type MessageCardPotentialActionInvokeAddInCommand struct {
 
 // MessageCardPotentialActionOpenURITarget is used for OpenUri action type.
 // It defines one URI per target operating system.
+//
+// Deprecated: use messagecard.PotentialActionOpenURITarget
+// instead.
 type MessageCardPotentialActionOpenURITarget struct {
 	// OS defines the operating system the target uri refers to. Supported
 	// operating system values are default, windows, iOS and android. The
@@ -176,7 +227,11 @@ type MessageCardPotentialActionOpenURITarget struct {
 	URI string `json:"uri,omitempty"`
 }
 
-// MessageCardPotentialActionHTTPPOSTHeader defines a HTTP header used for HttpPOST action type.
+// MessageCardPotentialActionHTTPPOSTHeader defines a HTTP header used for
+// HttpPOST action type.
+//
+// Deprecated: use messagecard.PotentialActionHTTPPOSTHeader
+// instead.
 type MessageCardPotentialActionHTTPPOSTHeader struct {
 	// Name is the header name.
 	Name string `json:"name,omitempty"`
@@ -186,6 +241,9 @@ type MessageCardPotentialActionHTTPPOSTHeader struct {
 }
 
 // MessageCardPotentialActionActionCardInput represents an ActionCard input.
+//
+// Deprecated: use messagecard.PotentialActionActionCardInput
+// instead.
 type MessageCardPotentialActionActionCardInput struct {
 	// Type of the ActionCard input.
 	// Must be either TextInput, DateInput or MultichoiceInput
@@ -223,6 +281,9 @@ type MessageCardPotentialActionActionCardInput struct {
 
 // MessageCardPotentialActionActionCardInputTextInput represents a TextInput
 // input used for potential action.
+//
+// Deprecated: use messagecard.PotentialActionActionCardInputTextInput
+// instead.
 type MessageCardPotentialActionActionCardInputTextInput struct {
 	// MaxLength indicates the maximum number of characters that can be
 	// entered.
@@ -235,6 +296,9 @@ type MessageCardPotentialActionActionCardInputTextInput struct {
 
 // MessageCardPotentialActionActionCardInputMultichoiceInput represents a
 // MultichoiceInput input used for potential action.
+//
+// Deprecated: use messagecard.PotentialActionActionCardInputMultichoiceInput
+// instead.
 type MessageCardPotentialActionActionCardInputMultichoiceInput struct {
 	// Choices defines the values that can be selected for the multichoice
 	// input.
@@ -257,6 +321,9 @@ type MessageCardPotentialActionActionCardInputMultichoiceInput struct {
 
 // MessageCardPotentialActionActionCardInputDateInput represents a DateInput
 // input used for potential action.
+//
+// Deprecated: use messagecard.PotentialActionActionCardInputDateInput
+// instead.
 type MessageCardPotentialActionActionCardInputDateInput struct {
 	// IncludeTime indicates whether the date input should allow for the
 	// selection of a time in addition to the date.
@@ -265,6 +332,8 @@ type MessageCardPotentialActionActionCardInputDateInput struct {
 
 // MessageCardSectionFact represents a section fact entry that is usually
 // displayed in a two-column key/value format.
+//
+// Deprecated: use messagecard.SectionFact instead.
 type MessageCardSectionFact struct {
 
 	// Name is the key for an associated value in a key/value pair
@@ -276,6 +345,8 @@ type MessageCardSectionFact struct {
 
 // MessageCardSectionImage represents an image as used by the heroImage and
 // images properties of a section.
+//
+// Deprecated: use messagecard.SectionImage instead.
 type MessageCardSectionImage struct {
 
 	// Image is the URL to the image.
@@ -288,6 +359,8 @@ type MessageCardSectionImage struct {
 }
 
 // MessageCardSection represents a section to include in a message card.
+//
+// Deprecated: use messagecard.Section instead.
 type MessageCardSection struct {
 	// Title is the title property of a section. This property is displayed
 	// in a font that stands out, while not as prominent as the card's title.
@@ -365,6 +438,8 @@ type MessageCardSection struct {
 
 // MessageCard represents a legacy actionable message card used via Office 365
 // or Microsoft Teams connectors.
+//
+// Deprecated: use messagecard.MessageCard instead.
 type MessageCard struct {
 	// Required; must be set to "MessageCard"
 	Type string `json:"@type"`
@@ -403,6 +478,10 @@ type MessageCard struct {
 
 	// PotentialActions is a collection of actions for a MessageCard.
 	PotentialActions []*MessageCardPotentialAction `json:"potentialAction,omitempty"`
+
+	// payload is a prepared MessageCard in JSON format for submission or
+	// pretty printing.
+	payload *bytes.Buffer `json:"-"`
 }
 
 // validatePotentialAction inspects the given *MessageCardPotentialAction
@@ -456,6 +535,8 @@ func addPotentialAction(collection *[]*MessageCardPotentialAction, actions ...*M
 // AddSection adds one or many additional MessageCardSection values to a
 // MessageCard. Validation is performed to reject invalid values with an error
 // message.
+//
+// Deprecated: use (messagecard.MessageCard).AddSection instead.
 func (mc *MessageCard) AddSection(section ...*MessageCardSection) error {
 	for _, s := range section {
 		logger.Printf("AddSection: MessageCardSection received: %+v\n", s)
@@ -502,12 +583,16 @@ func (mc *MessageCard) AddSection(section ...*MessageCardSection) error {
 
 // AddPotentialAction adds one or many MessageCardPotentialAction values to a
 // PotentialActions collection on a MessageCard.
+//
+// Deprecated: use (messagecard.MessageCard).AddPotentialAction instead.
 func (mc *MessageCard) AddPotentialAction(actions ...*MessageCardPotentialAction) error {
 	return addPotentialAction(&mc.PotentialActions, actions...)
 }
 
 // Validate validates a MessageCard calling ValidateFunc if defined,
-// otherwise, a default validation occurs
+// otherwise, a default validation occurs.
+//
+// Deprecated: use (messagecard.MessageCard).Validate instead.
 func (mc *MessageCard) Validate() error {
 	if mc.ValidateFunc != nil {
 		return mc.ValidateFunc()
@@ -524,8 +609,64 @@ func (mc *MessageCard) Validate() error {
 	return nil
 }
 
+// Prepare handles tasks needed to construct a payload from a MessageCard for
+// delivery to an endpoint.
+//
+// Deprecated: use (messagecard.MessageCard).Prepare instead.
+func (mc *MessageCard) Prepare() error {
+	jsonMessage, err := json.Marshal(mc)
+	if err != nil {
+		return fmt.Errorf(
+			"error marshalling MessageCard to JSON: %w",
+			err,
+		)
+	}
+
+	switch {
+	case mc.payload == nil:
+		mc.payload = &bytes.Buffer{}
+	default:
+		mc.payload.Reset()
+	}
+
+	_, err = mc.payload.Write(jsonMessage)
+	if err != nil {
+		return fmt.Errorf(
+			"error updating JSON payload for MessageCard: %w",
+			err,
+		)
+	}
+
+	return nil
+}
+
+// Payload returns the prepared MessageCard payload. The caller should call
+// Prepare() prior to calling this method, results are undefined otherwise.
+//
+// Deprecated: use (messagecard.MessageCard).Payload instead.
+func (mc *MessageCard) Payload() io.Reader {
+	return mc.payload
+}
+
+// PrettyPrint returns a formatted JSON payload of the MessageCard if the
+// Prepare() method has been called, or an empty string otherwise.
+//
+// Deprecated: use (messagecard.MessageCard).PrettyPrint instead.
+func (mc *MessageCard) PrettyPrint() string {
+	if mc.payload != nil {
+		var prettyJSON bytes.Buffer
+		_ = json.Indent(&prettyJSON, mc.payload.Bytes(), "", "\t")
+
+		return prettyJSON.String()
+	}
+
+	return ""
+}
+
 // AddFact adds one or many additional MessageCardSectionFact values to a
-// MessageCardSection
+// MessageCardSection.
+//
+// Deprecated: use (messagecard.Section).AddFact instead.
 func (mcs *MessageCardSection) AddFact(fact ...MessageCardSectionFact) error {
 	for _, f := range fact {
 		logger.Printf("AddFact: MessageCardSectionFact received: %+v\n", f)
@@ -546,7 +687,10 @@ func (mcs *MessageCardSection) AddFact(fact ...MessageCardSectionFact) error {
 }
 
 // AddFactFromKeyValue accepts a key and slice of values and converts them to
-// MessageCardSectionFact values
+// MessageCardSectionFact values.
+//
+// Deprecated: use (messagecard.Section).AddFactFromKeyValue
+// instead.
 func (mcs *MessageCardSection) AddFactFromKeyValue(key string, values ...string) error {
 	// validate arguments
 
@@ -576,12 +720,17 @@ func (mcs *MessageCardSection) AddFactFromKeyValue(key string, values ...string)
 // AddPotentialAction adds one or many MessageCardPotentialAction values to a
 // PotentialActions collection on a MessageCardSection. This is separate from
 // the actions collection for the MessageCard.
+//
+// Deprecated: use (messagecard.Section).AddPotentialAction
+// instead.
 func (mcs *MessageCardSection) AddPotentialAction(actions ...*MessageCardPotentialAction) error {
 	return addPotentialAction(&mcs.PotentialActions, actions...)
 }
 
 // AddImage adds an image to a MessageCard section. These images are used to
 // provide a photo gallery inside a MessageCard section.
+//
+// Deprecated: use (messagecard.Section).AddImage instead.
 func (mcs *MessageCardSection) AddImage(sectionImage ...MessageCardSectionImage) error {
 	for i := range sectionImage {
 		if sectionImage[i].Image == "" {
@@ -601,6 +750,8 @@ func (mcs *MessageCardSection) AddImage(sectionImage ...MessageCardSectionImage)
 // AddHeroImageStr adds a Hero Image to a MessageCard section using string
 // arguments. This image is used as the centerpiece or banner of a message
 // card.
+//
+// Deprecated: use (messagecard.Section).AddHeroImageStr instead.
 func (mcs *MessageCardSection) AddHeroImageStr(imageURL string, imageTitle string) error {
 	if imageURL == "" {
 		return fmt.Errorf("cannot add empty hero image URL")
@@ -628,6 +779,8 @@ func (mcs *MessageCardSection) AddHeroImageStr(imageURL string, imageTitle strin
 // AddHeroImage adds a Hero Image to a MessageCard section using a
 // MessageCardSectionImage argument. This image is used as the centerpiece or
 // banner of a message card.
+//
+// Deprecated: use (messagecard.Section).AddHeroImage instead.
 func (mcs *MessageCardSection) AddHeroImage(heroImage MessageCardSectionImage) error {
 	if heroImage.Image == "" {
 		return fmt.Errorf("cannot add empty hero image URL")
@@ -644,7 +797,9 @@ func (mcs *MessageCardSection) AddHeroImage(heroImage MessageCardSectionImage) e
 }
 
 // NewMessageCard creates a new message card with fields required by the
-// legacy message card format already predefined
+// legacy message card format already predefined.
+//
+// Deprecated: use messagecard.NewMessageCard instead.
 func NewMessageCard() MessageCard {
 	// define expected values to meet Office 365 Connector card requirements
 	// https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference#card-fields
@@ -656,29 +811,37 @@ func NewMessageCard() MessageCard {
 	return msgCard
 }
 
-// NewMessageCardSection creates an empty message card section
+// NewMessageCardSection creates an empty message card section.
+//
+// Deprecated: use messagecard.NewMessageCardSection instead.
 func NewMessageCardSection() *MessageCardSection {
 	msgCardSection := MessageCardSection{}
 	return &msgCardSection
 }
 
-// NewMessageCardSectionFact creates an empty message card section fact
+// NewMessageCardSectionFact creates an empty message card section fact.
+//
+// Deprecated: use messagecard.NewMessageCardSectionFact instead.
 func NewMessageCardSectionFact() MessageCardSectionFact {
 	msgCardSectionFact := MessageCardSectionFact{}
 	return msgCardSectionFact
 }
 
 // NewMessageCardSectionImage creates an empty image for use with message card
-// section
+// section.
+//
+// Deprecated: use messagecard.NewMessageCardSectionImage instead.
 func NewMessageCardSectionImage() MessageCardSectionImage {
 	msgCardSectionImage := MessageCardSectionImage{}
 	return msgCardSectionImage
 }
 
 // NewMessageCardPotentialAction creates a new MessageCardPotentialAction
-// using the provided potential action type and name. The name values defines
+// using the provided potential action type and name. The name value defines
 // the text that will be displayed on screen for the action. An error is
 // returned if invalid values are supplied.
+//
+// Deprecated: use messagecard.NewMessageCardPotentialAction instead.
 func NewMessageCardPotentialAction(potentialActionType string, name string) (*MessageCardPotentialAction, error) {
 	pa := MessageCardPotentialAction{
 		Type: potentialActionType,

@@ -94,8 +94,8 @@ func (l *Logger) handleLog(e *Entry) {
 	fmt.Fprintf(
 		l.Writer,
 		"%s %-*s",
-		style.Render(fmt.Sprintf("%*s", 1+l.Padding, level)),
-		l.rightPadding(names),
+		style.Render(fmt.Sprintf("%*s", 1+e.Padding, level)),
+		l.rightPadding(names, e.Padding),
 		e.Message,
 	)
 
@@ -106,11 +106,11 @@ func (l *Logger) handleLog(e *Entry) {
 	fmt.Fprintln(l.Writer)
 }
 
-func (l *Logger) rightPadding(names []string) int {
+func (l *Logger) rightPadding(names []string, padding int) int {
 	if len(names) == 0 {
 		return 0
 	}
-	return 50 - l.Padding
+	return 50 - padding
 }
 
 // WithFields returns a new entry with `fields` set.
@@ -129,6 +129,11 @@ func (l *Logger) WithField(key string, value interface{}) *Entry {
 // WithError returns a new entry with the "error" set to `err`.
 func (l *Logger) WithError(err error) *Entry {
 	return NewEntry(l).WithError(err)
+}
+
+// WithoutPadding returns a new entry with padding set to default.
+func (l *Logger) WithoutPadding() *Entry {
+	return NewEntry(l).WithoutPadding()
 }
 
 // Debug level message.
