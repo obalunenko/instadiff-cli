@@ -451,7 +451,11 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		if err := f.Close(); err != nil {
+			log.WithError(c.Context, err).Error("Failed to close file descriptor")
+		}
+	}(f)
 
 	content, err := io.ReadAll(f)
 	if err != nil {
