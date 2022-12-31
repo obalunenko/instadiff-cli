@@ -55,4 +55,4 @@ services:
     image: olegbalunenko/go-tools:v0.0.1
     volumes:
       - ../:/app/
-    entrypoint: /bin/sh -c 'cd /app/ && /app/scripts/codegen/go-generate.sh'
+    entrypoint: /bin/sh -c 'cd /app/ && /app/scripts/codegen/generate.sh'
