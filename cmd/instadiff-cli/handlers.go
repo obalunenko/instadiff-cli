@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"sort"
 	"text/tabwriter"
 	"time"
@@ -433,7 +434,7 @@ const (
 func getMediaType(c *cli.Context) media.Type {
 	mt := media.TypeUndefined
 
-	if c.Bool(mediaTypeStoryPhoto.String()) {
+	if c.Bool(storyPhoto) {
 		mt = media.TypeStoryPhoto
 	}
 
@@ -446,7 +447,7 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 		return nil, fmt.Errorf("path is empty")
 	}
 
-	f, err := os.Open(p)
+	f, err := os.Open(path.Clean(p))
 	if err != nil {
 		return nil, err
 	}
@@ -473,8 +474,9 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 func getFileContentType(f io.Reader) (string, error) {
 	// to sniff the content type only the first
 	// 512 bytes are used.
+	const sniffLen = 512
 
-	buf := make([]byte, 512)
+	buf := make([]byte, sniffLen)
 
 	_, err := f.Read(buf)
 	if err != nil {

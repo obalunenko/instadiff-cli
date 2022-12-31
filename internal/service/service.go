@@ -881,6 +881,7 @@ func getNew(oldlist, newlist []models.User) []models.User {
 	return diff
 }
 
+// UploadMedia uploads media to profile.
 func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
 	if file == nil {
 		return errors.New("file is empty")

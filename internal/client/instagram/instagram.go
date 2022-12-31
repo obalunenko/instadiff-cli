@@ -244,6 +244,7 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 	return cl, nil
 }
 
+// UploadMedia uploads media to the profile.
 func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
 	isStory := mt == media.TypeStoryPhoto
 
