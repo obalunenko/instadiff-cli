@@ -3,9 +3,11 @@ package client
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/obalunenko/instadiff-cli/internal/client/instagram"
+	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
@@ -22,6 +24,7 @@ type Client interface {
 	Block(ctx context.Context, user models.User) error
 	Unblock(ctx context.Context, user models.User) error
 	IsUseless(ctx context.Context, user models.User, threshold int) (bool, error)
+	UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error
 	Logout(ctx context.Context) error
 }
 
