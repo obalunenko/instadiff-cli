@@ -76,5 +76,12 @@ func commands(ctx context.Context) []*cli.Command {
 			Usage:   "List diff account history (lost and new followers and followings)",
 			Action:  executeCmd(ctx, cmdListHistoryDiff),
 		},
+		{
+			Name:    "upload",
+			Aliases: []string{"u"},
+			Usage:   "Upload media to profile",
+			Action:  executeCmd(ctx, cmdUploadMedia),
+			Flags:   uploadMediaFlags(),
+		},
 	}
 }

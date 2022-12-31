@@ -19,12 +19,14 @@ import (
 )
 
 const (
-	list      = "list"
-	logLevel  = "log_level"
-	cfgPath   = "config_path"
-	incognito = "incognito"
-	users     = "users"
-	username  = "username"
+	list       = "list"
+	logLevel   = "log_level"
+	cfgPath    = "config_path"
+	incognito  = "incognito"
+	users      = "users"
+	username   = "username"
+	filePath   = "file_path"
+	storyPhoto = "story_photo"
 )
 
 func main() {

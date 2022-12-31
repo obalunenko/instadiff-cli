@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"sort"
 	"text/tabwriter"
@@ -13,6 +16,7 @@ import (
 
 	log "github.com/obalunenko/logger"
 
+	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/internal/service"
 )
@@ -386,4 +390,99 @@ func cmdListUseless(c *cli.Context, svc *service.Service) error {
 	log.WithField(ctx, "count", len(bots)).Info("Could be blocked")
 
 	return printUsersList(c, bots)
+}
+
+func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
+	ctx := c.Context
+
+	// TODO:
+	//  - read file
+	//  - upload file
+
+	file, err := getMediaFile(c)
+	if err != nil {
+		return err
+	}
+
+	mt := getMediaType(c)
+
+	err = svc.UploadMedia(ctx, file, mt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//go:generate stringer -type=mediaTypeFlag -trimprefix=mediaTypeFlag -linecomment
+
+type mediaTypeFlag uint
+
+func (mt mediaTypeFlag) valid() bool {
+	return mt > mediaTypeUndefined && mt < mediaTypeSentinel
+}
+
+const (
+	mediaTypeUndefined mediaTypeFlag = iota // undefined
+
+	mediaTypeStoryPhoto // story_photo
+
+	mediaTypeSentinel // sentinel
+)
+
+func getMediaType(c *cli.Context) media.Type {
+	mt := media.TypeUndefined
+
+	if c.Bool(mediaTypeStoryPhoto.String()) {
+		mt = media.TypeStoryPhoto
+	}
+
+	return mt
+}
+
+func getMediaFile(c *cli.Context) (io.Reader, error) {
+	p := c.String(filePath)
+	if p == "" {
+		return nil, fmt.Errorf("path is empty")
+	}
+
+	f, err := os.Open(p)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	ct, err := getFileContentType(bytes.NewReader(content))
+	if err != nil {
+		return nil, err
+	}
+
+	log.WithFields(c.Context, log.Fields{
+		"file_type": ct,
+		"file_path": p,
+	}).Info("File to upload")
+
+	return bytes.NewReader(content), nil
+}
+
+func getFileContentType(f io.Reader) (string, error) {
+	// to sniff the content type only the first
+	// 512 bytes are used.
+
+	buf := make([]byte, 512)
+
+	_, err := f.Read(buf)
+	if err != nil {
+		return "", err
+	}
+
+	// the function that actually does the trick
+	ct := http.DetectContentType(buf)
+
+	return ct, nil
 }

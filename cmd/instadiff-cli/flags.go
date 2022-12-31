@@ -50,3 +50,20 @@ func addUsersFlag() *cli.StringSliceFlag {
 		Value:    &cli.StringSlice{},
 	}
 }
+
+func uploadMediaFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:     filePath,
+			Usage:    "Path to the media file",
+			Required: true,
+			Value:    "",
+		},
+		&cli.BoolFlag{
+			Name:     mediaTypeStoryPhoto.String(),
+			Usage:    "If true - media will be uploaded as story photo",
+			Required: false,
+			Value:    false,
+		},
+	}
+}
