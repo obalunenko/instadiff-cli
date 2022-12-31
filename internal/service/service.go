@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,7 @@ import (
 	"github.com/obalunenko/instadiff-cli/internal/client"
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
+	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/pkg/bar"
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
@@ -877,4 +879,21 @@ func getNew(oldlist, newlist []models.User) []models.User {
 	}
 
 	return diff
+}
+
+func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
+	if file == nil {
+		return errors.New("file is empty")
+	}
+
+	if !mt.Valid() {
+		return errors.New("media type is invalid")
+	}
+
+	err := svc.instagram.Client().UploadMedia(ctx, file, mt)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
