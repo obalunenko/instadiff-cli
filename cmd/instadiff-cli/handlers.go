@@ -13,6 +13,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/obalunenko/instadiff-cli/internal/utils"
+
 	"github.com/urfave/cli/v2"
 
 	log "github.com/obalunenko/logger"
@@ -55,11 +57,7 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 			return fmt.Errorf("service setup: %w", err)
 		}
 
-		defer func() {
-			if err = svc.Stop(ctx); err != nil {
-				log.WithError(ctx, err).Warn("Error occurred during the service stop")
-			}
-		}()
+		defer utils.LogError(ctx, svc.Stop(ctx), "Error occurred during the service stop")
 
 		return f(c, svc)
 	}
@@ -451,11 +449,8 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(f *os.File) {
-		if err := f.Close(); err != nil {
-			log.WithError(c.Context, err).Error("Failed to close file descriptor")
-		}
-	}(f)
+
+	defer utils.LogError(c.Context, f.Close(), "Failed to close file descriptor")
 
 	content, err := io.ReadAll(f)
 	if err != nil {
