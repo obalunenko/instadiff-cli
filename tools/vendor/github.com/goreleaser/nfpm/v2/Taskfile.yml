@@ -88,12 +88,20 @@ tasks:
       - ./scripts/cmd_docs.sh
     sources:
       - cmd/*.go
+      - files/*.go
       - nfpm.go
       - ./scripts/cmd_docs.sh
       - CONTRIBUTING.md
     generates:
       - www/docs/cmd/*.md
       - www/docs/contributing.md
+
+  docs:releases:
+    desc: Generate the latest file
+    cmds:
+      - ./scripts/pages/releases.sh
+    generates:
+      - www/docs/static/latest
 
   docs:imgs:
     desc: Download and resize images
@@ -115,12 +123,6 @@ tasks:
     cmds:
       - task: docs:generate
       - '{{.DOCKER}} run --rm -v ${PWD}/www:/docs docker.io/squidfunk/mkdocs-material build'
-
-  docs:vercel:build:
-    desc: Build documentation for deploying to Vercel
-    cmds:
-      - scripts/vercel/install.sh
-      - scripts/vercel/build.sh
 
   release:
     desc: Create a new tag

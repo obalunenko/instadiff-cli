@@ -26,6 +26,37 @@ The following types of changes will be recorded in this file:
 
 - placeholder
 
+## [v2.7.0] - 2022-12-12
+
+### Added
+
+- (GH-134) Allow setting user agent, fallback to project-specific default
+  value
+- (GH-135) Allow overriding default `http.Client`
+- (GH-157) Add `Adaptive Card` message format support
+  - see also discussion from GH-127, including feedback from
+    [@ghokun](https://github.com/ghokun)
+- (GH-169) Added YAML en(de)coding support to `MessageCard`
+  - credit: [@pcanilho](https://github.com/pcanilho)
+
+### Changed
+
+- Dependencies
+  - `github.com/stretchr/testify`
+    - `v1.7.0` to `v1.8.1`
+- (GH-154) Deprecate API interface, expose underlying "Teams" client
+- (GH-183) Update Makefile and GitHub Actions Workflows
+- (GH-190) Refactor GitHub Actions workflows to import logic
+
+### Fixed
+
+- (GH-166) Update `lintinstall` Makefile recipe
+- (GH-184) Apply Go 1.19 specific doc comments linting fixes
+- (GH-176) `./send_test.go:238:8: second argument to errors.As should not be
+  *error`
+- (GH-179) Wrong json key name for URL (uses uri instead)
+  - credit: [@janfonas](https://github.com/janfonas)
+
 ## [v2.6.1] - 2022-02-25
 
 ### Changed
@@ -316,7 +347,7 @@ The following types of changes will be recorded in this file:
 
 - Wrapper `IsValidInput()` added to handle all validation
   needs from one location.
-  - the intent was to both solve a CI erro and provide
+  - the intent was to both solve a CI error and provide
     a location to easily extend validation checks in
     the future (if needed)
 
@@ -412,7 +443,8 @@ The following types of changes will be recorded in this file:
 
 - add initial functionality of sending messages to MS Teams channel
 
-[Unreleased]: https://github.com/atc0005/go-teams-notify/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/atc0005/go-teams-notify/compare/v2.7.0...HEAD
+[v2.7.0]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.7.0
 [v2.6.1]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.6.1
 [v2.6.0]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.6.0
 [v2.5.0]: https://github.com/atc0005/go-teams-notify/releases/tag/v2.5.0

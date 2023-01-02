@@ -5,16 +5,11 @@ import (
 	"encoding/json"
 )
 
-var (
-	// EmptyStringBytes is a byte slice containing an empty JSON string.
-	EmptyStringBytes = []byte(`""`)
+// NullBytes is a byte slice containing the JSON null literal.
+var NullBytes = []byte("null")
 
-	// NullBytes is a byte slice containing the JSON null literal.
-	NullBytes = []byte("null")
-)
-
-// NewPtr returns a pointer of t.
-func NewPtr[T any](t T) *T {
+// Ptr returns a pointer of t.
+func Ptr[T any](t T) *T {
 	return &t
 }
 
@@ -25,23 +20,23 @@ func Null[T any]() Nullable[T] {
 	}
 }
 
-// OptionalNull returns a pointer to a null Nullable.
-func OptionalNull[T any]() *Nullable[T] {
+// NullPtr returns a pointer to a null Nullable.
+func NullPtr[T any]() *Nullable[T] {
 	return &Nullable[T]{
 		isNull: true,
 	}
 }
 
-// New returns a new Nullable with t as the value.
-func New[T any](t T) Nullable[T] {
+// NewNullable returns a new Nullable with t as the value.
+func NewNullable[T any](t T) Nullable[T] {
 	return Nullable[T]{
 		value:  t,
 		isNull: false,
 	}
 }
 
-// NewOptional returns a pointer to a new Nullable with t as the value.
-func NewOptional[T any](t T) *Nullable[T] {
+// NewNullablePtr returns a pointer to a new Nullable with t as the value.
+func NewNullablePtr[T any](t T) *Nullable[T] {
 	return &Nullable[T]{
 		value:  t,
 		isNull: false,
