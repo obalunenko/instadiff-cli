@@ -112,7 +112,9 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 				return fmt.Errorf("connect: %w", err)
 			}
 
-			defer utils.LogError(ctx, cl.Disconnect(ctx), "Failed to disconnect client")
+			defer func() {
+				utils.LogError(ctx, cl.Disconnect(ctx), "Failed to disconnect client")
+			}()
 
 			if err = cl.Ping(ctx, nil); err != nil {
 				return fmt.Errorf("ping: %w", err)

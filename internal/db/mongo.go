@@ -110,7 +110,9 @@ func (m *mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBat
 		return nil, fmt.Errorf("find batches [%s]: %w", bt.String(), err)
 	}
 
-	defer utils.LogError(ctx, resp.Close(ctx), "mongo: Failed to close cursor")
+	defer func() {
+		utils.LogError(ctx, resp.Close(ctx), "mongo: Failed to close cursor")
+	}()
 
 	var batches []models.UsersBatch
 

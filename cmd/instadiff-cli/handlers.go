@@ -57,7 +57,9 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 			return fmt.Errorf("service setup: %w", err)
 		}
 
-		defer utils.LogError(ctx, svc.Stop(ctx), "Error occurred during the service stop")
+		defer func() {
+			utils.LogError(ctx, svc.Stop(ctx), "Error occurred during the service stop")
+		}()
 
 		return f(c, svc)
 	}
@@ -450,7 +452,9 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 		return nil, err
 	}
 
-	defer utils.LogError(c.Context, f.Close(), "Failed to close file descriptor")
+	defer func() {
+		utils.LogError(c.Context, f.Close(), "Failed to close file descriptor")
+	}()
 
 	content, err := io.ReadAll(f)
 	if err != nil {
