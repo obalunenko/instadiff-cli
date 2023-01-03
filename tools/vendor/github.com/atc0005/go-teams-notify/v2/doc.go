@@ -6,37 +6,34 @@
 // full license information.
 
 /*
+Package goteamsnotify is used to send messages to a Microsoft Teams channel.
 
-Package goteamsnotify is used to send messages to Microsoft Teams (channels)
-
-PROJECT HOME
+# Project Home
 
 See our GitHub repo (https://github.com/atc0005/go-teams-notify) for the
 latest code, to file an issue or submit improvements for review and potential
 inclusion into the project.
 
-
-PURPOSE
+# Purpose
 
 Send messages to a Microsoft Teams channel.
 
+# Features
 
-FEATURES
+  - Submit messages to Microsoft Teams consisting of one or more sections,
+    Facts (key/value pairs), Actions or images (hosted externally)
+  - Support for MessageCard and Adaptive Card messages
+  - Support for Actions, allowing users to take quick actions within Microsoft
+    Teams
+  - Support for user mentions
+  - Configurable validation
+  - Configurable timeouts
+  - Configurable retry support
+  - Support for overriding the default http.Client
+  - Support for overriding the default project-specific user agent
 
-• Submit messages to Microsoft Teams consisting of one or more sections, Facts (key/value pairs), Actions or images (hosted externally)
-
-• Support for Actions, allowing users to take quick actions within Microsoft Teams
-
-• Configurable validation
-
-• Configurable timeouts
-
-• Configurable retry support
-
-
-USAGE
+# Usage
 
 See our main README for supported settings and examples.
-
 */
 package goteamsnotify

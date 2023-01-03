@@ -1,6 +1,6 @@
 package discord
 
-import "github.com/disgoorg/disgo/json"
+import "github.com/disgoorg/json"
 
 type ApplicationCommandCreate interface {
 	json.Marshaler
@@ -17,6 +17,7 @@ type SlashCommandCreate struct {
 	Options                  []ApplicationCommandOption  `json:"options,omitempty"`
 	DefaultMemberPermissions *json.Nullable[Permissions] `json:"default_member_permissions,omitempty"` // different behavior for 0 and null, optional
 	DMPermission             *bool                       `json:"dm_permission,omitempty"`
+	NSFW                     *bool                       `json:"nsfw,omitempty"`
 }
 
 func (c SlashCommandCreate) MarshalJSON() ([]byte, error) {
@@ -45,6 +46,7 @@ type UserCommandCreate struct {
 	NameLocalizations        map[Locale]string           `json:"name_localizations,omitempty"`
 	DefaultMemberPermissions *json.Nullable[Permissions] `json:"default_member_permissions,omitempty"`
 	DMPermission             *bool                       `json:"dm_permission,omitempty"`
+	NSFW                     *bool                       `json:"nsfw,omitempty"`
 }
 
 func (c UserCommandCreate) MarshalJSON() ([]byte, error) {
@@ -73,6 +75,7 @@ type MessageCommandCreate struct {
 	NameLocalizations        map[Locale]string           `json:"name_localizations,omitempty"`
 	DefaultMemberPermissions *json.Nullable[Permissions] `json:"default_member_permissions,omitempty"`
 	DMPermission             *bool                       `json:"dm_permission,omitempty"`
+	NSFW                     *bool                       `json:"nsfw,omitempty"`
 }
 
 func (c MessageCommandCreate) MarshalJSON() ([]byte, error) {

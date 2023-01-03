@@ -258,6 +258,7 @@ type ModifyUserOptions struct {
 	Note               *string `url:"note,omitempty" json:"note,omitempty"`
 	ThemeID            *int    `url:"theme_id,omitempty" json:"theme_id,omitempty"`
 	PublicEmail        *string `url:"public_email,omitempty" json:"public_email,omitempty"`
+	CommitEmail        *string `url:"commit_email,omitempty" json:"commit_email,omitempty"`
 }
 
 // ModifyUser modifies an existing user. Only administrators can change attributes
@@ -745,8 +746,9 @@ func (s *UsersService) DeleteGPGKeyForUser(user, key int, options ...RequestOpti
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/users.html#list-emails
 type Email struct {
-	ID    int    `json:"id"`
-	Email string `json:"email"`
+	ID          int        `json:"id"`
+	Email       string     `json:"email"`
+	ConfirmedAt *time.Time `json:"confirmed_at"`
 }
 
 // ListEmails gets a list of currently authenticated user's Emails.
