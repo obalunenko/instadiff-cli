@@ -412,10 +412,6 @@ func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 
 type mediaTypeFlag uint
 
-func (mt mediaTypeFlag) valid() bool {
-	return mt > mediaTypeUndefined && mt < mediaTypeSentinel
-}
-
 const (
 	mediaTypeUndefined mediaTypeFlag = iota // undefined
 
@@ -427,7 +423,7 @@ const (
 func getMediaType(c *cli.Context) media.Type {
 	mt := media.TypeUndefined
 
-	if c.Bool(storyPhoto) {
+	if c.Bool(mediaTypeStoryPhoto.String()) {
 		mt = media.TypeStoryPhoto
 	}
 
