@@ -15,7 +15,7 @@ import (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	reset := SetUpMongoContainer(ctx, m, "5.0.9", ContainerParams{
+	reset := SetUpMongoContainer(ctx, m, "6.0.3", ContainerParams{
 		User:          "user",
 		UserPassword:  "pwd",
 		ExpireSeconds: 30,
