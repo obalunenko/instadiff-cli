@@ -60,7 +60,7 @@ func uploadMediaFlags() []cli.Flag {
 			Value:    "",
 		},
 		&cli.BoolFlag{
-			Name:     storyPhoto,
+			Name:     mediaTypeStoryPhoto.String(),
 			Usage:    "If true - media will be uploaded as story photo",
 			Required: false,
 			Value:    false,
