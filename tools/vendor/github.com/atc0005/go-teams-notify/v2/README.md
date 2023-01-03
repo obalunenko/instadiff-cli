@@ -1,15 +1,15 @@
 <!-- omit in toc -->
-# go-teams-notify
+# goteamsnotify
 
-A package to send messages to Microsoft Teams (channels)
+A package to send messages to a Microsoft Teams channel.
 
 [![Latest release][githubtag-image]][githubtag-url]
 [![Go Reference][goref-image]][goref-url]
 [![License][license-image]][license-url]
-[![Validate Codebase](https://github.com/atc0005/go-teams-notify/workflows/Validate%20Codebase/badge.svg)](https://github.com/atc0005/go-teams-notify/actions?query=workflow%3A%22Validate+Codebase%22)
-[![Validate Docs](https://github.com/atc0005/go-teams-notify/workflows/Validate%20Docs/badge.svg)](https://github.com/atc0005/go-teams-notify/actions?query=workflow%3A%22Validate+Docs%22)
-[![Lint and Build using Makefile](https://github.com/atc0005/go-teams-notify/workflows/Lint%20and%20Build%20using%20Makefile/badge.svg)](https://github.com/atc0005/go-teams-notify/actions?query=workflow%3A%22Lint+and+Build+using+Makefile%22)
-[![Quick Validation](https://github.com/atc0005/go-teams-notify/workflows/Quick%20Validation/badge.svg)](https://github.com/atc0005/go-teams-notify/actions?query=workflow%3A%22Quick+Validation%22)
+[![go.mod Go version](https://img.shields.io/github/go-mod/go-version/atc0005/go-teams-notify)](https://github.com/atc0005/go-teams-notify)
+[![Lint and Build](https://github.com/atc0005/go-teams-notify/actions/workflows/lint-and-build.yml/badge.svg)](https://github.com/atc0005/go-teams-notify/actions/workflows/lint-and-build.yml)
+[![Project Analysis](https://github.com/atc0005/go-teams-notify/actions/workflows/project-analysis.yml/badge.svg)](https://github.com/atc0005/go-teams-notify/actions/workflows/project-analysis.yml)
+[![Push Validation](https://github.com/atc0005/go-teams-notify/actions/workflows/push-validation.yml/badge.svg)](https://github.com/atc0005/go-teams-notify/actions/workflows/push-validation.yml)
 
 <!-- omit in toc -->
 ## Table of contents
@@ -27,6 +27,8 @@ A package to send messages to Microsoft Teams (channels)
     - [How to create a webhook URL (Connector)](#how-to-create-a-webhook-url-connector)
   - [Examples](#examples)
     - [Basic](#basic)
+    - [User Mention](#user-mention)
+    - [Set custom user agent](#set-custom-user-agent)
     - [Add an Action](#add-an-action)
     - [Disable webhook URL prefix validation](#disable-webhook-url-prefix-validation)
     - [Enable custom patterns' validation](#enable-custom-patterns-validation)
@@ -42,28 +44,43 @@ inclusion into the project.
 ## Overview
 
 The `goteamsnotify` package (aka, `go-teams-notify`) allows sending messages
-to a Microsoft Teams channel.
+to a Microsoft Teams channel. These messages can be composed of legacy
+[`MessageCard`][msgcard-ref] or [`Adaptive Card`][adaptivecard-ref] card
+formats.
 
-Simple messages can be composed of only a title and a text body. More complex
-messages can be composed of multiple sections, key/value pairs (aka, `Facts`)
-and/or externally hosted images. See the [Features](#features) list for more
-information.
+Simple messages can be created by specifying only a title and a text body.
+More complex messages may be composed of multiple sections (`MessageCard`) or
+containers (`Adaptive Card`), key/value pairs (aka, `Facts`) and externally
+hosted images. See the [Features](#features) list for more information.
+
+**NOTE**: `Adaptive Card` support is currently limited. The goal is to expand
+this support in future releases to include additional features supported by
+Microsoft Teams.
 
 ## Features
 
 - Submit simple or complex messages to Microsoft Teams
   - simple messages consist of only a title and a text body (one or more
     strings)
-  - complex messages consist of one or more sections, key/value pairs (aka,
-    `Facts`) and/or externally hosted images. or images (hosted externally)
-- Support for [`Actions`][msgcard-ref-actions], allowing users to take quick
-  actions within Microsoft Teams
+  - complex messages may consist of multiple sections (`MessageCard`),
+    containers (`Adaptive Card`) key/value pairs (aka, `Facts`) and externally
+    hosted images
+- Support for Actions, allowing users to take quick actions within Microsoft
+  Teams
+  - [`MessageCard` `Actions`][msgcard-ref-actions]
+  - [`Adaptive Card` `Actions`][adaptivecard-ref-actions]
+- Support for [user mentions][adaptivecard-user-mentions] (`Adaptive
+  Card` format)
 - Configurable validation of webhook URLs
   - enabled by default, attempts to match most common known webhook URL
     patterns
   - option to disable validation entirely
   - option to use custom validation patterns
 - Configurable validation of `MessageCard` type
+  - default assertion that bare-minimum required fields are present
+  - support for providing a custom validation function to override default
+    validation behavior
+- Configurable validation of `Adaptive Card` type
   - default assertion that bare-minimum required fields are present
   - support for providing a custom validation function to override default
     validation behavior
@@ -88,10 +105,18 @@ For more details, see the
 
 ## Supported Releases
 
-| Series   | Example  | Status              |
-| -------- | -------- | ------------------- |
-| `v1.x.x` | `v1.3.1` | Not Supported (EOL) |
-| `v2.x.x` | `v2.6.0` | Supported           |
+| Series   | Example          | Status              |
+| -------- | ---------------- | ------------------- |
+| `v1.x.x` | `v1.3.1`         | Not Supported (EOL) |
+| `v2.x.x` | `v2.6.0`         | Supported           |
+| `v3.x.x` | `v3.0.0-alpha.1` | TBD                 |
+
+The current plan is to continue extending the v2 branch with new functionality
+while retaining backwards compatibility. Any breakage in compatibility for the
+v2 series is considered a bug (please report it).
+
+Long-term, the goal is to learn from missteps made in current releases and
+correct as many as possible for a future v3 series.
 
 ## Changelog
 
@@ -104,26 +129,6 @@ official release is also provided for further review.
 ## Usage
 
 ### Add this project as a dependency
-
-Assuming that you're using [Go
-Modules](https://blog.golang.org/using-go-modules), add this line to your
-imports like so:
-
-```golang
-import (
-  // ...
-
-  "github.com/atc0005/go-teams-notify/v2"
-)
-```
-
-Depending on your editor and current settings, your editor may resolve the
-import and update your `go.mod` and `go.sum` files accordingly. If not, review
-these resources for further information:
-
-- <https://blog.golang.org/using-go-modules>
-- <https://golang.org/doc/modules/managing-dependencies>
-- <https://golang.org/ref/mod>
 
 See the [Examples](#examples) section for more details.
 
@@ -182,15 +187,40 @@ shadabacc3934](https://gist.github.com/chusiang/895f6406fbf9285c58ad0a3ace13d025
 
 This is an example of a simple client application which uses this library.
 
-File: [basic](./examples/basic/main.go)
+- `Adaptive Card`
+  - File: [basic](./examples/adaptivecard/basic/main.go)
+- `MessageCard`
+  - File: [basic](./examples/messagecard/basic/main.go)
+
+#### User Mention
+
+These examples illustrates the use of one or more user mentions. This feature
+is not available in the legacy `MessageCard` card format.
+
+- File: [user-mention-single](./examples/adaptivecard/user-mention-single/main.go)
+- File: [user-mention-multiple](./examples/adaptivecard/user-mention-multiple/main.go)
+- File: [user-mention-verbose](./examples/adaptivecard/user-mention-verbose/main.go)
+  - this example does not necessarily reflect an optimal implementation
+
+#### Set custom user agent
+
+This example illustrates setting a custom user agent.
+
+- `Adaptive Card`
+  - File: [custom-user-agent](./examples/adaptivecard/custom-user-agent/main.go)
+- `MessageCard`
+  - File: [custom-user-agent](./examples/messagecard/custom-user-agent/main.go)
 
 #### Add an Action
 
-This example illustrates adding an [`OpenUri Action`][msgcard-ref-actions] to
-a message card. When used, this action triggers opening a URI in a separate
-browser or application.
+This example illustrates adding an [`OpenUri`][msgcard-ref-actions]
+(`MessageCard`) or [`OpenUrl`][adaptivecard-ref-actions] Action. When used,
+this action triggers opening a URL in a separate browser or application.
 
-File: [actions](./examples/actions/main.go)
+- `Adaptive Card`
+  - File: [actions](./examples/adaptivecard/actions/main.go)
+- `MessageCard`
+  - File: [actions](./examples/messagecard/actions/main.go)
 
 #### Disable webhook URL prefix validation
 
@@ -198,14 +228,20 @@ This example disables the validation webhook URLs, including the validation of
 known prefixes so that custom/private webhook URL endpoints can be used (e.g.,
 testing purposes).
 
-File: [disable-validation](./examples/disable-validation/main.go)
+- `Adaptive Card`
+  - File: [disable-validation](./examples/adaptivecard/disable-validation/main.go)
+- `MessageCard`
+  - File: [disable-validation](./examples/messagecard/disable-validation/main.go)
 
 #### Enable custom patterns' validation
 
 This example demonstrates how to enable custom validation patterns for webhook
 URLs.
 
-File: [custom-validation](./examples/custom-validation/main.go)
+- `Adaptive Card`
+  - File: [custom-validation](./examples/adaptivecard/custom-validation/main.go)
+- `MessageCard`
+  - File: [custom-validation](./examples/messagecard/custom-validation/main.go)
 
 ## Used by
 
@@ -241,3 +277,7 @@ using either this library or the original project.
 
 [msgcard-ref]: <https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference>
 [msgcard-ref-actions]: <https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference#actions>
+
+[adaptivecard-ref]: <https://adaptivecards.io/explorer>
+[adaptivecard-ref-actions]: <https://docs.microsoft.com/en-us/adaptive-cards/authoring-cards/getting-started>
+[adaptivecard-user-mentions]: <https://docs.microsoft.com/en-us/microsoftteams/platform/task-modules-and-cards/cards/cards-format#mention-support-within-adaptive-cards>

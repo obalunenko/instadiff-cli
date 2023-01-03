@@ -1,6 +1,8 @@
+// Package coverbadge provides internal logic for coverbadger tool.
 package coverbadge
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -14,7 +16,7 @@ type Params struct {
 }
 
 // Badger updates cover badge according tp Params.
-func Badger(p Params) error {
+func Badger(ctx context.Context, p Params) error {
 	style, err := parseBadgeStyle(p.BadgeStyle)
 	if err != nil {
 		return fmt.Errorf("invalid badge style flag: %w", err)
@@ -37,7 +39,7 @@ func Badger(p Params) error {
 	}
 
 	for _, f := range files {
-		if err := b.writeBadgeToMd(f, cov); err != nil {
+		if err := b.writeBadgeToMd(ctx, f, cov); err != nil {
 			return fmt.Errorf("write badge to markdown[%s]: %w", f, err)
 		}
 	}

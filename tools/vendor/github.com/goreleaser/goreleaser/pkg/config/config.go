@@ -16,6 +16,11 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
+// Git configs.
+type Git struct {
+	TagSort string `yaml:"tag_sort,omitempty" json:"tag_sort,omitempty"`
+}
+
 // GitHubURLs holds the URLs to be used when using github enterprise.
 type GitHubURLs struct {
 	API           string `yaml:"api,omitempty" json:"api,omitempty"`
@@ -423,10 +428,11 @@ type File struct {
 
 // FileInfo is the file info of a file.
 type FileInfo struct {
-	Owner string      `yaml:"owner,omitempty" json:"owner,omitempty"`
-	Group string      `yaml:"group,omitempty" json:"group,omitempty"`
-	Mode  os.FileMode `yaml:"mode,omitempty" json:"mode,omitempty"`
-	MTime time.Time   `yaml:"mtime,omitempty" json:"mtime,omitempty"`
+	Owner       string      `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Group       string      `yaml:"group,omitempty" json:"group,omitempty"`
+	Mode        os.FileMode `yaml:"mode,omitempty" json:"mode,omitempty"`
+	MTime       string      `yaml:"mtime,omitempty" json:"mtime,omitempty"`
+	ParsedMTime time.Time   `yaml:"-" json:"-"`
 }
 
 // UnmarshalYAML is a custom unmarshaler that wraps strings in arrays.
@@ -475,12 +481,14 @@ type UniversalBinary struct {
 type Archive struct {
 	ID                        string            `yaml:"id,omitempty" json:"id,omitempty"`
 	Builds                    []string          `yaml:"builds,omitempty" json:"builds,omitempty"`
+	BuildsInfo                FileInfo          `yaml:"builds_info,omitempty" json:"builds_info,omitempty"`
 	NameTemplate              string            `yaml:"name_template,omitempty" json:"name_template,omitempty"`
-	Replacements              map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"`
+	Replacements              map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"` // Deprecated: use templates instead
 	Format                    string            `yaml:"format,omitempty" json:"format,omitempty"`
 	FormatOverrides           []FormatOverride  `yaml:"format_overrides,omitempty" json:"format_overrides,omitempty"`
 	WrapInDirectory           string            `yaml:"wrap_in_directory,omitempty" json:"wrap_in_directory,omitempty" jsonschema:"oneof_type=string;boolean"`
 	StripParentBinaryFolder   bool              `yaml:"strip_parent_binary_folder,omitempty" json:"strip_parent_binary_folder,omitempty"`
+	RLCP                      bool              `yaml:"rlcp,omitempty" json:"rlcp,omitempty"`
 	Files                     []File            `yaml:"files,omitempty" json:"files,omitempty"`
 	Meta                      bool              `yaml:"meta,omitempty" json:"meta,omitempty"`
 	AllowDifferentBinaryCount bool              `yaml:"allow_different_binary_count,omitempty" json:"allow_different_binary_count,omitempty"`
@@ -654,7 +662,7 @@ type NFPMOverridables struct {
 	Release          string            `yaml:"release,omitempty" json:"release,omitempty"`
 	Prerelease       string            `yaml:"prerelease,omitempty" json:"prerelease,omitempty"`
 	VersionMetadata  string            `yaml:"version_metadata,omitempty" json:"version_metadata,omitempty"`
-	Replacements     map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"`
+	Replacements     map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"` // Deprecated: use templates instead
 	Dependencies     []string          `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
 	Recommends       []string          `yaml:"recommends,omitempty" json:"recommends,omitempty"`
 	Suggests         []string          `yaml:"suggests,omitempty" json:"suggests,omitempty"`
@@ -686,7 +694,7 @@ type Sign struct {
 	Cmd         string   `yaml:"cmd,omitempty" json:"cmd,omitempty"`
 	Args        []string `yaml:"args,omitempty" json:"args,omitempty"`
 	Signature   string   `yaml:"signature,omitempty" json:"signature,omitempty"`
-	Artifacts   string   `yaml:"artifacts,omitempty" json:"artifacts,omitempty"`
+	Artifacts   string   `yaml:"artifacts,omitempty" json:"artifacts,omitempty" jsonschema:"enum=all,enum=manifests,enum=images,enum=checksum,enum=source,enum=package,enum=archive,enum=binary,enum=sbom"`
 	IDs         []string `yaml:"ids,omitempty" json:"ids,omitempty"`
 	Stdin       *string  `yaml:"stdin,omitempty" json:"stdin,omitempty"`
 	StdinFile   string   `yaml:"stdin_file,omitempty" json:"stdin_file,omitempty"`
@@ -741,7 +749,7 @@ type SnapcraftLayoutMetadata struct {
 // Snapcraft config.
 type Snapcraft struct {
 	NameTemplate string            `yaml:"name_template,omitempty" json:"name_template,omitempty"`
-	Replacements map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"`
+	Replacements map[string]string `yaml:"replacements,omitempty" json:"replacements,omitempty"` // Deprecated: use templates instead.
 	Publish      bool              `yaml:"publish,omitempty" json:"publish,omitempty"`
 
 	ID               string                             `yaml:"id,omitempty" json:"id,omitempty"`
@@ -896,6 +904,7 @@ type Source struct {
 	Enabled        bool   `yaml:"enabled,omitempty" json:"enabled,omitempty"`
 	PrefixTemplate string `yaml:"prefix_template,omitempty" json:"prefix_template,omitempty"`
 	Files          []File `yaml:"files,omitempty" json:"files,omitempty"`
+	RLCP           bool   `yaml:"rlcp,omitempty" json:"rlcp,omitempty"`
 }
 
 // Project includes all project configuration.
@@ -930,7 +939,8 @@ type Project struct {
 	GoMod           GoMod            `yaml:"gomod,omitempty" json:"gomod,omitempty"`
 	Announce        Announce         `yaml:"announce,omitempty" json:"announce,omitempty"`
 	SBOMs           []SBOM           `yaml:"sboms,omitempty" json:"sboms,omitempty"`
-	Chocolateys     []Chocolatey     `yaml:"chocolateys,omitempty" json:"chocolatey,omitempty"`
+	Chocolateys     []Chocolatey     `yaml:"chocolateys,omitempty" json:"chocolateys,omitempty"`
+	Git             Git              `yaml:"git,omitempty" json:"git,omitempty"`
 
 	UniversalBinaries []UniversalBinary `yaml:"universal_binaries,omitempty" json:"universal_binaries,omitempty"`
 

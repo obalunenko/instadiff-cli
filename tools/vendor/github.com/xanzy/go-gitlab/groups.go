@@ -18,10 +18,13 @@ package gitlab
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 )
 
 // GroupsService handles communication with the group related methods of
@@ -81,6 +84,7 @@ type Group struct {
 	PreventForkingOutsideGroup     bool             `json:"prevent_forking_outside_group"`
 	MarkedForDeletionOn            *ISOTime         `json:"marked_for_deletion_on"`
 	CreatedAt                      *time.Time       `json:"created_at"`
+	IPRestrictionRanges            string           `json:"ip_restriction_ranges"`
 }
 
 // GroupAvatar represents a GitLab group avatar.
@@ -89,6 +93,15 @@ type Group struct {
 type GroupAvatar struct {
 	Filename string
 	Image    io.Reader
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (a *GroupAvatar) MarshalJSON() ([]byte, error) {
+	if a.Filename == "" && a.Image == nil {
+		return []byte(`""`), nil
+	}
+	type alias GroupAvatar
+	return json.Marshal((*alias)(a))
 }
 
 // LDAPGroupLink represents a GitLab LDAP group link.
@@ -119,7 +132,7 @@ type ListGroupsOptions struct {
 	OrderBy              *string           `url:"order_by,omitempty" json:"order_by,omitempty"`
 	Owned                *bool             `url:"owned,omitempty" json:"owned,omitempty"`
 	Search               *string           `url:"search,omitempty" json:"search,omitempty"`
-	SkipGroups           *[]int            `url:"skip_groups,omitempty" json:"skip_groups,omitempty"`
+	SkipGroups           *[]int            `url:"skip_groups,omitempty" del:"," json:"skip_groups,omitempty"`
 	Sort                 *string           `url:"sort,omitempty" json:"sort,omitempty"`
 	Statistics           *bool             `url:"statistics,omitempty" json:"statistics,omitempty"`
 	TopLevelOnly         *bool             `url:"top_level_only,omitempty" json:"top_level_only,omitempty"`
@@ -321,6 +334,7 @@ func (s *GroupsService) DownloadAvatar(gid interface{}, options ...RequestOption
 type CreateGroupOptions struct {
 	Name                           *string                     `url:"name,omitempty" json:"name,omitempty"`
 	Path                           *string                     `url:"path,omitempty" json:"path,omitempty"`
+	Avatar                         *GroupAvatar                `url:"-" json:"-"`
 	Description                    *string                     `url:"description,omitempty" json:"description,omitempty"`
 	MembershipLock                 *bool                       `url:"membership_lock,omitempty" json:"membership_lock,omitempty"`
 	Visibility                     *VisibilityValue            `url:"visibility,omitempty" json:"visibility,omitempty"`
@@ -338,6 +352,7 @@ type CreateGroupOptions struct {
 	ParentID                       *int                        `url:"parent_id,omitempty" json:"parent_id,omitempty"`
 	SharedRunnersMinutesLimit      *int                        `url:"shared_runners_minutes_limit,omitempty" json:"shared_runners_minutes_limit,omitempty"`
 	ExtraSharedRunnersMinutesLimit *int                        `url:"extra_shared_runners_minutes_limit,omitempty" json:"extra_shared_runners_minutes_limit,omitempty"`
+	IPRestrictionRanges            *string                     `url:"ip_restriction_ranges,omitempty" json:"ip_restriction_ranges,omitempty"`
 }
 
 // CreateGroup creates a new project group. Available only for users who can
@@ -345,7 +360,22 @@ type CreateGroupOptions struct {
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/groups.html#new-group
 func (s *GroupsService) CreateGroup(opt *CreateGroupOptions, options ...RequestOptionFunc) (*Group, *Response, error) {
-	req, err := s.client.NewRequest(http.MethodPost, "groups", opt, options)
+	var err error
+	var req *retryablehttp.Request
+
+	if opt.Avatar == nil {
+		req, err = s.client.NewRequest(http.MethodPost, "groups", opt, options)
+	} else {
+		req, err = s.client.UploadRequest(
+			http.MethodPost,
+			"groups",
+			opt.Avatar.Image,
+			opt.Avatar.Filename,
+			UploadAvatar,
+			opt,
+			options,
+		)
+	}
 	if err != nil {
 		return nil, nil, err
 	}
@@ -429,6 +459,7 @@ func (s *GroupsService) TransferSubGroup(gid interface{}, opt *TransferSubGroupO
 type UpdateGroupOptions struct {
 	Name                                 *string                     `url:"name,omitempty" json:"name,omitempty"`
 	Path                                 *string                     `url:"path,omitempty" json:"path,omitempty"`
+	Avatar                               *GroupAvatar                `url:"-" json:"avatar,omitempty"`
 	Description                          *string                     `url:"description,omitempty" json:"description,omitempty"`
 	MembershipLock                       *bool                       `url:"membership_lock,omitempty" json:"membership_lock,omitempty"`
 	Visibility                           *VisibilityValue            `url:"visibility,omitempty" json:"visibility,omitempty"`
@@ -449,6 +480,7 @@ type UpdateGroupOptions struct {
 	PreventForkingOutsideGroup           *bool                       `url:"prevent_forking_outside_group,omitempty" json:"prevent_forking_outside_group,omitempty"`
 	SharedRunnersSetting                 *SharedRunnersSettingValue  `url:"shared_runners_setting,omitempty" json:"shared_runners_setting,omitempty"`
 	PreventSharingGroupsOutsideHierarchy *bool                       `url:"prevent_sharing_groups_outside_hierarchy,omitempty" json:"prevent_sharing_groups_outside_hierarchy,omitempty"`
+	IPRestrictionRanges                  *string                     `url:"ip_restriction_ranges,omitempty" json:"ip_restriction_ranges,omitempty"`
 }
 
 // UpdateGroup updates an existing group; only available to group owners and
@@ -462,7 +494,21 @@ func (s *GroupsService) UpdateGroup(gid interface{}, opt *UpdateGroupOptions, op
 	}
 	u := fmt.Sprintf("groups/%s", PathEscape(group))
 
-	req, err := s.client.NewRequest(http.MethodPut, u, opt, options)
+	var req *retryablehttp.Request
+
+	if opt.Avatar == nil || (opt.Avatar.Filename == "" && opt.Avatar.Image == nil) {
+		req, err = s.client.NewRequest(http.MethodPut, u, opt, options)
+	} else {
+		req, err = s.client.UploadRequest(
+			http.MethodPut,
+			u,
+			opt.Avatar.Image,
+			opt.Avatar.Filename,
+			UploadAvatar,
+			opt,
+			options,
+		)
+	}
 	if err != nil {
 		return nil, nil, err
 	}

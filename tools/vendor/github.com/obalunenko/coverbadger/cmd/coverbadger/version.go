@@ -6,12 +6,11 @@ import (
 	"os"
 	"text/tabwriter"
 
-	logging "github.com/sirupsen/logrus"
-
+	log "github.com/obalunenko/logger"
 	"github.com/obalunenko/version"
 )
 
-func printVersion(_ context.Context) {
+func printVersion(ctx context.Context) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.TabIndent)
 
 	_, err := fmt.Fprintf(w, `
@@ -35,6 +34,6 @@ func printVersion(_ context.Context) {
 		version.GetBuildDate(),
 		version.GetGoVersion())
 	if err != nil {
-		logging.WithError(err).Error("print version")
+		log.WithError(ctx, err).Error("print version")
 	}
 }
