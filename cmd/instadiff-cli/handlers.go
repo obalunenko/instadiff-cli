@@ -396,20 +396,13 @@ func cmdListUseless(c *cli.Context, svc *service.Service) error {
 func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 	ctx := c.Context
 
-	// TODO:
-	//  - read file
-	//  - upload file
-
 	file, err := getMediaFile(c)
 	if err != nil {
-		return err
+		return fmt.Errorf("get media file: %w", err)
 	}
 
-	mt := getMediaType(c)
-
-	err = svc.UploadMedia(ctx, file, mt)
-	if err != nil {
-		return err
+	if err = svc.UploadMedia(ctx, file, getMediaType(c)); err != nil {
+		return fmt.Errorf("upload media: %w", err)
 	}
 
 	return nil
@@ -441,15 +434,17 @@ func getMediaType(c *cli.Context) media.Type {
 	return mt
 }
 
+var errEmptyFilePath = errors.New("path is empty")
+
 func getMediaFile(c *cli.Context) (io.Reader, error) {
 	p := c.String(filePath)
 	if p == "" {
-		return nil, fmt.Errorf("path is empty")
+		return nil, errEmptyFilePath
 	}
 
 	f, err := os.Open(path.Clean(p))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open file: %w", err)
 	}
 
 	defer func() {
@@ -458,12 +453,12 @@ func getMediaFile(c *cli.Context) (io.Reader, error) {
 
 	content, err := io.ReadAll(f)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read file: %w", err)
 	}
 
 	ct, err := getFileContentType(bytes.NewReader(content))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get file content type: %w", err)
 	}
 
 	log.WithFields(c.Context, log.Fields{

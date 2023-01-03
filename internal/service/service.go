@@ -891,10 +891,5 @@ func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Ty
 		return errors.New("media type is invalid")
 	}
 
-	err := svc.instagram.Client().UploadMedia(ctx, file, mt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return svc.instagram.Client().UploadMedia(ctx, file, mt)
 }

@@ -246,14 +246,12 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 
 // UploadMedia uploads media to the profile.
 func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
-	isStory := mt == media.TypeStoryPhoto
-
 	itm, err := c.client.Upload(&goinsta.UploadOptions{
 		File:                 file,
 		Thumbnail:            nil,
 		Album:                nil,
 		Caption:              "",
-		IsStory:              isStory,
+		IsStory:              isStory(mt),
 		IsIGTV:               false,
 		Title:                "",
 		IGTVPreview:          false,
@@ -276,6 +274,10 @@ func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type)
 	}).Info("Uploaded")
 
 	return nil
+}
+
+func isStory(mt media.Type) bool {
+	return mt == media.TypeStoryPhoto
 }
 
 // IsUseless reports where user is useless for statistics.
