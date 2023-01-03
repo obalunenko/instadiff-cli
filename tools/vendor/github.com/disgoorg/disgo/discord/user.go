@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/disgoorg/disgo/json"
+	"github.com/disgoorg/json"
 	"github.com/disgoorg/snowflake/v2"
 )
 
@@ -33,6 +33,9 @@ const (
 	UserFlagEarlyVerifiedBotDeveloper
 	UserFlagDiscordCertifiedModerator
 	UserFlagBotHTTPInteractions
+	_
+	_
+	UserFlagActiveDeveloper
 	UserFlagsNone UserFlags = 0
 )
 
@@ -166,4 +169,16 @@ const (
 type SelfUserUpdate struct {
 	Username string               `json:"username,omitempty"`
 	Avatar   *json.Nullable[Icon] `json:"avatar,omitempty"`
+}
+
+type ApplicationRoleConnection struct {
+	PlatformName     *string           `json:"platform_name"`
+	PlatformUsername *string           `json:"platform_username"`
+	Metadata         map[string]string `json:"metadata"`
+}
+
+type ApplicationRoleConnectionUpdate struct {
+	PlatformName     *string            `json:"platform_name,omitempty"`
+	PlatformUsername *string            `json:"platform_username,omitempty"`
+	Metadata         *map[string]string `json:"metadata,omitempty"`
 }

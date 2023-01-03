@@ -17,6 +17,7 @@
 package gitlab
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -120,6 +121,7 @@ type Project struct {
 	SharedWithGroups                          []struct {
 		GroupID          int    `json:"group_id"`
 		GroupName        string `json:"group_name"`
+		GroupFullPath    string `json:"group_full_path"`
 		GroupAccessLevel int    `json:"group_access_level"`
 	} `json:"shared_with_groups"`
 	Statistics                               *Statistics        `json:"statistics"`
@@ -146,6 +148,7 @@ type Project struct {
 	ExternalAuthorizationClassificationLabel string             `json:"external_authorization_classification_label"`
 	RequirementsAccessLevel                  AccessControlValue `json:"requirements_access_level"`
 	SecurityAndComplianceAccessLevel         AccessControlValue `json:"security_and_compliance_access_level"`
+	MergeRequestDefaultTargetSelf            bool               `json:"mr_default_target_self"`
 
 	// Deprecated members
 	PublicBuilds bool `json:"public_builds"`
@@ -710,6 +713,15 @@ type ProjectAvatar struct {
 	Image    io.Reader
 }
 
+// MarshalJSON implements the json.Marshaler interface.
+func (a *ProjectAvatar) MarshalJSON() ([]byte, error) {
+	if a.Filename == "" && a.Image == nil {
+		return []byte(`""`), nil
+	}
+	type alias ProjectAvatar
+	return json.Marshal((*alias)(a))
+}
+
 // CreateProject creates a new project owned by the authenticated user.
 //
 // GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#create-project
@@ -811,7 +823,7 @@ type EditProjectOptions struct {
 	AutoDevopsDeployStrategy                  *string                              `url:"auto_devops_deploy_strategy,omitempty" json:"auto_devops_deploy_strategy,omitempty"`
 	AutoDevopsEnabled                         *bool                                `url:"auto_devops_enabled,omitempty" json:"auto_devops_enabled,omitempty"`
 	AutocloseReferencedIssues                 *bool                                `url:"autoclose_referenced_issues,omitempty" json:"autoclose_referenced_issues,omitempty"`
-	Avatar                                    *ProjectAvatar                       `url:"-" json:"-"`
+	Avatar                                    *ProjectAvatar                       `url:"-" json:"avatar,omitempty"`
 	BuildCoverageRegex                        *string                              `url:"build_coverage_regex,omitempty" json:"build_coverage_regex,omitempty"`
 	BuildGitStrategy                          *string                              `url:"build_git_strategy,omitempty" json:"build_git_strategy,omitempty"`
 	BuildTimeout                              *int                                 `url:"build_timeout,omitempty" json:"build_timeout,omitempty"`
@@ -832,6 +844,7 @@ type EditProjectOptions struct {
 	KeepLatestArtifact                        *bool                                `url:"keep_latest_artifact,omitempty" json:"keep_latest_artifact,omitempty"`
 	LFSEnabled                                *bool                                `url:"lfs_enabled,omitempty" json:"lfs_enabled,omitempty"`
 	MergeCommitTemplate                       *string                              `url:"merge_commit_template,omitempty" json:"merge_commit_template,omitempty"`
+	MergeRequestDefaultTargetSelf             *bool                                `url:"mr_default_target_self,omitempty" json:"mr_default_target_self,omitempty"`
 	MergeMethod                               *MergeMethodValue                    `url:"merge_method,omitempty" json:"merge_method,omitempty"`
 	MergePipelinesEnabled                     *bool                                `url:"merge_pipelines_enabled,omitempty" json:"merge_pipelines_enabled,omitempty"`
 	MergeRequestsAccessLevel                  *AccessControlValue                  `url:"merge_requests_access_level,omitempty" json:"merge_requests_access_level,omitempty"`
@@ -901,11 +914,11 @@ func (s *ProjectsService) EditProject(pid interface{}, opt *EditProjectOptions, 
 
 	var req *retryablehttp.Request
 
-	if opt.Avatar == nil {
+	if opt.Avatar == nil || (opt.Avatar.Filename == "" && opt.Avatar.Image == nil) {
 		req, err = s.client.NewRequest(http.MethodPut, u, opt, options)
 	} else {
 		req, err = s.client.UploadRequest(
-			http.MethodPost,
+			http.MethodPut,
 			u,
 			opt.Avatar.Image,
 			opt.Avatar.Filename,
@@ -1971,4 +1984,55 @@ func (s *ProjectsService) TransferProject(pid interface{}, opt *TransferProjectO
 	}
 
 	return p, resp, err
+}
+
+// StartHousekeepingProject start the Housekeeping task for a project.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/projects.html#start-the-housekeeping-task-for-a-project
+func (s *ProjectsService) StartHousekeepingProject(pid interface{}, options ...RequestOptionFunc) (*Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, err
+	}
+	u := fmt.Sprintf("projects/%s/housekeeping", PathEscape(project))
+
+	req, err := s.client.NewRequest(http.MethodPost, u, nil, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.client.Do(req, nil)
+}
+
+// GetRepositoryStorage Get the path to repository storage.
+//
+// GitLab API docs:
+// https://docs.gitlab.com/ee/api/projects.html#get-the-path-to-repository-storage
+type ProjectReposityStorage struct {
+	ProjectID         int    `json:"project_id"`
+	DiskPath          string `json:"disk_path"`
+	CreatedAt         *time.Time `json:"created_at"`
+	RepositoryStorage string `json:"repository_storage"`
+}
+
+func (s *ProjectsService) GetRepositoryStorage(pid interface{}, options ...RequestOptionFunc) (*ProjectReposityStorage, *Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, nil, err
+	}
+	u := fmt.Sprintf("projects/%s/storage", PathEscape(project))
+
+	req, err := s.client.NewRequest(http.MethodGet, u, nil, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	prs := new(ProjectReposityStorage)
+	resp, err := s.client.Do(req, prs)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return prs, resp, err
 }

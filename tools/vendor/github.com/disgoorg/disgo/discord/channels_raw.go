@@ -3,7 +3,7 @@ package discord
 import (
 	"time"
 
-	"github.com/disgoorg/disgo/json"
+	"github.com/disgoorg/json"
 	"github.com/disgoorg/snowflake/v2"
 )
 
@@ -192,6 +192,7 @@ type guildForumChannel struct {
 	DefaultReactionEmoji          *DefaultReactionEmoji `json:"default_reaction_emoji"`
 	DefaultThreadRateLimitPerUser int                   `json:"default_thread_rate_limit_per_user"`
 	DefaultSortOrder              *DefaultSortOrder     `json:"default_sort_order"`
+	DefaultForumLayout            DefaultForumLayout    `json:"default_forum_layout"`
 
 	// idk discord name your shit correctly
 	LastThreadID *snowflake.ID `json:"last_message_id"`

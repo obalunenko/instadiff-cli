@@ -61,6 +61,11 @@ func WithError(err error) *Entry {
 	return Log.WithError(err)
 }
 
+// WithoutPadding returns a new entry with padding set to default.
+func WithoutPadding() *Entry {
+	return Log.WithoutPadding()
+}
+
 // Debug level message.
 func Debug(msg string) {
 	Log.Debug(msg)

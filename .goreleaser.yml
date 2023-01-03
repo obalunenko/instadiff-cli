@@ -26,14 +26,14 @@ builds:
   - id: cli
     binary: instadiff-cli
     goos:
-      - linux
-      - darwin
-      - windows
+      - "linux"
+      - "darwin"
+      - "windows"
     goarch:
-      - 386
-      - amd64
-      - arm
-      - arm64
+      - "386"
+      - "amd64"
+      - "arm"
+      - "arm64"
     mod_timestamp: '{{ .CommitTimestamp }}'
     env:
       - CGO_ENABLED=0
@@ -42,7 +42,6 @@ builds:
       - -trimpath
     ldflags:
       - "{{ .Env.GO_BUILD_LDFLAGS }}"
-      -
 universal_binaries:
   -
     # ID of the source build
@@ -69,14 +68,10 @@ archives:
       - cli
     format: tar.gz
     wrap_in_directory: true
+    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
-      linux: Tux
     name_template: "{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     files:
       - LICENSE
