@@ -65,14 +65,12 @@ func decode(r io.Reader) (image.Image, error) {
 		"file_type": ct,
 	}).Info("Media file")
 
-	var img image.Image
-
-	switch ct {
-	case "application/octet-stream":
-		img, err = decodeHEIF(bytes.NewReader(content))
-	default:
-		img, _, err = image.Decode(bytes.NewReader(content))
+	if ct == "application/octet-stream" {
+		// There is no way to implement heif decoder without C or external tools usage.
+		return nil, errors.New("unsupported format")
 	}
+
+	img, _, err := image.Decode(bytes.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +98,6 @@ func resizeImage(src image.Image, w, h int) image.Image {
 	return imaging.Overlay(dst, tmp, image.Pt(w/2-iw/2, h/2-ih/2), 1.0)
 }
 
-var errEmptyFilePath = errors.New("path is empty")
-
 func getFileContentType(f io.Reader) (string, error) {
 	// to sniff the content type only the first
 	// 512 bytes are used.
@@ -118,10 +114,4 @@ func getFileContentType(f io.Reader) (string, error) {
 	ct := http.DetectContentType(buf)
 
 	return ct, nil
-}
-
-func decodeHEIF(r io.Reader) (image.Image, error) {
-	// There is no way to implement heif decoder without C or external tools usage.
-
-	return nil, errors.New("unsupported format")
 }

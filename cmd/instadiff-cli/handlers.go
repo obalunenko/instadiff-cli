@@ -391,6 +391,8 @@ func cmdListUseless(c *cli.Context, svc *service.Service) error {
 	return printUsersList(c, bots)
 }
 
+var errEmptyFilePath = errors.New("path is empty")
+
 func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 	ctx := c.Context
 
@@ -409,6 +411,10 @@ func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 }
 
 func getMediaFile(ctx context.Context, fpath string) (io.Reader, error) {
+	if fpath == "" {
+		return nil, errEmptyFilePath
+	}
+
 	f, err := os.Open(path.Clean(fpath))
 	if err != nil {
 		return nil, fmt.Errorf("open file: %w", err)
