@@ -16,9 +16,7 @@ import (
 	"github.com/tcnksm/go-input"
 
 	"github.com/obalunenko/instadiff-cli/internal/actions"
-
-	"github.com/obalunenko/instadiff-cli/pkg/spinner"
-
+	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
 	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
@@ -245,6 +243,10 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 
 // UploadMedia uploads media to the profile.
 func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
+	if !mt.Valid() {
+		return fmt.Errorf("%s: %w", mt.String(), clientErrors.ErrUnsupportedMediaType)
+	}
+
 	itm, err := c.client.Upload(&goinsta.UploadOptions{
 		File:                 file,
 		Thumbnail:            nil,
