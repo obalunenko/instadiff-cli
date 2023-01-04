@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"sort"
 	"text/tabwriter"
 	"time"
@@ -394,7 +396,7 @@ func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 
 	p := c.String(filePath)
 
-	file, err := media.GetMediaFile(ctx, p)
+	file, err := getMediaFile(ctx, p)
 	if err != nil {
 		return fmt.Errorf("get media file: %w", err)
 	}
@@ -404,6 +406,19 @@ func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 	}
 
 	return nil
+}
+
+func getMediaFile(ctx context.Context, fpath string) (io.Reader, error) {
+	f, err := os.Open(path.Clean(fpath))
+	if err != nil {
+		return nil, fmt.Errorf("open file: %w", err)
+	}
+
+	defer func() {
+		utils.LogError(ctx, f.Close(), "Failed to close file descriptor")
+	}()
+
+	return f, nil
 }
 
 //go:generate stringer -type=mediaTypeFlag -trimprefix=mediaTypeFlag -linecomment

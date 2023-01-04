@@ -10,12 +10,8 @@ import (
 	"image/jpeg"
 	"io"
 	"net/http"
-	"os"
-	"path"
 
 	log "github.com/obalunenko/logger"
-
-	"github.com/obalunenko/instadiff-cli/internal/utils"
 
 	"github.com/disintegration/imaging"
 )
@@ -105,34 +101,6 @@ func resizeImage(src image.Image, w, h int) image.Image {
 }
 
 var errEmptyFilePath = errors.New("path is empty")
-
-func GetMediaFile(ctx context.Context, fpath string) (io.Reader, error) {
-	f, err := os.Open(path.Clean(fpath))
-	if err != nil {
-		return nil, fmt.Errorf("open file: %w", err)
-	}
-
-	defer func() {
-		utils.LogError(ctx, f.Close(), "Failed to close file descriptor")
-	}()
-
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("read file: %w", err)
-	}
-
-	ct, err := getFileContentType(bytes.NewReader(content))
-	if err != nil {
-		return nil, fmt.Errorf("get file content type: %w", err)
-	}
-
-	log.WithFields(ctx, log.Fields{
-		"file_type": ct,
-		"file_path": fpath,
-	}).Info("Media file")
-
-	return bytes.NewReader(content), nil
-}
 
 func getFileContentType(f io.Reader) (string, error) {
 	// to sniff the content type only the first

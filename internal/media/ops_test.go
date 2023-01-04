@@ -2,7 +2,6 @@ package media
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"fmt"
 	"io"
@@ -164,57 +163,6 @@ func diff(tb testing.TB, want, actual io.Reader) {
 	require.NoError(tb, err)
 
 	assert.True(tb, bytes.Equal(h1.Sum(nil), h2.Sum(nil)))
-}
-
-func TestGetMediaFile(t *testing.T) {
-	ctx := context.Background()
-
-	type args struct {
-		ctx   context.Context
-		fpath string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    file
-		wantErr assert.ErrorAssertionFunc
-	}{
-		{
-			name: "",
-			args: args{
-				ctx:   ctx,
-				fpath: filepath.Join("testdata", "1080x1090.jpg"),
-			},
-			want: file{
-				path: filepath.Join("testdata", "1080x1090.jpg"),
-			},
-			wantErr: assert.NoError,
-		},
-		{
-			name: "",
-			args: args{
-				ctx:   ctx,
-				fpath: filepath.Join("testdata", "sample1.heic"),
-			},
-			want: file{
-				path: filepath.Join("testdata", "sample1.heic"),
-			},
-			wantErr: assert.NoError,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetMediaFile(tt.args.ctx, tt.args.fpath)
-			if !tt.wantErr(t, err, fmt.Sprintf("GetMediaFile(%v, %v)", tt.args.ctx, tt.args.fpath)) {
-				return
-			}
-
-			want := getReaderFromPath(t, tt.want.path)
-
-			diff(t, want, got)
-		})
-	}
 }
 
 func Test_getFileContentType(t *testing.T) {
