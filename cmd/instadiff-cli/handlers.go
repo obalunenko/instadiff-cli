@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"path"
 	"sort"
 	"text/tabwriter"
 	"time"
@@ -396,7 +392,9 @@ func cmdListUseless(c *cli.Context, svc *service.Service) error {
 func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
 	ctx := c.Context
 
-	file, err := getMediaFile(c)
+	p := c.String(filePath)
+
+	file, err := media.GetMediaFile(ctx, p)
 	if err != nil {
 		return fmt.Errorf("get media file: %w", err)
 	}
@@ -428,57 +426,4 @@ func getMediaType(c *cli.Context) media.Type {
 	}
 
 	return mt
-}
-
-var errEmptyFilePath = errors.New("path is empty")
-
-func getMediaFile(c *cli.Context) (io.Reader, error) {
-	p := c.String(filePath)
-	if p == "" {
-		return nil, errEmptyFilePath
-	}
-
-	f, err := os.Open(path.Clean(p))
-	if err != nil {
-		return nil, fmt.Errorf("open file: %w", err)
-	}
-
-	defer func() {
-		utils.LogError(c.Context, f.Close(), "Failed to close file descriptor")
-	}()
-
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("read file: %w", err)
-	}
-
-	ct, err := getFileContentType(bytes.NewReader(content))
-	if err != nil {
-		return nil, fmt.Errorf("get file content type: %w", err)
-	}
-
-	log.WithFields(c.Context, log.Fields{
-		"file_type": ct,
-		"file_path": p,
-	}).Info("File to upload")
-
-	return bytes.NewReader(content), nil
-}
-
-func getFileContentType(f io.Reader) (string, error) {
-	// to sniff the content type only the first
-	// 512 bytes are used.
-	const sniffLen = 512
-
-	buf := make([]byte, sniffLen)
-
-	_, err := f.Read(buf)
-	if err != nil {
-		return "", err
-	}
-
-	// the function that actually does the trick
-	ct := http.DetectContentType(buf)
-
-	return ct, nil
 }

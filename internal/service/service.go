@@ -883,12 +883,20 @@ func getNew(oldlist, newlist []models.User) []models.User {
 
 // UploadMedia uploads media to profile.
 func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
+	stop := spinner.Set("Uploading media", "Done", "yellow")
+	defer stop()
+
 	if file == nil {
 		return errors.New("file is empty")
 	}
 
 	if !mt.Valid() {
 		return errors.New("media type is invalid")
+	}
+
+	file, err := media.AddBorders(file, mt)
+	if err != nil {
+		return fmt.Errorf("add borders: %w", err)
 	}
 
 	return svc.instagram.Client().UploadMedia(ctx, file, mt)
