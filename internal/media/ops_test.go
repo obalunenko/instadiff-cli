@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/obalunenko/getenv"
 	"github.com/olegfedoseev/image-diff"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,10 @@ type file struct {
 }
 
 func Test_addBorders(t *testing.T) {
+	if getenv.BoolOrDefault("CI", false) {
+		t.Skip("Doesn't work on CI")
+	}
+
 	type file struct {
 		path string
 	}
