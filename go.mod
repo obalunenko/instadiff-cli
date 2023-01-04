@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/logger v0.5.1
 	github.com/obalunenko/version v1.1.0
+	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/schollz/progressbar/v3 v3.12.2
 	github.com/spf13/viper v1.14.0
