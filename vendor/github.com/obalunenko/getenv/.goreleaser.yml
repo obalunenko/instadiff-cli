@@ -1,0 +1,29 @@
+release:
+  github:
+    owner: obalunenko
+    name: getenv
+
+builds:
+  - skip: true
+
+checksum:
+  name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
+
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - "README"
+      - "^readme"
+      - "^scripts"
+      - "scripts:"
+      - Merge pull request
+      - Merge branch
+      - Rebase on master
+      - "^Makefile"
+      - "goreleaser"

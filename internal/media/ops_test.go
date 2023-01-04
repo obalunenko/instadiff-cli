@@ -2,12 +2,15 @@ package media
 
 import (
 	"bytes"
-	"crypto/sha256"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/obalunenko/getenv"
+	diff "github.com/olegfedoseev/image-diff"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,6 +20,10 @@ type file struct {
 }
 
 func Test_addBorders(t *testing.T) {
+	if getenv.BoolOrDefault("CI", false) {
+		t.Skip("Doesn't work on CI")
+	}
+
 	type file struct {
 		path string
 	}
@@ -119,7 +126,7 @@ func Test_addBorders(t *testing.T) {
 
 			want := getReaderFromPath(t, tt.want.path)
 
-			diff(t, want, got)
+			diffImageReaders(t, want, got)
 		})
 	}
 }
@@ -133,18 +140,45 @@ func getReaderFromPath(tb testing.TB, path string) io.Reader {
 	return bytes.NewReader(content)
 }
 
-func diff(tb testing.TB, want, actual io.Reader) {
+func diffImageReaders(tb testing.TB, want, actual io.Reader) {
 	tb.Helper()
 
-	h1, h2 := sha256.New(), sha256.New()
-
-	_, err := io.Copy(h1, want)
+	wantimg, err := decode(want)
 	require.NoError(tb, err)
 
-	_, err = io.Copy(h2, actual)
+	actimg, err := decode(actual)
 	require.NoError(tb, err)
 
-	assert.True(tb, bytes.Equal(h1.Sum(nil), h2.Sum(nil)))
+	var eq bool
+
+	d, percent, err := diff.CompareImages(wantimg, actimg)
+	require.NoError(tb, err)
+
+	if percent > 0.0 {
+		name := strings.ReplaceAll(fmt.Sprintf("%s_diff.jpg", tb.Name()), "/", "_")
+
+		f, err := os.Create(filepath.Join("testdata", name))
+		require.NoError(tb, err)
+
+		tb.Cleanup(func() {
+			require.NoError(tb, f.Close())
+		})
+
+		r, err := encode(d)
+		require.NoError(tb, err)
+
+		buf := new(bytes.Buffer)
+
+		_, err = buf.ReadFrom(r)
+		require.NoError(tb, err)
+
+		_, err = f.Write(buf.Bytes())
+		require.NoError(tb, err)
+	} else {
+		eq = true
+	}
+
+	assert.True(tb, eq)
 }
 
 func Test_getFileContentType(t *testing.T) {

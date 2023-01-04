@@ -1,0 +1,126 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gofmt
+    - revive
+    - goimports
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/obalunenko/getenv/
+  revive:
+    # see https://github.com/mgechev/revive#available-rules for details.
+    ignore-generated-header: true
+    severity: warning
+    rules:
+      - name: indent-error-flow
+        severity: warning
+      - name: exported
+        severity: warning
+      - name: defer
+        severity: warning
+        arguments: [ [ "call-chain", "loop", "method-call", "recover", "return" ] ]
+
+issues:
+  exclude-use-default: false
+  exclude:
+    # for "public interface + private struct implementation" cases only!
+    - exported func * returns unexported type *, which can be annoying to use
+    - should have a package comment, unless it's in another file for this package
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - funlen
+        - dupl
+        - gosec
+    - path: internal/input/
+      linters:
+        - gocyclo
+        - funlen
+        - godot
+        - godox
+        - dupl
+        - gofmt
+        - gci
+        - gofumpt
+        - goimports
+        - gosimple
+    - path: internal/puzzles/constants.go
+      linters:
+        - revive
+
+      # Show only new issues: if there are unstaged changes or untracked files,
+      # only those changes are analyzed, else only changes in HEAD~ are analyzed.
+      # It's a super-useful option for integration of golangci-lint into existing
+      # large codebase. It's not practical to fix all existing issues at the moment
+      # of integration: much better don't allow issues in new code.
+      # Default is false.
+      new: true
+
+      # Fix found issues (if it's supported by the linter)
+      fix: false
+
+  severity:
+    # Default value is empty string.
+    # Set the default severity for issues. If severity rules are defined and the issues
+    # do not match or no severity is provided to the rule this will be the default
+    # severity applied. Severities should match the supported severity names of the
+    # selected out format.
+    # - Code climate: https://docs.codeclimate.com/docs/issues#issue-severity
+    # -   Checkstyle: https://checkstyle.sourceforge.io/property_types.html#severity
+    # -       GitHub: https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-error-message
+    default-severity: error
+
+    # The default value is false.
+    # If set to true severity-rules regular expressions become case sensitive.
+    case-sensitive: false
+
+    # Default value is empty list.
+    # When a list of severity rules are provided, severity information will be added to lint
+    # issues. Severity rules have the same filtering capability as exclude rules except you
+    # are allowed to specify one matcher per severity rule.
+    # Only affects out formats that support setting severity information.
+    rules:
+      - linters:
+          - dupl
+        severity: warning
+
+run:
+  issues-exit-code: 1
+  tests: true
+  skip-dirs:
+    - vendor/
+  skip-files:
+    - \.pb\.go$
+
+# output configuration options
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
+  # default is "colored-line-number"
+  format: github-actions
+
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+
+  # make issues output unique by line, default is true
+  uniq-by-line: true
+
+  # add a prefix to the output file references; default is no prefix
+  path-prefix: ""
+
+  # sorts results by: filepath, line and column
+  sort-results: true
+
+
