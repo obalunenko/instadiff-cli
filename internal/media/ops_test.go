@@ -3,7 +3,6 @@ package media
 import (
 	"bytes"
 	"crypto/sha256"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -118,26 +117,9 @@ func Test_addBorders(t *testing.T) {
 				return
 			}
 
-			dst, err := os.Create(filepath.Join("testdata", fmt.Sprintf("%s.jpg", tt.name)))
-			require.NoError(t, err)
-
-			t.Cleanup(func() {
-				require.NoError(t, dst.Close())
-			})
-
-			buf := new(bytes.Buffer)
-
-			_, err = buf.ReadFrom(got)
-			require.NoError(t, err)
-
-			content := buf.Bytes()
-
-			_, err = dst.Write(content)
-			require.NoError(t, err)
-
 			want := getReaderFromPath(t, tt.want.path)
 
-			diff(t, want, bytes.NewReader(content))
+			diff(t, want, got)
 		})
 	}
 }
