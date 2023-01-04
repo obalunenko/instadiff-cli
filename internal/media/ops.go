@@ -64,7 +64,7 @@ func decode(r io.Reader) (image.Image, error) {
 
 	log.WithFields(context.TODO(), log.Fields{
 		"file_type": ct,
-	}).Info("Media file")
+	}).Debug("Media file")
 
 	if ct == "application/octet-stream" {
 		// There is no way to implement heif decoder without C or external tools usage.

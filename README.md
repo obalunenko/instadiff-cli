@@ -1,4 +1,4 @@
-![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-12.81%25-brightgreen?longCache=true&style=flat)
+![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-26.32%25-brightgreen?longCache=true&style=flat)
 
 [![GO](https://img.shields.io/github/go-mod/go-version/obalunenko/instadiff-cli)](https://golang.org/doc/devel/release.html)
 [![Build Status](https://travis-ci.com/obalunenko/instadiff-cli.svg?branch=master)](https://travis-ci.com/obalunenko/instadiff-cli)

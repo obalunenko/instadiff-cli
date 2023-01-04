@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -424,7 +425,12 @@ func getMediaFile(ctx context.Context, fpath string) (io.Reader, error) {
 		utils.LogError(ctx, f.Close(), "Failed to close file descriptor")
 	}()
 
-	return f, nil
+	content, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(content), nil
 }
 
 //go:generate stringer -type=mediaTypeFlag -trimprefix=mediaTypeFlag -linecomment
