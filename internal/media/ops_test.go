@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/obalunenko/getenv"
-	"github.com/olegfedoseev/image-diff"
+	diff "github.com/olegfedoseev/image-diff"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
