@@ -4,15 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"sort"
 	"text/tabwriter"
 	"time"
+
+	"github.com/obalunenko/instadiff-cli/internal/utils"
 
 	"github.com/urfave/cli/v2"
 
 	log "github.com/obalunenko/logger"
 
+	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/internal/service"
 )
@@ -51,9 +56,7 @@ func executeCmd(ctx context.Context, f cmdFunc) cli.ActionFunc {
 		}
 
 		defer func() {
-			if err = svc.Stop(ctx); err != nil {
-				log.WithError(ctx, err).Warn("Error occurred during the service stop")
-			}
+			utils.LogError(ctx, svc.Stop(ctx), "Error occurred during the service stop")
 		}()
 
 		return f(c, svc)
@@ -386,4 +389,62 @@ func cmdListUseless(c *cli.Context, svc *service.Service) error {
 	log.WithField(ctx, "count", len(bots)).Info("Could be blocked")
 
 	return printUsersList(c, bots)
+}
+
+var errEmptyFilePath = errors.New("path is empty")
+
+func cmdUploadMedia(c *cli.Context, svc *service.Service) error {
+	ctx := c.Context
+
+	p := c.String(filePath)
+
+	file, err := getMediaFile(ctx, p)
+	if err != nil {
+		return fmt.Errorf("get media file: %w", err)
+	}
+
+	if err = svc.UploadMedia(ctx, file, getMediaType(c)); err != nil {
+		return fmt.Errorf("upload media: %w", err)
+	}
+
+	return nil
+}
+
+func getMediaFile(ctx context.Context, fpath string) (io.Reader, error) {
+	if fpath == "" {
+		return nil, errEmptyFilePath
+	}
+
+	f, err := os.Open(path.Clean(fpath))
+	if err != nil {
+		return nil, fmt.Errorf("open file: %w", err)
+	}
+
+	defer func() {
+		utils.LogError(ctx, f.Close(), "Failed to close file descriptor")
+	}()
+
+	return f, nil
+}
+
+//go:generate stringer -type=mediaTypeFlag -trimprefix=mediaTypeFlag -linecomment
+
+type mediaTypeFlag uint
+
+const (
+	mediaTypeUndefined mediaTypeFlag = iota // undefined
+
+	mediaTypeStoryPhoto // story_photo
+
+	mediaTypeSentinel // sentinel
+)
+
+func getMediaType(c *cli.Context) media.Type {
+	mt := media.TypeUndefined
+
+	if c.Bool(mediaTypeStoryPhoto.String()) {
+		mt = media.TypeStoryPhoto
+	}
+
+	return mt
 }

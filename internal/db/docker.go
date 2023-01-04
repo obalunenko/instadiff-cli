@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/obalunenko/instadiff-cli/internal/utils"
+
 	log "github.com/obalunenko/logger"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -111,9 +113,7 @@ func setUpDB(ctx context.Context, m *testing.M, container containerParams, p Con
 			}
 
 			defer func() {
-				if err = cl.Disconnect(ctx); err != nil {
-					log.WithError(ctx, err).Error("Failed to disconnect client")
-				}
+				utils.LogError(ctx, cl.Disconnect(ctx), "Failed to disconnect client")
 			}()
 
 			if err = cl.Ping(ctx, nil); err != nil {

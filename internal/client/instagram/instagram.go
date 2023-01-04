@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/obalunenko/instadiff-cli/pkg/spinner"
 
+	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 )
 
@@ -240,6 +242,42 @@ func challenge(cl *goinsta.Instagram, chURL string) (*goinsta.Instagram, error) 
 	}
 
 	return cl, nil
+}
+
+// UploadMedia uploads media to the profile.
+func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
+	itm, err := c.client.Upload(&goinsta.UploadOptions{
+		File:                 file,
+		Thumbnail:            nil,
+		Album:                nil,
+		Caption:              "",
+		IsStory:              isStory(mt),
+		IsIGTV:               false,
+		Title:                "",
+		IGTVPreview:          false,
+		MuteAudio:            false,
+		DisableComments:      false,
+		DisableLikeViewCount: false,
+		DisableSubtitles:     false,
+		UserTags:             nil,
+		AlbumTags:            nil,
+		Location:             nil,
+	})
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(ctx, log.Fields{
+		"id":              itm.ID,
+		"media_type_inst": itm.MediaType,
+		"is_story":        isStory,
+	}).Info("Uploaded")
+
+	return nil
+}
+
+func isStory(mt media.Type) bool {
+	return mt == media.TypeStoryPhoto
 }
 
 // IsUseless reports where user is useless for statistics.

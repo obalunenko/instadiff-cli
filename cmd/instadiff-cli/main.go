@@ -25,6 +25,7 @@ const (
 	incognito = "incognito"
 	users     = "users"
 	username  = "username"
+	filePath  = "file_path"
 )
 
 func main() {

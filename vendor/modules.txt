@@ -87,6 +87,9 @@ github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/disintegration/imaging v1.6.2
+## explicit
+github.com/disintegration/imaging
 # github.com/docker/cli v20.10.14+incompatible
 ## explicit
 github.com/docker/cli/cli/compose/interpolation
@@ -383,6 +386,12 @@ go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/ssh/terminal
+# golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8
+## explicit; go 1.12
+golang.org/x/image/bmp
+golang.org/x/image/ccitt
+golang.org/x/image/tiff
+golang.org/x/image/tiff/lzw
 # golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
 ## explicit; go 1.17
 golang.org/x/net/context

@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/obalunenko/logger"
+	"github.com/obalunenko/instadiff-cli/internal/utils"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -110,9 +111,7 @@ func (m *mongoDB) GetAllUsersBatchByType(ctx context.Context, bt models.UsersBat
 	}
 
 	defer func() {
-		if err := resp.Close(ctx); err != nil {
-			log.WithError(ctx, err).Error("mongo: Failed to close cursor")
-		}
+		utils.LogError(ctx, resp.Close(ctx), "mongo: Failed to close cursor")
 	}()
 
 	var batches []models.UsersBatch
