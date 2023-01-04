@@ -220,7 +220,7 @@ jobs:
 
       - name: Prepare test coverage
         run: |
-          make test-cover
+          make prepare-cover-report
         shell: bash
 
       - name: Tests report

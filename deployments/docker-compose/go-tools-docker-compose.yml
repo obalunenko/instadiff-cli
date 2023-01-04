@@ -20,12 +20,20 @@ services:
   run-tests:
     extends:
       service: tools
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: /bin/sh -c './scripts/tests/run.sh'
 
   run-tests-coverage:
     extends:
       service: tools
     entrypoint: /bin/sh -c './scripts/tests/coverage.sh'
+
+  prepare-cover-report:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/tests/prepare-cover-report.sh'
+
 
   update-readme-coverage:
     extends:

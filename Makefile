@@ -100,6 +100,10 @@ test-cover:
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
 
+prepare-cover-report: test-cover
+	$(COMPOSE_TOOLS_CMD_UP) prepare-cover-report prepare-cover-report
+.PHONY: prepare-cover-report
+
 ## Tests sonar report generate.
 test-sonar-report:
 	./scripts/tests/sonar-report.sh
@@ -147,7 +151,7 @@ format-project: fmt imports
 .PHONY: format-project
 
 ## Open coverage report.
-open-cover-report: test-cover
+open-cover-report: test-cover prepare-cover-report
 	./scripts/open-coverage-report.sh
 .PHONY: open-cover-report
 
