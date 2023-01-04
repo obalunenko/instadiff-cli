@@ -7,6 +7,7 @@ require (
 	github.com/briandowns/spinner v1.20.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/obalunenko/getenv v1.1.0
 	github.com/obalunenko/logger v0.5.1
 	github.com/obalunenko/version v1.1.0
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
