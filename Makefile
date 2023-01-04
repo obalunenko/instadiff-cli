@@ -7,7 +7,13 @@ APP_NAME?=instadiff-cli
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
 
 
-COMPOSE_CMD=docker compose -f scripts/go-tools-docker-compose.yml up --exit-code-from
+GOTOOLS_IMAGE_TAG?=v0.1.4
+SHELL := env GOTOOLS_IMAGE_TAG=$(GOTOOLS_IMAGE_TAG) $(SHELL)
+
+COMPOSE_TOOLS_FILE=deployments/docker-compose/go-tools-docker-compose.yml
+COMPOSE_TOOLS_CMD_BASE=docker compose -f $(COMPOSE_TOOLS_FILE)
+COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --exit-code-from
+COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) pull
 
 # COLORS
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -54,7 +60,7 @@ build: compile-instadiff-cli
 
 ## recreate all generated code and documentation.
 codegen:
-	$(COMPOSE_CMD) go-generate go-generate
+	$(COMPOSE_TOOLS_CMD_UP) go-generate go-generate
 .PHONY: codegen
 
 ## recreate all generated code and swagger documentation and format code.
@@ -68,17 +74,17 @@ vet:
 
 ## Run full linting
 lint-full:
-	$(COMPOSE_CMD) lint-full lint-full
+	$(COMPOSE_TOOLS_CMD_UP) lint-full lint-full
 .PHONY: lint-full
 
 ## Run linting for build pipeline
 lint-pipeline:
-	$(COMPOSE_CMD) lint-pipeline lint-pipeline
+	$(COMPOSE_TOOLS_CMD_UP) lint-pipeline lint-pipeline
 .PHONY: lint-pipeline
 
 ## Run linting for sonar report
 lint-sonar:
-	$(COMPOSE_CMD) lint-sonar lint-sonar
+	$(COMPOSE_TOOLS_CMD_UP) lint-sonar lint-sonar
 .PHONY: lint-sonar
 
 ## Test all packages
@@ -101,7 +107,8 @@ test-sonar-report:
 
 ## Installs tools from vendor.
 install-tools:
-	docker compose -f scripts/go-tools-docker-compose.yml pull
+	echo "Installing ${GOTOOLS_IMAGE_TAG}"
+	$(COMPOSE_TOOLS_CMD_PULL)
 .PHONY: install-tools
 
 ## Sync vendor of root project and tools.
@@ -126,13 +133,13 @@ docker-down:
 ## Fix imports sorting.
 imports:
 	${call colored, fix-imports is running...}
-	$(COMPOSE_CMD) fix-imports fix-imports
+	$(COMPOSE_TOOLS_CMD_UP) fix-imports fix-imports
 .PHONY: imports
 
 ## Format code.
 fmt:
 	${call colored, fmt is running...}
-	$(COMPOSE_CMD) fix-fmt fix-fmt
+	$(COMPOSE_TOOLS_CMD_UP) fix-fmt fix-fmt
 .PHONY: fmt
 
 ## Format code and sort imports.
@@ -146,7 +153,7 @@ open-cover-report: test-cover
 
 ## Update readme coverage badge.
 update-readme-cover: test-cover
-	$(COMPOSE_CMD) update-readme-coverage update-readme-coverage
+	$(COMPOSE_TOOLS_CMD_UP) update-readme-coverage update-readme-coverage
 .PHONY: update-readme-cover
 
 ## Release
