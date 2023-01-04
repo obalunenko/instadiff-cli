@@ -32,7 +32,7 @@ services:
   prepare-cover-report:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/tests/prepare-cover-report.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/tests/prepare-cover-report.sh'
 
 
   update-readme-coverage:
