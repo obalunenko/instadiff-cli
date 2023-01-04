@@ -18,16 +18,17 @@ import (
 
 // AddBorders add white borders to the image.
 func AddBorders(r io.Reader, mt Type) (io.Reader, error) {
+	if !mt.Valid() {
+		return nil, fmt.Errorf("unsupported media type[%s]", mt.String())
+	}
+
 	var (
 		w, h int
 	)
 
-	switch mt {
-	case TypeStoryPhoto:
+	if mt == TypeStoryPhoto {
 		w = 1080
 		h = 1920
-	default:
-		return nil, fmt.Errorf("unsupported media type[%s]", mt.String())
 	}
 
 	return addBorders(r, w, h)
