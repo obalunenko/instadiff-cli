@@ -271,7 +271,7 @@ func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type)
 		"id":              itm.ID,
 		"media_type_inst": itm.MediaType,
 		"is_story":        isStory,
-	}).Info("Uploaded")
+	}).Debug("Uploaded")
 
 	return nil
 }
