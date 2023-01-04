@@ -12,15 +12,13 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/obalunenko/instadiff-cli/internal/utils"
-
-	"github.com/urfave/cli/v2"
-
 	log "github.com/obalunenko/logger"
+	"github.com/urfave/cli/v2"
 
 	"github.com/obalunenko/instadiff-cli/internal/media"
 	"github.com/obalunenko/instadiff-cli/internal/models"
 	"github.com/obalunenko/instadiff-cli/internal/service"
+	"github.com/obalunenko/instadiff-cli/internal/utils"
 )
 
 func notFound(ctx context.Context) cli.CommandNotFoundFunc {
