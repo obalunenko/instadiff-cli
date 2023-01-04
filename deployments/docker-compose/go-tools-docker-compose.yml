@@ -6,6 +6,7 @@ services:
     working_dir: /app/
     volumes:
       - ../../:/app/
+    command: /bin/sh -c 'git config --global --add safe.directory /app'
 
   fix-imports:
     extends:
