@@ -1,5 +1,19 @@
-NAME=instadiff-cli
 BIN_DIR=./bin
+
+SHELL := env VERSION=$(VERSION) $(SHELL)
+VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
+
+APP_NAME?=instadiff-cli
+SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
+
+
+GOTOOLS_IMAGE_TAG?=v0.1.4
+SHELL := env GOTOOLS_IMAGE_TAG=$(GOTOOLS_IMAGE_TAG) $(SHELL)
+
+COMPOSE_TOOLS_FILE=deployments/docker-compose/go-tools-docker-compose.yml
+COMPOSE_TOOLS_CMD_BASE=docker compose -f $(COMPOSE_TOOLS_FILE)
+COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --exit-code-from
+COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) pull
 
 # COLORS
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -44,9 +58,13 @@ compile-instadiff-cli: vet
 build: compile-instadiff-cli
 .PHONY: build
 
-## recreate all generated code.
-generate:
-	./scripts/codegen/generate.sh
+## recreate all generated code and documentation.
+codegen:
+	$(COMPOSE_TOOLS_CMD_UP) go-generate go-generate
+.PHONY: codegen
+
+## recreate all generated code and swagger documentation and format code.
+generate: codegen format-project vet
 .PHONY: generate
 
 ## vet project
@@ -56,17 +74,17 @@ vet:
 
 ## Run full linting
 lint-full:
-	./scripts/linting/run-linters.sh
+	$(COMPOSE_TOOLS_CMD_UP) lint-full lint-full
 .PHONY: lint-full
 
 ## Run linting for build pipeline
 lint-pipeline:
-	./scripts/linting/golangci-pipeline.sh
+	$(COMPOSE_TOOLS_CMD_UP) lint-pipeline lint-pipeline
 .PHONY: lint-pipeline
 
 ## Run linting for sonar report
 lint-sonar:
-	./scripts/linting/golangci-sonar.sh
+	$(COMPOSE_TOOLS_CMD_UP) lint-sonar lint-sonar
 .PHONY: lint-sonar
 
 ## Test all packages
@@ -74,10 +92,17 @@ test:
 	./scripts/tests/run.sh
 .PHONY: test
 
+test-regression: test
+.PHONY: test-regression
+
 ## Test coverage report.
 test-cover:
 	./scripts/tests/coverage.sh
 .PHONY: test-cover
+
+prepare-cover-report: test-cover
+	$(COMPOSE_TOOLS_CMD_UP) prepare-cover-report prepare-cover-report
+.PHONY: prepare-cover-report
 
 ## Tests sonar report generate.
 test-sonar-report:
@@ -86,7 +111,8 @@ test-sonar-report:
 
 ## Installs tools from vendor.
 install-tools:
-	./scripts/install/vendored-tools.sh
+	echo "Installing ${GOTOOLS_IMAGE_TAG}"
+	$(COMPOSE_TOOLS_CMD_PULL)
 .PHONY: install-tools
 
 ## Sync vendor of root project and tools.
@@ -111,13 +137,13 @@ docker-down:
 ## Fix imports sorting.
 imports:
 	${call colored, fix-imports is running...}
-	./scripts/style/fix-imports.sh
+	$(COMPOSE_TOOLS_CMD_UP) fix-imports fix-imports
 .PHONY: imports
 
 ## Format code.
 fmt:
 	${call colored, fmt is running...}
-	./scripts/style/fmt.sh
+	$(COMPOSE_TOOLS_CMD_UP) fix-fmt fix-fmt
 .PHONY: fmt
 
 ## Format code and sort imports.
@@ -125,13 +151,13 @@ format-project: fmt imports
 .PHONY: format-project
 
 ## Open coverage report.
-open-cover-report: test-cover
+open-cover-report: test-cover prepare-cover-report
 	./scripts/open-coverage-report.sh
 .PHONY: open-cover-report
 
 ## Update readme coverage badge.
 update-readme-cover: test-cover
-	./scripts/update-readme-coverage.sh
+	$(COMPOSE_TOOLS_CMD_UP) update-readme-coverage update-readme-coverage
 .PHONY: update-readme-cover
 
 ## Release

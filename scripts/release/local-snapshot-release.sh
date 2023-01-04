@@ -9,11 +9,12 @@ SCRIPTS_DIR="${REPO_ROOT}/scripts"
 
 source "${SCRIPTS_DIR}/helpers-source.sh"
 
-echo "${SCRIPT_NAME} is running... "
+APP=${APP_NAME}
+
+echo "${SCRIPT_NAME} is running fo ${APP}... "
 
 checkInstalled 'goreleaser'
 
-APP=aoc-cli
 
 # Get new tags from the remote
 git fetch --tags -f
@@ -21,7 +22,7 @@ git fetch --tags -f
 COMMIT="$(git rev-parse HEAD)"
 SHORTCOMMIT="$(git rev-parse --short HEAD)"
 DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-VERSION="$(git describe --tags --always "$(git rev-list --tags --max-count=1)")"
+VERSION="$(git tag --sort=committerdate | tail -1)"
 GOVERSION="$(go version | awk '{print $3;}')"
 
 if [ -z "${VERSION}" ] || [ "${VERSION}" = "${SHORTCOMMIT}" ]

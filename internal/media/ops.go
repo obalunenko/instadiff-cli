@@ -11,9 +11,8 @@ import (
 	"io"
 	"net/http"
 
-	log "github.com/obalunenko/logger"
-
 	"github.com/disintegration/imaging"
+	log "github.com/obalunenko/logger"
 )
 
 // AddBorders add white borders to the image.

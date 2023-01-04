@@ -76,7 +76,6 @@ archives:
     files:
       - LICENSE
       - README.md
-      - config-example.json
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 

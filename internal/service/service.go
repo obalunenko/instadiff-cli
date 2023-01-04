@@ -11,14 +11,12 @@ import (
 	"sync"
 	"time"
 
-	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
-
 	"github.com/hashicorp/go-multierror"
 	log "github.com/obalunenko/logger"
 
 	"github.com/obalunenko/instadiff-cli/internal/actions"
-
 	"github.com/obalunenko/instadiff-cli/internal/client"
+	clientErrors "github.com/obalunenko/instadiff-cli/internal/client/errors"
 	"github.com/obalunenko/instadiff-cli/internal/config"
 	"github.com/obalunenko/instadiff-cli/internal/db"
 	"github.com/obalunenko/instadiff-cli/internal/media"

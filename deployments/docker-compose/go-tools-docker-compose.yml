@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  tools:
+    image: ghcr.io/obalunenko/go-tools:${GOTOOLS_IMAGE_TAG:-latest}
+    working_dir: /app/
+    volumes:
+      - ../../:/app/
+
+  fix-imports:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/style/fix-imports.sh'
+
+  fix-fmt:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/style/fmt.sh'
+
+  run-tests:
+    extends:
+      service: tools
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: /bin/sh -c './scripts/tests/run.sh'
+
+  run-tests-coverage:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/tests/coverage.sh'
+
+  prepare-cover-report:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/tests/prepare-cover-report.sh'
+
+
+  update-readme-coverage:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/update-readme-coverage.sh'
+
+  lint-full:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/linting/run-linters.sh'
+
+  lint-pipeline:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/linting/golangci-pipeline.sh'
+
+  lint-sonar:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/linting/golangci-sonar.sh'
+
+  go-generate:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c './scripts/codegen/generate.sh'

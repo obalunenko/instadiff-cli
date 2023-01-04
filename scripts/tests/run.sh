@@ -1,12 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
-set -eu pipefail
+set -e
 
 SCRIPT_NAME="$(basename "$0")"
 
 echo "${SCRIPT_NAME} is running... "
 
-GOTEST="go test -v "
+GOTEST="go test "
 if command -v "gotestsum" &>/dev/null; then
   GOTEST="gotestsum --format pkgname-and-test-fails --"
 fi

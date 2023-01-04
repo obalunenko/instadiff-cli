@@ -12,6 +12,12 @@ source "${SCRIPTS_DIR}/helpers-source.sh"
 
 echo "${SCRIPT_NAME} is running... "
 
-openSource "${COVER_DIR}/full.html"
+checkInstalled gocov
 
-echo "${SCRIPT_NAME} done."
+gocov convert "${COVER_DIR}/full.cov" >"${COVER_DIR}/full.json"
+
+checkInstalled 'gocov-html'
+
+gocov-html "${COVER_DIR}/full.json" >"${COVER_DIR}/full.html"
+
+echo "${SCRIPT_NAME} is done... "

@@ -13,8 +13,15 @@ echo "${SCRIPT_NAME} is running... "
 
 checkInstalled 'gofmt'
 
-GO_FILES=$(find . -type f -name '*.go' | grep -v 'vendor' | grep -v '.git')
+echo "Making filelist"
+GO_FILES=( $(find . -type f -name "*.go" -not -path "./vendor/*" -not -path "./tools/vendor/*" -not -path "./.git/*") )
 
-gofmt -s -w ${GO_FILES}
+LOCAL_PFX=$(go list -m)
+echo "Local packages prefix: ${LOCAL_PFX}"
+
+for f in "${GO_FILES[@]}"; do
+  echo "Fixing fmt at ${f}"
+  gofmt -s -w "$f"
+done
 
 echo "${SCRIPT_NAME} done."

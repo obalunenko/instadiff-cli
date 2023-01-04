@@ -21,6 +21,63 @@ on:
       - ".github/workflows/**"
 
 jobs:
+  build:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        os: ["ubuntu-22.04"]
+        go: ["1.19"]
+    runs-on: ${{ matrix.os }}
+    name: Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+
+      - run: |
+          go version
+        shell: bash
+
+      - name: Set up cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
+        with:
+          path: |
+            ${{ env.GOBIN }}
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
+
+      - name: Install tools
+        run: |
+          make install-tools
+        shell: bash
+
+      - name: Build
+        run: |
+          make build
+        shell: bash
+
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          install-only: true
+
+      - name: Check release
+        run: |
+          make check-releaser
+        shell: bash
+
   testing:
     strategy:
       fail-fast: false
@@ -69,7 +126,6 @@ jobs:
         shell: bash
 
   linting:
-    needs: testing
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -121,7 +177,7 @@ jobs:
         shell: bash
 
   reports:
-    needs: linting
+    needs: [linting, testing, build]
     strategy:
       fail-fast: true
       max-parallel: 1
@@ -164,7 +220,7 @@ jobs:
 
       - name: Prepare test coverage
         run: |
-          make test-cover
+          make prepare-cover-report
         shell: bash
 
       - name: Tests report
@@ -188,56 +244,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  build:
-    needs: linting
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        os: ["ubuntu-22.04"]
-        go: ["1.19"]
-    runs-on: ${{ matrix.os }}
-    name: Build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go }}
-
-      - run: |
-          go version
-        shell: bash
-
-      - name: Set up cache
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-vendored-tools-${{ secrets.CACHE_VERSION }}
-        with:
-          path: |
-            ${{ env.GOBIN }}
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/tools/go.sum') }}
-
-      - name: Install tools
-        run: |
-          make install-tools
-        shell: bash
-
-      - name: Build
-        run: |
-          make build
-        shell: bash
-
-      - name: Check release
-        run: |
-          make check-releaser
-        shell: bash
