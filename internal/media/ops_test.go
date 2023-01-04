@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/olegfedoseev/image-diff"
@@ -149,7 +150,9 @@ func diffImageReaders(tb testing.TB, want, actual io.Reader) {
 	require.NoError(tb, err)
 
 	if percent > 0.0 {
-		f, err := os.Create(filepath.Join("testdata", fmt.Sprintf("%s_diff.jpg", tb.Name())))
+		name := strings.ReplaceAll(fmt.Sprintf("%s_diff.jpg", tb.Name()), "/", "_")
+
+		f, err := os.Create(filepath.Join("testdata", name))
 		require.NoError(tb, err)
 
 		tb.Cleanup(func() {
