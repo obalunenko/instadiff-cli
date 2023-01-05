@@ -42,11 +42,13 @@ function menu() {
 
   SHORTCOMMIT="$(git rev-parse --short HEAD)"
 
-  PREV_VERSION="$(git tag --sort=committerdate | tail -1)"
+  PREV_VERSION="$(git tag | sort -V | tail -1)"
   if [ -z "${PREV_VERSION}" ] || [ "${PREV_VERSION}" = "${SHORTCOMMIT}" ]
    then
     PREV_VERSION="v0.0.0"
   fi
+
+  echo "Current version: ${PREV_VERSION}"
 
   case "$selection" in
   1)
