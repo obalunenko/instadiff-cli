@@ -881,7 +881,7 @@ func getNew(oldlist, newlist []models.User) []models.User {
 
 // UploadMedia uploads media to profile.
 func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Type) error {
-	stop := spinner.Set("Uploading media", "Done", "yellow")
+	stop := spinner.Set("Uploading media", "", "yellow")
 	defer stop()
 
 	if file == nil {
