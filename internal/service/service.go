@@ -889,7 +889,7 @@ func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Ty
 	}
 
 	if !mt.Valid() {
-		return errors.New("media type is invalid")
+		return fmt.Errorf("media type is invalid: %s", mt)
 	}
 
 	file, err := media.AddBorders(file, mt)
