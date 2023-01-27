@@ -20,6 +20,7 @@ type ConfigFile struct {
 	Account       *Account          `json:"account"`
 	Device        Device            `json:"device"`
 	TOTP          *TOTP             `json:"totp"`
+	SessionNonce  string            `json:"session"`
 }
 
 type Device struct {
@@ -140,8 +141,6 @@ func (e *Error400) GetMessage() string {
 
 // ChallengeError is error returned by HTTP 400 status code.
 type ChallengeError struct {
-	insta *Instagram
-
 	Challenge struct {
 		URL               string `json:"url"`
 		APIPath           string `json:"api_path"`
@@ -191,7 +190,18 @@ type Location struct {
 type SuggestedUsers struct {
 	Type        int `json:"type"`
 	Suggestions []struct {
-		User            User          `json:"user"`
+		User struct {
+			ID                         interface{}   `json:"pk"`
+			Username                   string        `json:"username"`
+			FullName                   string        `json:"full_name"`
+			IsVerified                 bool          `json:"is_verified"`
+			IsPrivate                  bool          `json:"is_private"`
+			HasHighlightReels          bool          `json:"has_highlight_reels"`
+			HasAnonymousProfilePicture bool          `json:"has_anonymous_profile_picture"`
+			ProfilePicID               string        `json:"profile_pic_id"`
+			ProfilePicURL              string        `json:"profile_pic_url"`
+			AccountBadges              []interface{} `json:"account_badges"`
+		} `json:"user"`
 		Algorithm       string        `json:"algorithm"`
 		SocialContext   string        `json:"social_context"`
 		Icon            string        `json:"icon"`
@@ -289,7 +299,7 @@ type Caption struct {
 	ContentType     string      `json:"content_type"`
 	Status          string      `json:"status"`
 	BitFlags        int         `json:"bit_flags"`
-	User            User        `json:"user"`
+	User            UserMinimal `json:"user"`
 	DidReportAsSpam bool        `json:"did_report_as_spam"`
 	MediaID         int64       `json:"media_id"`
 	HasTranslation  bool        `json:"has_translation"`
@@ -434,9 +444,9 @@ type InboxItemLike struct {
 }
 
 type respLikers struct {
-	Users     []*User `json:"users"`
-	UserCount int64   `json:"user_count"`
-	Status    string  `json:"status"`
+	Users     []*UserMinimal `json:"users"`
+	UserCount int64          `json:"user_count"`
+	Status    string         `json:"status"`
 }
 
 type ErrChallengeProcess struct {

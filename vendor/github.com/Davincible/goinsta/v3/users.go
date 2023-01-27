@@ -5,32 +5,53 @@ import (
 	"fmt"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 )
+
+type FollowOrder string
+
+const (
+	DefaultOrder  FollowOrder = "default"
+	LatestOrder   FollowOrder = "date_followed_latest"
+	EarliestOrder FollowOrder = "date_followed_earliest"
+)
+
+type UserMinimal struct {
+	insta *Instagram
+
+	ID                         int64  `json:"pk"`
+	IDstr                      string `json:"pk_id"`
+	Username                   string `json:"username"`
+	FullName                   string `json:"full_name"`
+	IsPrivate                  bool   `json:"is_private"`
+	IsVerified                 bool   `json:"is_verified"`
+	ProfilePicID               string `json:"profile_pic_id"`
+	ProfilePicURL              string `json:"profile_pic_url"`
+	AccountBadges              []any  `json:"account_badges"`
+	LatestReelMedia            int    `json:"latest_reel_media"`
+	HasAnonymousProfilePicture bool   `json:"has_anonymous_profile_picture"`
+}
 
 // Users is a struct that stores many user's returned by many different methods.
 type Users struct {
 	insta *Instagram
 
-	// It's a bit confusing have the same structure
+	// It's a bit confusing to have the same structure
 	// in the Instagram strucure and in the multiple users
 	// calls
 
 	err      error
 	endpoint string
+	query    map[string]string
 
-	Status    string          `json:"status"`
-	BigList   bool            `json:"big_list"`
-	Users     []*User         `json:"users"`
+	Status    string        `json:"status"`
+	BigList   bool          `json:"big_list"`
+	Users     []UserMinimal `json:"users"`
+	AllUsers  []UserMinimal
 	PageSize  int             `json:"page_size"`
 	RawNextID json.RawMessage `json:"next_max_id"`
 	NextID    string          `json:"-"`
-}
-
-func newUsers(insta *Instagram) *Users {
-	users := &Users{insta: insta}
-
-	return users
 }
 
 // SetInstagram sets new instagram to user structure
@@ -41,58 +62,75 @@ func (users *Users) SetInstagram(insta *Instagram) {
 // Next allows to paginate after calling:
 // Account.Follow* and User.Follow*
 //
-// New user list is stored inside Users
+// # New user list is stored inside Users
 //
 // returns false when list reach the end.
 func (users *Users) Next() bool {
 	if users.err != nil {
+		fmt.Println("Returnging false")
 		return false
 	}
 
 	insta := users.insta
 	endpoint := users.endpoint
 
+	query := map[string]string{}
+	if users.NextID != "" {
+		query["max_id"] = users.NextID
+	}
+
+	if _, ok := users.query["rank_token"]; !ok {
+		users.query["rank_token"] = generateUUID()
+	}
+
+	for key, value := range users.query {
+		query[key] = value
+	}
+
 	body, _, err := insta.sendRequest(
 		&reqOptions{
 			Endpoint: endpoint,
-			Query: map[string]string{
-				"max_id":             users.NextID,
-				"ig_sig_key_version": instaSigKeyVersion,
-				"rank_token":         insta.rankToken,
-			},
+			Query:    query,
 		},
 	)
 	if err != nil {
 		users.err = err
 		return false
 	}
-	usrs := Users{}
-	err = json.Unmarshal(body, &usrs)
-	if err != nil {
+
+	var newUsers Users
+	if err := json.Unmarshal(body, &newUsers); err != nil {
 		users.err = err
 		return false
 	}
 
-	if len(usrs.RawNextID) > 0 && usrs.RawNextID[0] == '"' && usrs.RawNextID[len(usrs.RawNextID)-1] == '"' {
-		if err := json.Unmarshal(usrs.RawNextID, &usrs.NextID); err != nil {
-			users.err = err
-			return false
-		}
-	} else if usrs.RawNextID != nil {
+	// check whether the nextID contains quotes (string type) or not (int64 type)
+	users.NextID = ""
+	if len(newUsers.RawNextID) > 0 && newUsers.RawNextID[0] == '"' && newUsers.RawNextID[len(newUsers.RawNextID)-1] == '"' {
+		users.NextID = strings.TrimPrefix(strings.TrimSuffix(string(newUsers.RawNextID), "\""), "\"")
+	} else if len(newUsers.RawNextID) > 0 {
 		var nextID int64
-		if err := json.Unmarshal(usrs.RawNextID, &nextID); err != nil {
+		if err := json.Unmarshal(newUsers.RawNextID, &nextID); err != nil {
 			users.err = err
 			return false
 		}
-		usrs.NextID = strconv.FormatInt(nextID, 10)
+		users.NextID = strconv.FormatInt(nextID, 10)
 	}
-	*users = usrs
-	if usrs.NextID == "" {
+
+	users.Status = newUsers.Status
+	users.BigList = newUsers.BigList
+	users.Users = newUsers.Users
+	users.AllUsers = append(users.AllUsers, newUsers.Users...)
+	users.PageSize = newUsers.PageSize
+	users.RawNextID = newUsers.RawNextID
+
+	users.setValues()
+
+	// Dont't return false on first error otherwise for loop won't run
+	if users.NextID == "" {
 		users.err = ErrNoMore
 	}
-	users.insta = insta
-	users.endpoint = endpoint
-	users.setValues()
+
 	return true
 }
 
@@ -157,7 +195,7 @@ type User struct {
 	RecentlyBestiedByCount         int           `json:"recently_bestied_by_count"`
 	AccountType                    int           `json:"account_type"`
 	AccountBadges                  []interface{} `json:"account_badges,omitempty"`
-	FbIdV2                         int64         `json:"fbid_v2"`
+	FbIdV2                         int64         `json:"fbid_"`
 	IsUnpublished                  bool          `json:"is_unpublished"`
 	UserTagsCount                  int           `json:"usertags_count"`
 	UserTagReviewEnabled           bool          `json:"usertag_review_enabled"`
@@ -308,7 +346,8 @@ func (insta *Instagram) NewUser() *User {
 // Info updates user info
 // extra query arguments can be passes one after another as func(key, value).
 // Only if an even number of string arguements will be passed, they will be
-//   used in the query.
+//
+//	used in the query.
 //
 // See example: examples/user/friendship.go
 func (user *User) Info(params ...interface{}) error {
@@ -345,26 +384,54 @@ func (user *User) Sync(params ...interface{}) error {
 
 // Following returns a list of user following.
 //
-// Users.Next can be used to paginate
+// Query can be used to search for a specific user.
+// Be aware that it only matches from the start, e.g.
+// "theprimeagen" will only match "theprime" not "prime".
+// To fetch all user an empty string "".
 //
-// See example: examples/user/following.go
-func (user *User) Following() *Users {
-	users := &Users{}
-	users.insta = user.insta
-	users.endpoint = fmt.Sprintf(urlFollowing, user.ID)
-	return users
+// Users.Next can be used to paginate
+func (user *User) Following(query string, order FollowOrder) *Users {
+	return user.followList(urlFollowing, query, order)
 }
 
 // Followers returns a list of user followers.
 //
-// Users.Next can be used to paginate
+// Query can be used to search for a specific user.
+// Be aware that it only matches from the start, e.g.
+// "theprimeagen" will only match "theprime" not "prime".
+// To fetch all user an empty string "".
 //
-// See example: examples/user/followers.go
-func (user *User) Followers() *Users {
-	users := &Users{}
-	users.insta = user.insta
-	users.endpoint = fmt.Sprintf(urlFollowers, user.ID)
-	return users
+// Users.Next can be used to paginate.
+func (user *User) Followers(query ...string) *Users {
+	var q string
+
+	if len(query) > 0 {
+		q = query[0]
+	}
+
+	return user.followList(urlFollowers, q, DefaultOrder)
+}
+
+func (user *User) followList(url, query string, order FollowOrder) *Users {
+	users := Users{
+		insta:    user.insta,
+		endpoint: fmt.Sprintf(url, user.ID),
+		query: map[string]string{
+			"search_surface": "follow_list_page",
+			"query":          query,
+			"enable_groups":  "true",
+		},
+	}
+
+	if order != DefaultOrder {
+		users.query["order"] = string(order)
+	}
+
+	if url == urlFollowing {
+		users.query["includes_hashtags"] = "true"
+	}
+
+	return &users
 }
 
 // Block blocks user
@@ -528,7 +595,7 @@ func generateMuteData(user *User, opt muteOption) map[string]string {
 // This function performs a follow call. If user is private
 // you have to wait until he/she accepts you.
 //
-// If the account is public User.Friendship will be updated
+// # If the account is public User.Friendship will be updated
 //
 // See example: examples/user/follow.go
 func (user *User) Follow() error {
@@ -567,7 +634,7 @@ func (user *User) Follow() error {
 
 // Unfollow unfollows user
 //
-// User.Friendship will be updated
+// # User.Friendship will be updated
 //
 // See example: examples/user/unfollow.go
 func (user *User) Unfollow() error {
@@ -644,8 +711,8 @@ func (user *User) GetFeaturedAccounts() ([]*User, error) {
 
 // Feed returns user feeds (media)
 //
-// 	params can be:
-// 		string: timestamp of the minimum media timestamp.
+//	params can be:
+//		string: timestamp of the minimum media timestamp.
 //
 // For pagination use FeedMedia.Next()
 //
@@ -707,10 +774,11 @@ func (user *User) Tags(minTimestamp []byte) (*FeedMedia, error) {
 }
 
 // DownloadProfilePic will download a user's profile picture if available, and
-//   return it as a byte slice.
+//
+//	return it as a byte slice.
 func (user *User) DownloadProfilePic() ([]byte, error) {
 	if user.ProfilePicURL == "" {
-		return nil, ErrNoProfilePicUrl
+		return nil, ErrNoProfilePicURL
 	}
 	insta := user.insta
 	b, err := insta.download(user.ProfilePicURL)
@@ -722,7 +790,9 @@ func (user *User) DownloadProfilePic() ([]byte, error) {
 }
 
 // DownloadProfilePicTo will download the user profile picture to the provided
-//   path. If path does not include a file name, one will be extracted automatically.
+//
+//	path. If path does not include a file name, one will be extracted automatically.
+//
 // File extention does not need to be set, and will be set automatically.
 func (user *User) DownloadProfilePicTo(dst string) error {
 	folder, fn := path.Split(dst)
