@@ -184,18 +184,13 @@ func (svc *Service) getUsers(ctx context.Context, bt models.UsersBatchType) ([]m
 		return nil, fmt.Errorf("find diff users: %w", err)
 	}
 
-	err = svc.storeUsers(ctx, models.UsersBatch{
+	batch := models.UsersBatch{
 		Users:     users,
 		Type:      bt,
 		CreatedAt: time.Now(),
-	})
-	if err != nil {
-		if errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", bt.String()).Warn("Failed to store users")
+	}
 
-			return users, nil
-		}
-
+	if err = svc.storeUsers(ctx, batch); err != nil && !errors.Is(err, ErrNoUsers) {
 		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
 	}
 
@@ -300,18 +295,13 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 	bt := models.UsersBatchTypeNotMutual
 
-	err = svc.storeUsers(ctx, models.UsersBatch{
+	batch := models.UsersBatch{
 		Users:     notmutual,
 		Type:      bt,
 		CreatedAt: time.Now(),
-	})
-	if err != nil {
-		if errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).WithField("batch_type", bt.String()).Warn("Failed to store users")
+	}
 
-			return notmutual, nil
-		}
-		
+	if err = svc.storeUsers(ctx, batch); err != nil && !errors.Is(err, ErrNoUsers) {
 		return nil, fmt.Errorf("store users [%s]: %w", bt, err)
 	}
 
