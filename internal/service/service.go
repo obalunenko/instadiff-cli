@@ -184,18 +184,13 @@ func (svc *Service) getUsers(ctx context.Context, bt models.UsersBatchType) ([]m
 		return nil, fmt.Errorf("find diff users: %w", err)
 	}
 
-	err = svc.storeUsers(ctx, models.UsersBatch{
+	batch := models.UsersBatch{
 		Users:     users,
 		Type:      bt,
 		CreatedAt: time.Now(),
-	})
-	if err != nil {
-		if errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).Warn("Failed to store users")
+	}
 
-			return users, nil
-		}
-
+	if err = svc.storeUsers(ctx, batch); err != nil && !errors.Is(err, ErrNoUsers) {
 		return nil, fmt.Errorf("store users [%s]: %w", bt.String(), err)
 	}
 
@@ -300,12 +295,13 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 	bt := models.UsersBatchTypeNotMutual
 
-	err = svc.storeUsers(ctx, models.UsersBatch{
+	batch := models.UsersBatch{
 		Users:     notmutual,
 		Type:      bt,
 		CreatedAt: time.Now(),
-	})
-	if err != nil {
+	}
+
+	if err = svc.storeUsers(ctx, batch); err != nil && !errors.Is(err, ErrNoUsers) {
 		return nil, fmt.Errorf("store users [%s]: %w", bt, err)
 	}
 
@@ -889,7 +885,7 @@ func (svc *Service) UploadMedia(ctx context.Context, file io.Reader, mt media.Ty
 	}
 
 	if !mt.Valid() {
-		return errors.New("media type is invalid")
+		return fmt.Errorf("media type is invalid: %s", mt)
 	}
 
 	file, err := media.AddBorders(file, mt)

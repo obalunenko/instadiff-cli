@@ -253,9 +253,6 @@ func (c *Client) UploadMedia(ctx context.Context, file io.Reader, mt media.Type)
 		Album:                nil,
 		Caption:              "",
 		IsStory:              isStory(mt),
-		IsIGTV:               false,
-		Title:                "",
-		IGTVPreview:          false,
 		MuteAudio:            false,
 		DisableComments:      false,
 		DisableLikeViewCount: false,
@@ -317,7 +314,7 @@ func (c *Client) UserFollowers(ctx context.Context, user models.User) ([]models.
 
 	u.SetInstagram(c.client)
 
-	return c.makeUsersList(ctx, u.Followers())
+	return c.makeUsersList(ctx, u.Followers(""))
 }
 
 // UserFollowings returns user followings.
@@ -329,7 +326,7 @@ func (c *Client) UserFollowings(ctx context.Context, user models.User) ([]models
 
 	u.SetInstagram(c.client)
 
-	return c.makeUsersList(ctx, u.Following())
+	return c.makeUsersList(ctx, u.Following("", goinsta.EarliestOrder))
 }
 
 // GetUserByName finds user by username.
@@ -372,12 +369,12 @@ func (c *Client) Unfollow(ctx context.Context, user models.User) error {
 
 // Followers returns list of followers.
 func (c *Client) Followers(ctx context.Context) ([]models.User, error) {
-	return c.makeUsersList(ctx, c.client.Account.Followers())
+	return c.makeUsersList(ctx, c.client.Account.Followers(""))
 }
 
 // Followings returns list of followings.
 func (c *Client) Followings(ctx context.Context) ([]models.User, error) {
-	return c.makeUsersList(ctx, c.client.Account.Following())
+	return c.makeUsersList(ctx, c.client.Account.Following("", goinsta.EarliestOrder))
 }
 
 // Username returns current account username.
