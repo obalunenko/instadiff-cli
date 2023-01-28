@@ -39,6 +39,6 @@ GO_BUILD_PACKAGE="${REPO_ROOT}/cmd/${APP}"
 
 rm -rf "${BIN_OUT}"
 
-go build -o "${BIN_OUT}" -a -ldflags "${GO_BUILD_LDFLAGS}" "${GO_BUILD_PACKAGE}"
+go build -o "${BIN_OUT}" -a -trimpath -ldflags "${GO_BUILD_LDFLAGS}" "${GO_BUILD_PACKAGE}"
 
 echo "Binary compiled at ${BIN_OUT}"
