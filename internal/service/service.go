@@ -191,7 +191,7 @@ func (svc *Service) getUsers(ctx context.Context, bt models.UsersBatchType) ([]m
 	})
 	if err != nil {
 		if errors.Is(err, ErrNoUsers) {
-			log.WithError(ctx, err).Warn("Failed to store users")
+			log.WithError(ctx, err).WithField("batch_type", bt.String()).Warn("Failed to store users")
 
 			return users, nil
 		}
@@ -306,6 +306,11 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
+		if errors.Is(err, ErrNoUsers) {
+			log.WithError(ctx, err).WithField("batch_type", bt.String()).Warn("Failed to store users")
+
+			return notmutual, nil
+		}
 		return nil, fmt.Errorf("store users [%s]: %w", bt, err)
 	}
 
