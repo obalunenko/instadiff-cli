@@ -311,6 +311,7 @@ func (svc *Service) GetNotMutualFollowers(ctx context.Context) ([]models.User, e
 
 			return notmutual, nil
 		}
+		
 		return nil, fmt.Errorf("store users [%s]: %w", bt, err)
 	}
 
