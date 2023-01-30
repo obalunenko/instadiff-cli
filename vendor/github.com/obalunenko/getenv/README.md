@@ -1,4 +1,4 @@
-![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-96.23%25-brightgreen?longCache=true&style=flat)
+![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-100%25-brightgreen?longCache=true&style=flat)
 
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/obalunenko/getenv)
@@ -11,3 +11,16 @@
 # getenv
 
 Package getenv provides functionality for loading environment variables and parse them into go builtin types.
+
+## Types supported:
+- string
+- []string 
+- int
+- []int
+- int64 
+- []int64
+- float64 
+- []float64
+- time.Time
+- time.Duration 
+- bool
