@@ -2,145 +2,130 @@
 package getenv
 
 import (
-	"os"
-	"strconv"
-	"strings"
 	"time"
+
+	"github.com/obalunenko/getenv/internal"
+	"github.com/obalunenko/getenv/option"
 )
+
+// EnvOrDefault retrieves the value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func EnvOrDefault[T internal.EnvParsable](key string, defaultVal T, options ...option.Option) T {
+	w := internal.NewEnvParser(defaultVal)
+
+	params := newParseParams(options)
+
+	val := w.ParseEnv(key, defaultVal, params)
+
+	return val.(T)
+}
+
+func newParseParams(opts []option.Option) internal.Parameters {
+	var p internal.Parameters
+
+	for _, opt := range opts {
+		opt.Apply(&p)
+	}
+
+	return p
+}
 
 // IntOrDefault retrieves the int value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func IntOrDefault(key string, defaultVal int) int {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
-
-	val, err := strconv.Atoi(env)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+	return EnvOrDefault(key, defaultVal)
 }
 
 // StringOrDefault retrieves the string value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func StringOrDefault(key, defaultVal string) string {
-	env, ok := os.LookupEnv(key)
-	if !ok || env == "" {
-		return defaultVal
-	}
-
-	return env
+	return EnvOrDefault(key, defaultVal)
 }
 
 // BoolOrDefault retrieves the bool value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func BoolOrDefault(key string, defaultVal bool) bool {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
-
-	val, err := strconv.ParseBool(env)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+	return EnvOrDefault(key, defaultVal)
 }
 
 // StringSliceOrDefault retrieves the string slice value of the environment variable named
 // by the key and separated by sep.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func StringSliceOrDefault(key string, defaultVal []string, sep string) []string {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
+	return EnvOrDefault(key, defaultVal, option.WithSeparator(sep))
+}
 
-	val := strings.Split(env, sep)
+// IntSliceOrDefault retrieves the int slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
+func IntSliceOrDefault(key string, defaultVal []int, sep string) []int {
+	return EnvOrDefault(key, defaultVal, option.WithSeparator(sep))
+}
 
-	return val
+// Float64SliceOrDefault retrieves the float64 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
+func Float64SliceOrDefault(key string, defaultVal []float64, sep string) []float64 {
+	return EnvOrDefault(key, defaultVal, option.WithSeparator(sep))
 }
 
 // DurationOrDefault retrieves the time.Duration value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func DurationOrDefault(key string, defaultVal time.Duration) time.Duration {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
-
-	val, err := time.ParseDuration(env)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+	return EnvOrDefault(key, defaultVal)
 }
 
 // TimeOrDefault retrieves the time.Time value of the environment variable named
 // by the key represented by layout.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func TimeOrDefault(key string, defaultVal time.Time, layout string) time.Time {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
-
-	val, err := time.Parse(layout, env)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+	return EnvOrDefault(key, defaultVal, option.WithTimeLayout(layout))
 }
 
 // Int64OrDefault retrieves the int64 value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func Int64OrDefault(key string, defaultVal int64) int64 {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
-
-	const (
-		base    = 10
-		bitsize = 64
-	)
-
-	val, err := strconv.ParseInt(env, base, bitsize)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+	return EnvOrDefault(key, defaultVal)
 }
 
 // Float64OrDefault retrieves the float64 value of the environment variable named
 // by the key.
 // If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
 func Float64OrDefault(key string, defaultVal float64) float64 {
-	env := StringOrDefault(key, "")
-	if env == "" {
-		return defaultVal
-	}
+	return EnvOrDefault(key, defaultVal)
+}
 
-	const (
-		bitsize = 64
-	)
-
-	val, err := strconv.ParseFloat(env, bitsize)
-	if err != nil {
-		return defaultVal
-	}
-
-	return val
+// Int64SliceOrDefault retrieves the int6464 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+//
+// Deprecated: use EnvOrDefault.
+func Int64SliceOrDefault(key string, defaultVal []int64, sep string) []int64 {
+	return EnvOrDefault(key, defaultVal, option.WithSeparator(sep))
 }
