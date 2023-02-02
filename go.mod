@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Davincible/goinsta/v3 v3.2.6
-	github.com/briandowns/spinner v1.20.0
+	github.com/briandowns/spinner v1.21.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/getenv v1.2.1
