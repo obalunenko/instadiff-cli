@@ -15,6 +15,6 @@ checkInstalled golangci-lint
 
 echo "Linting..."
 
-golangci-lint run --config .golangci.yml > linters.out
+golangci-lint run --timeout=10m --config .golangci.yml > linters.out
 
 echo "${SCRIPT_NAME} done."

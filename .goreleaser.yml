@@ -43,8 +43,7 @@ builds:
     ldflags:
       - "{{ .Env.GO_BUILD_LDFLAGS }}"
 universal_binaries:
-  -
-    # ID of the source build
+  - # ID of the source build
     #
     # Defaults to the project name.
     id: cli

@@ -16,6 +16,6 @@ checkInstalled golangci-lint
 echo "Linting..."
 
 golangci-lint run --out-format=github-actions --no-config --disable-all -E govet
-golangci-lint run --config .golangci.pipe.yml
+golangci-lint run --timeout=10m --out-format=github-actions --config .golangci.pipe.yml
 
 echo "${SCRIPT_NAME} done."
