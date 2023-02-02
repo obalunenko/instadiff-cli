@@ -5,7 +5,7 @@ on:
     branches:
       - "master"
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
     branches:
       - "*"
     paths:
@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: ["ubuntu-22.04"]
-        go: ["1.19"]
+        os: [ "ubuntu-22.04" ]
+        go: [ "1.20" ]
     runs-on: ${{ matrix.os }}
     name: Build
     steps:
@@ -83,8 +83,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: ["ubuntu-22.04"]
-        go: ["1.19"]
+        os: [ "ubuntu-22.04" ]
+        go: [ "1.20" ]
     runs-on: ${{ matrix.os }}
     name: Run Tests
     steps:
@@ -130,8 +130,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        os: ["ubuntu-22.04"]
-        go: ["1.19"]
+        os: [ "ubuntu-22.04" ]
+        go: [ "1.20" ]
     runs-on: ${{ matrix.os }}
     name: Run linters
     steps:
@@ -177,13 +177,13 @@ jobs:
         shell: bash
 
   reports:
-    needs: [linting, testing, build]
+    needs: [ linting, testing, build ]
     strategy:
       fail-fast: true
       max-parallel: 1
       matrix:
-        os: ["ubuntu-22.04"]
-        go: ["1.19"]
+        os: [ "ubuntu-22.04" ]
+        go: [ "1.20" ]
     runs-on: ${{ matrix.os }}
     name: Quality reports
     steps:

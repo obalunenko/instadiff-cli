@@ -90,15 +90,15 @@ Example of config file:
 
 ```json
 {
-  "instagram":{
-    "whitelist":[
+  "instagram": {
+    "whitelist": [
       "user1",
       "user2",
       "user3",
       "1234567"
     ],
-    "limits":{
-      "unfollow":100
+    "limits": {
+      "unfollow": 100
     },
     "sleep": 7
   },
@@ -113,15 +113,17 @@ Example of config file:
 ```
 
 * instagram: it is a config for instagram
-    * whitelist: list of followings that will be not unfollowed even if they are not mutual (usernames and ID's supported both).
+    * whitelist: list of followings that will be not unfollowed even if they are not mutual (usernames and ID's
+      supported both).
     * limits: limits per one run.
-        * unfollow: number of users that could be unfollowed in one run (be careful with big number - account could be banned)
+        * unfollow: number of users that could be unfollowed in one run (be careful with big number - account could be
+          banned)
     * sleep: sleep interval in seconds between each unfollow request to prevent account ban for ddos reason.
-* storage: it's a config for database storage. 
-	* local: if true, memory cache will be used and connection to mongo will be not set.
-	* mongo: is a config for mongo database
-	  - url: url of mongo DB to connect
-	  - db: name of Database
+* storage: it's a config for database storage.
+    * local: if true, memory cache will be used and connection to mongo will be not set.
+    * mongo: is a config for mongo database
+        - url: url of mongo DB to connect
+        - db: name of Database
 
 Create a json file with configuration and pass the path to it via flag `--config_path`
 
