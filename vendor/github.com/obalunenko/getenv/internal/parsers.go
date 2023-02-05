@@ -225,3 +225,53 @@ func float64OrDefault(key string, defaultVal float64) float64 {
 
 	return val
 }
+
+// uint64OrDefault retrieves the unt64 value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint64OrDefault(key string, defaultVal uint64) uint64 {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		base    = 10
+		bitsize = 64
+	)
+
+	val, err := strconv.ParseUint(env, base, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return val
+}
+
+// uint64SliceOrDefault retrieves the uint64 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint64SliceOrDefault(key string, defaultVal []uint64, sep string) []uint64 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uint64, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 64
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, v)
+	}
+
+	return val
+}

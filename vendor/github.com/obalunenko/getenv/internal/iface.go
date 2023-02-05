@@ -24,11 +24,15 @@ func NewEnvParser(v any) EnvParser {
 	case int64:
 		p = int64Parser(v.(int64))
 	case []int64:
-		p = in64SliceParser(v.([]int64))
+		p = int64SliceParser(v.([]int64))
 	case float64:
 		p = float64Parser(v.(float64))
 	case []float64:
 		p = float64SliceParser(v.([]float64))
+	case uint64:
+		p = uint64Parser(v.(uint64))
+	case []uint64:
+		p = uint64SliceParser(v.([]uint64))
 	case time.Time:
 		p = timeParser(v.(time.Time))
 	case time.Duration:
@@ -37,18 +41,12 @@ func NewEnvParser(v any) EnvParser {
 		panic(fmt.Sprintf("unsupported type :%T", i))
 	}
 
-	return envParserWrap{
-		EnvParser: p,
-	}
+	return p
 }
 
 // EnvParser interface for parsing environment variables.
 type EnvParser interface {
 	ParseEnv(key string, defaltVal any, options Parameters) any
-}
-
-type envParserWrap struct {
-	EnvParser
 }
 
 type stringParser string
@@ -105,9 +103,9 @@ func (i int64Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	return val
 }
 
-type in64SliceParser []int64
+type int64SliceParser []int64
 
-func (i in64SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+func (i int64SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
 	sep := options.Separator
 
 	val := int64SliceOrDefault(key, defaltVal.([]int64), sep)
@@ -145,6 +143,24 @@ type durationParser time.Duration
 
 func (d durationParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	val := durationOrDefault(key, defaltVal.(time.Duration))
+
+	return val
+}
+
+type uint64Parser uint64
+
+func (d uint64Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := uint64OrDefault(key, defaltVal.(uint64))
+
+	return val
+}
+
+type uint64SliceParser []uint64
+
+func (i uint64SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uint64SliceOrDefault(key, defaltVal.([]uint64), sep)
 
 	return val
 }
