@@ -20,7 +20,7 @@ type file struct {
 }
 
 func Test_addBorders(t *testing.T) {
-	if getenv.BoolOrDefault("CI", false) {
+	if getenv.EnvOrDefault("CI", false) {
 		t.Skip("Doesn't work on CI")
 	}
 
