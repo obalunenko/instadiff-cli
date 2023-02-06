@@ -1,4 +1,23 @@
-// Package getenv provides functionality for loading environment variables.
+// Package getenv provides functionality for loading environment variables and parse them into go builtin types.
+//
+// Types supported:
+//   - string
+//   - []string
+//   - int
+//   - []int
+//   - int64
+//   - []int64
+//   - uint64
+//   - []uint64
+//   - uint
+//   - []uint
+//   - uint32
+//   - []uint32
+//   - float64
+//   - []float64
+//   - time.Time
+//   - time.Duration
+//   - bool
 package getenv
 
 import (

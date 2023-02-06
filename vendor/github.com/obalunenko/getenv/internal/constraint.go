@@ -16,7 +16,7 @@ type String interface {
 
 // Int is a constraint for integer and slice of integers.
 type Int interface {
-	int | []int | int64 | []int64 | uint64 | []uint64
+	int | []int | int64 | []int64 | uint64 | []uint64 | uint | []uint | []uint32 | uint32
 }
 
 // Float is a constraint for floats and slice of floats.

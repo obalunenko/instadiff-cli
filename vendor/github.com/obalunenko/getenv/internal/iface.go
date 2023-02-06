@@ -10,38 +10,68 @@ import (
 func NewEnvParser(v any) EnvParser {
 	var p EnvParser
 
-	switch i := v.(type) {
-	case string:
-		p = stringParser(v.(string))
-	case []string:
-		p = stringSliceParser(v.([]string))
-	case int:
-		p = intParser(v.(int))
-	case []int:
-		p = intSliceParser(v.([]int))
+	switch t := v.(type) {
+	case string, []string:
+		p = newStringParser(t)
+	case int, []int, int64, []int64, uint64, []uint64, uint, []uint, uint32, []uint32:
+		p = newIntParser(t)
 	case bool:
-		p = boolParser(v.(bool))
-	case int64:
-		p = int64Parser(v.(int64))
-	case []int64:
-		p = int64SliceParser(v.([]int64))
+		p = boolParser(t)
 	case float64:
-		p = float64Parser(v.(float64))
+		p = float64Parser(t)
 	case []float64:
-		p = float64SliceParser(v.([]float64))
-	case uint64:
-		p = uint64Parser(v.(uint64))
-	case []uint64:
-		p = uint64SliceParser(v.([]uint64))
+		p = float64SliceParser(t)
 	case time.Time:
-		p = timeParser(v.(time.Time))
+		p = timeParser(t)
 	case time.Duration:
-		p = durationParser(v.(time.Duration))
+		p = durationParser(t)
 	default:
-		panic(fmt.Sprintf("unsupported type :%T", i))
+		p = nil
+	}
+
+	if p == nil {
+		panic(fmt.Sprintf("unsupported type :%T", v))
 	}
 
 	return p
+}
+
+func newStringParser(v any) EnvParser {
+	switch t := v.(type) {
+	case string:
+		return stringParser(t)
+	case []string:
+		return stringSliceParser(t)
+	default:
+		return nil
+	}
+}
+
+func newIntParser(v any) EnvParser {
+	switch t := v.(type) {
+	case int:
+		return intParser(t)
+	case []int:
+		return intSliceParser(t)
+	case int64:
+		return int64Parser(t)
+	case []int64:
+		return int64SliceParser(t)
+	case uint64:
+		return uint64Parser(t)
+	case []uint64:
+		return uint64SliceParser(t)
+	case uint:
+		return uintParser(t)
+	case []uint:
+		return uintSliceParser(t)
+	case []uint32:
+		return uint32SliceParser(t)
+	case uint32:
+		return uint32Parser(t)
+	default:
+		return nil
+	}
 }
 
 // EnvParser interface for parsing environment variables.
@@ -161,6 +191,42 @@ func (i uint64SliceParser) ParseEnv(key string, defaltVal any, options Parameter
 	sep := options.Separator
 
 	val := uint64SliceOrDefault(key, defaltVal.([]uint64), sep)
+
+	return val
+}
+
+type uintParser uint
+
+func (d uintParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := uintOrDefault(key, defaltVal.(uint))
+
+	return val
+}
+
+type uintSliceParser []uint
+
+func (i uintSliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uintSliceOrDefault(key, defaltVal.([]uint), sep)
+
+	return val
+}
+
+type uint32SliceParser []uint32
+
+func (i uint32SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uint32SliceOrDefault(key, defaltVal.([]uint32), sep)
+
+	return val
+}
+
+type uint32Parser uint
+
+func (d uint32Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := uint32OrDefault(key, defaltVal.(uint32))
 
 	return val
 }
