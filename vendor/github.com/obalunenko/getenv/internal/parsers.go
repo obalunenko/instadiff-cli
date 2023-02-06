@@ -275,3 +275,103 @@ func uint64SliceOrDefault(key string, defaultVal []uint64, sep string) []uint64 
 
 	return val
 }
+
+// uintOrDefault retrieves the unt64 value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func uintOrDefault(key string, defaultVal uint) uint {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		base    = 10
+		bitsize = 32
+	)
+
+	val, err := strconv.ParseUint(env, base, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return uint(val)
+}
+
+// uintSliceOrDefault retrieves the uint slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uintSliceOrDefault(key string, defaultVal []uint, sep string) []uint {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uint, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 32
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, uint(v))
+	}
+
+	return val
+}
+
+// uint32SliceOrDefault retrieves the uint32 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint32SliceOrDefault(key string, defaultVal []uint32, sep string) []uint32 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uint32, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 32
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, uint32(v))
+	}
+
+	return val
+}
+
+// uint32OrDefault retrieves the unt32 value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint32OrDefault(key string, defaultVal uint32) uint32 {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		base    = 10
+		bitsize = 32
+	)
+
+	val, err := strconv.ParseUint(env, base, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return uint32(val)
+}
