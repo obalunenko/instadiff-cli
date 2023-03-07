@@ -392,7 +392,7 @@ go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8
+# golang.org/x/image v0.5.0
 ## explicit; go 1.12
 golang.org/x/image/bmp
 golang.org/x/image/ccitt
