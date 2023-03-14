@@ -580,6 +580,8 @@ func (p *ProgressBar) Clear() error {
 // Describe will change the description shown before the progress, which
 // can be changed on the fly (as for a slow running process).
 func (p *ProgressBar) Describe(description string) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
 	p.config.description = description
 	if p.config.invisible {
 		return
@@ -1091,9 +1093,6 @@ var termWidth = func() (width int, err error) {
 	if err == nil {
 		return width, nil
 	}
-	width, _, err = term.GetSize(int(os.Stderr.Fd()))
-	if err == nil {
-		return width, nil
-	}
+
 	return 0, err
 }
