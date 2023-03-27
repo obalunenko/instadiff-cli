@@ -20,3 +20,4 @@ dist/
 coverage/
 .DS_Store
 tests-report.json
+README_doc.md
