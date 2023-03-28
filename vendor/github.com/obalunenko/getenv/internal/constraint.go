@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"net"
 	"net/url"
 	"time"
 )
@@ -8,7 +9,7 @@ import (
 type (
 	// EnvParsable is a constraint for supported environment variable types parsers.
 	EnvParsable interface {
-		String | Int | Uint | Float | Time | bool | url.URL
+		String | Int | Uint | Float | Time | bool | url.URL | []url.URL | net.IP | []net.IP
 	}
 
 	// String is a constraint for strings and slice of strings.
@@ -23,16 +24,16 @@ type (
 
 	// Uint is a constraint for unsigned integer and slice of unsigned integers.
 	Uint interface {
-		uint | []uint | uint8 | uint16 | uint32 | []uint32 | uint64 | []uint64
+		uint | []uint | uint8 | []uint8 | uint16 | []uint16 | uint32 | []uint32 | uint64 | []uint64
 	}
 
 	// Float is a constraint for floats and slice of floats.
 	Float interface {
-		float32 | float64 | []float64
+		float32 | []float32 | float64 | []float64
 	}
 
 	// Time is a constraint for time.Time and time.Duration.
 	Time interface {
-		time.Time | []time.Time | time.Duration
+		time.Time | []time.Time | time.Duration | []time.Duration
 	}
 )

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -95,7 +96,34 @@ func intSliceOrDefault(key string, defaultVal []int, sep string) []int {
 	return val
 }
 
-// intSliceOrDefault retrieves the int slice value of the environment variable named
+// float32SliceOrDefault retrieves the float32 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func float32SliceOrDefault(key string, defaultVal []float32, sep string) []float32 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]float32, 0, len(valraw))
+
+	const (
+		bitsize = 32
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseFloat(s, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, float32(v))
+	}
+
+	return val
+}
+
+// float64SliceOrDefault retrieves the float64 slice value of the environment variable named
 // by the key and separated by sep.
 // If variable not set or value is empty - defaultVal will be returned.
 func float64SliceOrDefault(key string, defaultVal []float64, sep string) []float64 {
@@ -281,6 +309,29 @@ func timeSliceOrDefault(key string, defaultVal []time.Time, layout, separator st
 
 	for _, s := range valraw {
 		v, err := time.Parse(layout, s)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, v)
+	}
+
+	return val
+}
+
+// durationSliceOrDefault retrieves the []time.Duration value of the environment variable named
+// by the key represented by layout.
+// If variable not set or value is empty - defaultVal will be returned.
+func durationSliceOrDefault(key string, defaultVal []time.Duration, separator string) []time.Duration {
+	valraw := stringSliceOrDefault(key, nil, separator)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]time.Duration, 0, len(valraw))
+
+	for _, s := range valraw {
+		v, err := time.ParseDuration(s)
 		if err != nil {
 			return defaultVal
 		}
@@ -543,6 +594,62 @@ func uintSliceOrDefault(key string, defaultVal []uint, sep string) []uint {
 	return val
 }
 
+// uint8SliceOrDefault retrieves the uint8 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint8SliceOrDefault(key string, defaultVal []uint8, sep string) []uint8 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uint8, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 8
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, uint8(v))
+	}
+
+	return val
+}
+
+// uint16SliceOrDefault retrieves the uint16 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uint16SliceOrDefault(key string, defaultVal []uint16, sep string) []uint16 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uint16, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 16
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, uint16(v))
+	}
+
+	return val
+}
+
 // uint32SliceOrDefault retrieves the uint32 slice value of the environment variable named
 // by the key and separated by sep.
 // If variable not set or value is empty - defaultVal will be returned.
@@ -630,4 +737,67 @@ func urlOrDefault(key string, defaultVal url.URL) url.URL {
 	}
 
 	return *val
+}
+
+// urlSliceOrDefault retrieves the url.URL slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func urlSliceOrDefault(key string, defaultVal []url.URL, sep string) []url.URL {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]url.URL, 0, len(valraw))
+
+	for _, s := range valraw {
+		v, err := url.Parse(s)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, *v)
+	}
+
+	return val
+}
+
+// ipOrDefault retrieves the net.IP value of the environment variable named
+// by the key represented by layout.
+// If variable not set or value is empty - defaultVal will be returned.
+func ipOrDefault(key string, defaultVal net.IP) net.IP {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	val := net.ParseIP(env)
+	if val == nil {
+		return defaultVal
+	}
+
+	return val
+}
+
+// ipSliceOrDefault retrieves the net.IP slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func ipSliceOrDefault(key string, defaultVal []net.IP, sep string) []net.IP {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]net.IP, 0, len(valraw))
+
+	for _, s := range valraw {
+		v := net.ParseIP(s)
+		if v == nil {
+			return defaultVal
+		}
+
+		val = append(val, v)
+	}
+
+	return val
 }

@@ -3,6 +3,7 @@ package internal
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"time"
 )
@@ -16,20 +17,22 @@ func NewEnvParser(v any) EnvParser {
 		p = newStringParser(t)
 	case int, []int, int8, []int8, int16, []int16, int32, []int32, int64, []int64:
 		p = newIntParser(t)
-	case uint, []uint, uint8, uint16, uint32, []uint32, uint64, []uint64:
+	case uint, []uint, uint8, []uint8, uint16, []uint16, uint32, []uint32, uint64, []uint64:
 		p = newUintParser(t)
 	case bool:
 		p = boolParser(t)
-	case float32, float64, []float64:
+	case float32, []float32, float64, []float64:
 		p = newFloatParser(t)
-	case time.Time:
-		p = timeParser(t)
-	case []time.Time:
-		p = timeSliceParser(t)
-	case time.Duration:
-		p = durationParser(t)
+	case time.Time, []time.Time, time.Duration, []time.Duration:
+		p = newTimeParser(t)
 	case url.URL:
 		p = urlParser(t)
+	case []url.URL:
+		p = urlSliceParser(t)
+	case net.IP:
+		p = ipParser(t)
+	case []net.IP:
+		p = ipSliceParser(t)
 	default:
 		p = nil
 	}
@@ -83,12 +86,16 @@ func newUintParser(v any) EnvParser {
 	switch t := v.(type) {
 	case uint8:
 		return uint8Parser(t)
+	case []uint8:
+		return uint8SliceParser(t)
 	case uint:
 		return uintParser(t)
 	case []uint:
 		return uintSliceParser(t)
 	case uint16:
 		return uint16Parser(t)
+	case []uint16:
+		return uint16SliceParser(t)
 	case uint32:
 		return uint32Parser(t)
 	case []uint32:
@@ -106,10 +113,27 @@ func newFloatParser(v any) EnvParser {
 	switch t := v.(type) {
 	case float32:
 		return float32Parser(t)
+	case []float32:
+		return float32SliceParser(t)
 	case float64:
 		return float64Parser(t)
 	case []float64:
 		return float64SliceParser(t)
+	default:
+		return nil
+	}
+}
+
+func newTimeParser(v any) EnvParser {
+	switch t := v.(type) {
+	case time.Time:
+		return timeParser(t)
+	case []time.Time:
+		return timeSliceParser(t)
+	case time.Duration:
+		return durationParser(t)
+	case []time.Duration:
+		return durationSliceParser(t)
 	default:
 		return nil
 	}
@@ -152,6 +176,16 @@ func (i intSliceParser) ParseEnv(key string, defaltVal any, options Parameters) 
 	sep := options.Separator
 
 	val := intSliceOrDefault(key, defaltVal.([]int), sep)
+
+	return val
+}
+
+type float32SliceParser []float32
+
+func (i float32SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := float32SliceOrDefault(key, defaltVal.([]float32), sep)
 
 	return val
 }
@@ -283,6 +317,16 @@ func (t timeSliceParser) ParseEnv(key string, defaltVal any, options Parameters)
 	return val
 }
 
+type durationSliceParser []time.Duration
+
+func (t durationSliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := durationSliceOrDefault(key, defaltVal.([]time.Duration), sep)
+
+	return val
+}
+
 type durationParser time.Duration
 
 func (d durationParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -335,12 +379,32 @@ func (i uintSliceParser) ParseEnv(key string, defaltVal any, options Parameters)
 	return val
 }
 
+type uint8SliceParser []uint8
+
+func (i uint8SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uint8SliceOrDefault(key, defaltVal.([]uint8), sep)
+
+	return val
+}
+
 type uint32SliceParser []uint32
 
 func (i uint32SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
 	sep := options.Separator
 
 	val := uint32SliceOrDefault(key, defaltVal.([]uint32), sep)
+
+	return val
+}
+
+type uint16SliceParser []uint16
+
+func (i uint16SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uint16SliceOrDefault(key, defaltVal.([]uint16), sep)
 
 	return val
 }
@@ -365,6 +429,34 @@ type urlParser url.URL
 
 func (t urlParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	val := urlOrDefault(key, defaltVal.(url.URL))
+
+	return val
+}
+
+type urlSliceParser []url.URL
+
+func (t urlSliceParser) ParseEnv(key string, defaltVal any, opts Parameters) any {
+	separator := opts.Separator
+
+	val := urlSliceOrDefault(key, defaltVal.([]url.URL), separator)
+
+	return val
+}
+
+type ipParser net.IP
+
+func (t ipParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := ipOrDefault(key, defaltVal.(net.IP))
+
+	return val
+}
+
+type ipSliceParser []net.IP
+
+func (t ipSliceParser) ParseEnv(key string, defaltVal any, opts Parameters) any {
+	separator := opts.Separator
+
+	val := ipSliceOrDefault(key, defaltVal.([]net.IP), separator)
 
 	return val
 }
