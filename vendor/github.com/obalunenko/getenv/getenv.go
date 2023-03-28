@@ -14,7 +14,9 @@
 // - int64
 // - []int64
 // - uint8
+// - []uint8
 // - uint16
+// - []uint16
 // - uint64
 // - []uint64
 // - uint
@@ -22,13 +24,18 @@
 // - uint32
 // - []uint32
 // - float32
+// - []float32
 // - float64
 // - []float64
 // - time.Time
 // - []time.Time
 // - time.Duration
+// - []time.Duration
 // - bool
 // - url.URL
+// - []url.URL
+// - net.IP
+// - []net.IP
 package getenv
 
 import (
