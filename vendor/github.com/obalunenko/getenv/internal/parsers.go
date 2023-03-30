@@ -55,6 +55,29 @@ func boolOrDefault(key string, defaultVal bool) bool {
 	return val
 }
 
+// boolSliceOrDefault retrieves the bool slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func boolSliceOrDefault(key string, defaultVal []bool, sep string) []bool {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]bool, 0, len(valraw))
+
+	for _, s := range valraw {
+		b, err := strconv.ParseBool(s)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, b)
+	}
+
+	return val
+}
+
 // stringSliceOrDefault retrieves the string slice value of the environment variable named
 // by the key and separated by sep.
 // If variable not set or value is empty - defaultVal will be returned.
@@ -793,6 +816,152 @@ func ipSliceOrDefault(key string, defaultVal []net.IP, sep string) []net.IP {
 	for _, s := range valraw {
 		v := net.ParseIP(s)
 		if v == nil {
+			return defaultVal
+		}
+
+		val = append(val, v)
+	}
+
+	return val
+}
+
+// uintptrOrDefault retrieves the uintptr value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func uintptrOrDefault(key string, defaultVal uintptr) uintptr {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		base    = 10
+		bitsize = 0
+	)
+
+	val, err := strconv.ParseUint(env, base, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return uintptr(val)
+}
+
+// uintptrSliceOrDefault retrieves the uintptr slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func uintptrSliceOrDefault(key string, defaultVal []uintptr, sep string) []uintptr {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	val := make([]uintptr, 0, len(valraw))
+
+	const (
+		base    = 10
+		bitsize = 0
+	)
+
+	for _, s := range valraw {
+		v, err := strconv.ParseUint(s, base, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, uintptr(v))
+	}
+
+	return val
+}
+
+// complex64OrDefault retrieves the complex64 value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func complex64OrDefault(key string, defaultVal complex64) complex64 {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		bitsize = 64
+	)
+
+	val, err := strconv.ParseComplex(env, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return complex64(val)
+}
+
+// complex64SliceOrDefault retrieves the complex64 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func complex64SliceOrDefault(key string, defaultVal []complex64, sep string) []complex64 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	const (
+		bitsize = 64
+	)
+
+	val := make([]complex64, 0, len(valraw))
+
+	for _, s := range valraw {
+		v, err := strconv.ParseComplex(s, bitsize)
+		if err != nil {
+			return defaultVal
+		}
+
+		val = append(val, complex64(v))
+	}
+
+	return val
+}
+
+// complex128OrDefault retrieves the complex128 value of the environment variable named
+// by the key.
+// If variable not set or value is empty - defaultVal will be returned.
+func complex128OrDefault(key string, defaultVal complex128) complex128 {
+	env := stringOrDefault(key, "")
+	if env == "" {
+		return defaultVal
+	}
+
+	const (
+		bitsize = 128
+	)
+
+	val, err := strconv.ParseComplex(env, bitsize)
+	if err != nil {
+		return defaultVal
+	}
+
+	return val
+}
+
+// complex128SliceOrDefault retrieves the complex128 slice value of the environment variable named
+// by the key and separated by sep.
+// If variable not set or value is empty - defaultVal will be returned.
+func complex128SliceOrDefault(key string, defaultVal []complex128, sep string) []complex128 {
+	valraw := stringSliceOrDefault(key, nil, sep)
+	if valraw == nil {
+		return defaultVal
+	}
+
+	const (
+		bitsize = 128
+	)
+
+	val := make([]complex128, 0, len(valraw))
+
+	for _, s := range valraw {
+		v, err := strconv.ParseComplex(s, bitsize)
+		if err != nil {
 			return defaultVal
 		}
 

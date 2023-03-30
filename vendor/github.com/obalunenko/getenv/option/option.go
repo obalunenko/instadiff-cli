@@ -5,8 +5,9 @@ import (
 	"github.com/obalunenko/getenv/internal"
 )
 
-// Option implements options for EnvOrDefault.
+// Option is a contract for EnvParser parameters options.
 type Option interface {
+	// Apply applies the option to the parameters.
 	Apply(params *internal.Parameters)
 }
 
@@ -16,7 +17,7 @@ func (w withSeparator) Apply(p *internal.Parameters) {
 	p.Separator = string(w)
 }
 
-// WithSeparator ads slice separator option.
+// WithSeparator adds slice separator option.
 func WithSeparator(separator string) Option {
 	return withSeparator(separator)
 }
@@ -27,7 +28,7 @@ func (w withTimeLayout) Apply(p *internal.Parameters) {
 	p.Layout = string(w)
 }
 
-// WithTimeLayout ads time layout option.
+// WithTimeLayout adds time.Time layout option.
 func WithTimeLayout(layout string) Option {
 	return withTimeLayout(layout)
 }
