@@ -17,22 +17,20 @@ func NewEnvParser(v any) EnvParser {
 		p = newStringParser(t)
 	case int, []int, int8, []int8, int16, []int16, int32, []int32, int64, []int64:
 		p = newIntParser(t)
-	case uint, []uint, uint8, []uint8, uint16, []uint16, uint32, []uint32, uint64, []uint64:
+	case uint, []uint, uint8, []uint8, uint16, []uint16, uint32, []uint32, uint64, []uint64, uintptr, []uintptr:
 		p = newUintParser(t)
-	case bool:
-		p = boolParser(t)
+	case bool, []bool:
+		p = newBoolParser(t)
 	case float32, []float32, float64, []float64:
 		p = newFloatParser(t)
 	case time.Time, []time.Time, time.Duration, []time.Duration:
 		p = newTimeParser(t)
-	case url.URL:
-		p = urlParser(t)
-	case []url.URL:
-		p = urlSliceParser(t)
-	case net.IP:
-		p = ipParser(t)
-	case []net.IP:
-		p = ipSliceParser(t)
+	case url.URL, []url.URL:
+		p = newURLParser(t)
+	case net.IP, []net.IP:
+		p = newIPParser(t)
+	case complex64, []complex64, complex128, []complex128:
+		p = newComplexParser(t)
 	default:
 		p = nil
 	}
@@ -42,6 +40,46 @@ func NewEnvParser(v any) EnvParser {
 	}
 
 	return p
+}
+
+// newComplexParser is a constructor for complex parsers.
+func newComplexParser(v any) EnvParser {
+	switch t := v.(type) {
+	case complex64:
+		return complex64Parser(t)
+	case []complex64:
+		return complex64SliceParser(t)
+	case complex128:
+		return complex128Parser(t)
+	case []complex128:
+		return complex128SliceParser(t)
+	default:
+		return nil
+	}
+}
+
+// newURLParser is a constructor for url.URL parsers.
+func newURLParser(v any) EnvParser {
+	switch t := v.(type) {
+	case url.URL:
+		return urlParser(t)
+	case []url.URL:
+		return urlSliceParser(t)
+	default:
+		return nil
+	}
+}
+
+// newIPParser is a constructor for net.IP parsers.
+func newIPParser(v any) EnvParser {
+	switch t := v.(type) {
+	case net.IP:
+		return ipParser(t)
+	case []net.IP:
+		return ipSliceParser(t)
+	default:
+		return nil
+	}
 }
 
 func newStringParser(v any) EnvParser {
@@ -55,6 +93,7 @@ func newStringParser(v any) EnvParser {
 	}
 }
 
+// newIntParser is a constructor for integer parsers.
 func newIntParser(v any) EnvParser {
 	switch t := v.(type) {
 	case int:
@@ -82,6 +121,7 @@ func newIntParser(v any) EnvParser {
 	}
 }
 
+// newUintParser is a constructor for unsigned integer parsers.
 func newUintParser(v any) EnvParser {
 	switch t := v.(type) {
 	case uint8:
@@ -104,11 +144,16 @@ func newUintParser(v any) EnvParser {
 		return uint64Parser(t)
 	case []uint64:
 		return uint64SliceParser(t)
+	case uintptr:
+		return uintptrParser(t)
+	case []uintptr:
+		return uintptrSliceParser(t)
 	default:
 		return nil
 	}
 }
 
+// newFloatParser is a constructor for float parsers.
 func newFloatParser(v any) EnvParser {
 	switch t := v.(type) {
 	case float32:
@@ -124,6 +169,7 @@ func newFloatParser(v any) EnvParser {
 	}
 }
 
+// newTimeParser is a constructor for time parsers.
 func newTimeParser(v any) EnvParser {
 	switch t := v.(type) {
 	case time.Time:
@@ -139,11 +185,25 @@ func newTimeParser(v any) EnvParser {
 	}
 }
 
+// newBoolParser is a constructor for boolParser.
+func newBoolParser(v any) EnvParser {
+	switch t := v.(type) {
+	case bool:
+		return boolParser(t)
+	case []bool:
+		return boolSliceParser(t)
+	default:
+		return nil
+	}
+}
+
 // EnvParser interface for parsing environment variables.
 type EnvParser interface {
+	// ParseEnv parses environment variable by key and returns value.
 	ParseEnv(key string, defaltVal any, options Parameters) any
 }
 
+// stringParser is a parser for string type.
 type stringParser string
 
 func (s stringParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -409,6 +469,7 @@ func (i uint16SliceParser) ParseEnv(key string, defaltVal any, options Parameter
 	return val
 }
 
+// uint16Parser is a parser for uint16
 type uint16Parser uint
 
 func (d uint16Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -417,6 +478,7 @@ func (d uint16Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	return val
 }
 
+// uint32Parser is a parser for uint32
 type uint32Parser uint
 
 func (d uint32Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -425,6 +487,7 @@ func (d uint32Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	return val
 }
 
+// stringSliceParser is a parser for []string
 type urlParser url.URL
 
 func (t urlParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -433,6 +496,7 @@ func (t urlParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	return val
 }
 
+// urlSliceParser is a parser for []url.URL
 type urlSliceParser []url.URL
 
 func (t urlSliceParser) ParseEnv(key string, defaltVal any, opts Parameters) any {
@@ -443,6 +507,7 @@ func (t urlSliceParser) ParseEnv(key string, defaltVal any, opts Parameters) any
 	return val
 }
 
+// ipParser is a parser for net.IP
 type ipParser net.IP
 
 func (t ipParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
@@ -451,12 +516,84 @@ func (t ipParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
 	return val
 }
 
+// ipSliceParser is a parser for []net.IP
 type ipSliceParser []net.IP
 
 func (t ipSliceParser) ParseEnv(key string, defaltVal any, opts Parameters) any {
 	separator := opts.Separator
 
 	val := ipSliceOrDefault(key, defaltVal.([]net.IP), separator)
+
+	return val
+}
+
+// boolSliceParser is a parser for []bool
+type boolSliceParser []bool
+
+func (b boolSliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := boolSliceOrDefault(key, defaltVal.([]bool), sep)
+
+	return val
+}
+
+// uintptrParser is a parser for uintptr
+type uintptrParser uintptr
+
+func (d uintptrParser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := uintptrOrDefault(key, defaltVal.(uintptr))
+
+	return val
+}
+
+// uintptrSliceParser is a parser for []uintptr
+type uintptrSliceParser []uintptr
+
+func (i uintptrSliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := uintptrSliceOrDefault(key, defaltVal.([]uintptr), sep)
+
+	return val
+}
+
+// complex64Parser is a parser for complex64
+type complex64Parser complex64
+
+func (d complex64Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := complex64OrDefault(key, defaltVal.(complex64))
+
+	return val
+}
+
+// complex64SliceParser is a parser for []complex64
+type complex64SliceParser []complex64
+
+func (i complex64SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := complex64SliceOrDefault(key, defaltVal.([]complex64), sep)
+
+	return val
+}
+
+// complex128Parser is a parser for complex128
+type complex128Parser complex128
+
+func (d complex128Parser) ParseEnv(key string, defaltVal any, _ Parameters) any {
+	val := complex128OrDefault(key, defaltVal.(complex128))
+
+	return val
+}
+
+// complex128SliceParser is a parser for []complex128
+type complex128SliceParser []complex128
+
+func (i complex128SliceParser) ParseEnv(key string, defaltVal any, options Parameters) any {
+	sep := options.Separator
+
+	val := complex128SliceOrDefault(key, defaltVal.([]complex128), sep)
 
 	return val
 }

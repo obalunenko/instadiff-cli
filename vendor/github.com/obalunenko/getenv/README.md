@@ -2,12 +2,13 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/obalunenko/getenv.svg)](https://pkg.go.dev/github.com/obalunenko/getenv)
 [![Go Report Card](https://goreportcard.com/badge/github.com/obalunenko/getenv)](https://goreportcard.com/report/github.com/obalunenko/getenv)
 [![codecov](https://codecov.io/gh/obalunenko/getenv/branch/master/graph/badge.svg)](https://codecov.io/gh/obalunenko/getenv)
-![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-98.93%25-brightgreen?longCache=true&style=flat)
+![coverbadger-tag-do-not-edit](https://img.shields.io/badge/coverage-100%25-brightgreen?longCache=true&style=flat)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=obalunenko_getenv&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=obalunenko_getenv)
 
 # getenv
 
-Package getenv provides functionality for loading environment variables and parse them into go builtin types.
+Package getenv provides a simple way to get environment variables.
+It's type-safe and supports built-in types and slices of them.
 
 Types supported:
 - string
@@ -30,6 +31,8 @@ Types supported:
 - []uint64
 - uint
 - []uint
+- uintptr
+- []uintptr
 - uint32
 - []uint32
 - float32
@@ -41,18 +44,24 @@ Types supported:
 - time.Duration
 - []time.Duration
 - bool
+- []bool
 - url.URL
 - []url.URL
 - net.IP
 - []net.IP
+- complex64
+- []complex64
+- complex128
+- []complex128
 
 ## Examples
 
 ### EnvOrDefault
 
-EnvOrDefault retrieves the value of the environment variable named
-by the key.
-If variable not set or value is empty - defaultVal will be returned.
+EnvOrDefault retrieves the value of the environment variable named by the key.
+If the variable is present in the environment the value will be parsed and returned.
+Otherwise, the default value will be returned.
+The value returned will be of the same type as the default value.
 
 ```golang
 package main
@@ -140,6 +149,30 @@ func main() {
 	val = getenv.EnvOrDefault(key, net.IP{})
 	fmt.Printf("[%T]: %v\n", val, val)
 
+	// []string
+	if err := os.Setenv(key, "a,b,c,d"); err != nil {
+		panic(err)
+	}
+
+	val = getenv.EnvOrDefault(key, []string{}, option.WithSeparator(","))
+	fmt.Printf("[%T]: %v\n", val, val)
+
+	// complex128
+	if err := os.Setenv(key, "1+2i"); err != nil {
+		panic(err)
+	}
+
+	val = getenv.EnvOrDefault(key, complex128(0))
+	fmt.Printf("[%T]: %v\n", val, val)
+
+	// []complex64
+	if err := os.Setenv(key, "1+2i,3+4i"); err != nil {
+		panic(err)
+	}
+
+	val = getenv.EnvOrDefault(key, []complex64{}, option.WithSeparator(","))
+	fmt.Printf("[%T]: %v\n", val, val)
+
 }
 
 ```
@@ -154,4 +187,7 @@ Output:
 [time.Duration]: 2h35m0s
 [url.URL]: {https  test:abcd123 golangbyexample.com:8000 /tutorials/intro  false false type=advance&compact=false history }
 [net.IP]: 2001:cb8::17
+[[]string]: [a b c d]
+[complex128]: (1+2i)
+[[]complex64]: [(1+2i) (3+4i)]
 ```
