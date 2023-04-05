@@ -47,9 +47,44 @@
 package getenv
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"reflect"
+
 	"github.com/obalunenko/getenv/internal"
 	"github.com/obalunenko/getenv/option"
 )
+
+var (
+	// ErrNotSet is an error that is returned when the environment variable is not set.
+	ErrNotSet = errors.New("not set")
+	// ErrInvalidValue is an error that is returned when the environment variable is not valid.
+	ErrInvalidValue = errors.New("invalid value")
+)
+
+// Env retrieves the value of the environment variable named by the key.
+// If the variable is present in the environment the value will be parsed and returned.
+// Otherwise, an error will be returned.
+func Env[T internal.EnvParsable](key string, options ...option.Option) (T, error) {
+	// Create a default value of the same type as the value that we want to get.
+	var defVal T
+
+	val := EnvOrDefault(key, defVal, options...)
+
+	// If the value is equal to the default value, it means that the value was not parsed.
+	// This means that the environment variable was not set, or it was set to an invalid value.
+	if reflect.DeepEqual(val, defVal) {
+		v, ok := os.LookupEnv(key)
+		if !ok {
+			return val, fmt.Errorf("could not get variable[%s]: %w", key, ErrNotSet)
+		}
+
+		return val, fmt.Errorf("could not parse variable[%s] value[%v] to type[%T]: %w", key, v, defVal, ErrInvalidValue)
+	}
+
+	return val, nil
+}
 
 // EnvOrDefault retrieves the value of the environment variable named by the key.
 // If the variable is present in the environment the value will be parsed and returned.
