@@ -7,7 +7,7 @@ APP_NAME?=instadiff-cli
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
 
 
-GOTOOLS_IMAGE_TAG?=v0.6.3
+GOTOOLS_IMAGE_TAG?=v0.8.0
 SHELL := env GOTOOLS_IMAGE_TAG=$(GOTOOLS_IMAGE_TAG) $(SHELL)
 
 COMPOSE_TOOLS_FILE=deployments/docker-compose/go-tools-docker-compose.yml
