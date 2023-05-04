@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 	github.com/urfave/cli/v2 v2.25.3
-	go.mongodb.org/mongo-driver v1.11.5
+	go.mongodb.org/mongo-driver v1.11.6
 )
 
 require (
