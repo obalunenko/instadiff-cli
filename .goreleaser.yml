@@ -67,7 +67,6 @@ archives:
       - cli
     format: tar.gz
     wrap_in_directory: true
-    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
