@@ -49,8 +49,6 @@ package getenv
 import (
 	"errors"
 	"fmt"
-	"os"
-	"reflect"
 
 	"github.com/obalunenko/getenv/internal"
 	"github.com/obalunenko/getenv/option"
@@ -64,26 +62,29 @@ var (
 )
 
 // Env retrieves the value of the environment variable named by the key.
-// If the variable is present in the environment the value will be parsed and returned.
+// If the variable is present in the environment, the value will be parsed and returned.
 // Otherwise, an error will be returned.
 func Env[T internal.EnvParsable](key string, options ...option.Option) (T, error) {
-	// Create a default value of the same type as the value that we want to get.
-	var defVal T
+	var t T
 
-	val := EnvOrDefault(key, defVal, options...)
+	w := internal.NewEnvParser(t)
 
-	// If the value is equal to the default value, it means that the value was not parsed.
-	// This means that the environment variable was not set, or it was set to an invalid value.
-	if reflect.DeepEqual(val, defVal) {
-		v, ok := os.LookupEnv(key)
-		if !ok {
-			return val, fmt.Errorf("could not get variable[%s]: %w", key, ErrNotSet)
+	params := newParseParams(options)
+
+	val, err := w.ParseEnv(key, params)
+	if err != nil {
+		if errors.Is(err, internal.ErrNotSet) {
+			return t, fmt.Errorf("failed to get environment variable[%s]: %w", key, ErrNotSet)
 		}
 
-		return val, fmt.Errorf("could not parse variable[%s] value[%v] to type[%T]: %w", key, v, defVal, ErrInvalidValue)
+		if errors.Is(err, internal.ErrInvalidValue) {
+			return t, fmt.Errorf("failed to parse environment variable[%s]: %w", key, ErrInvalidValue)
+		}
+
+		return t, fmt.Errorf("failed to parse environment variable[%s]: %w", key, err)
 	}
 
-	return val, nil
+	return val.(T), nil
 }
 
 // EnvOrDefault retrieves the value of the environment variable named by the key.
@@ -91,13 +92,12 @@ func Env[T internal.EnvParsable](key string, options ...option.Option) (T, error
 // Otherwise, the default value will be returned.
 // The value returned will be of the same type as the default value.
 func EnvOrDefault[T internal.EnvParsable](key string, defaultVal T, options ...option.Option) T {
-	w := internal.NewEnvParser(defaultVal)
+	val, err := Env[T](key, options...)
+	if err != nil {
+		return defaultVal
+	}
 
-	params := newParseParams(options)
-
-	val := w.ParseEnv(key, defaultVal, params)
-
-	return val.(T)
+	return val
 }
 
 // newParseParams creates new parameters from options.
