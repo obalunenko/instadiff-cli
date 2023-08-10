@@ -220,8 +220,8 @@ github.com/montanaflynn/stats
 github.com/obalunenko/getenv
 github.com/obalunenko/getenv/internal
 github.com/obalunenko/getenv/option
-# github.com/obalunenko/logger v0.6.0
-## explicit; go 1.20
+# github.com/obalunenko/logger v0.7.1
+## explicit; go 1.21
 github.com/obalunenko/logger
 # github.com/obalunenko/version v1.1.0
 ## explicit; go 1.17
@@ -286,7 +286,7 @@ github.com/russross/blackfriday/v2
 # github.com/schollz/progressbar/v3 v3.13.1
 ## explicit; go 1.13
 github.com/schollz/progressbar/v3
-# github.com/sirupsen/logrus v1.9.0
+# github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.9.5

@@ -6,13 +6,10 @@ VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
 APP_NAME?=logger
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
 
-GOTOOLS_IMAGE_TAG?=v0.4.3
-SHELL := env GOTOOLS_IMAGE_TAG=$(GOTOOLS_IMAGE_TAG) $(SHELL)
-
 COMPOSE_TOOLS_FILE=deployments/docker-compose/go-tools-docker-compose.yml
 COMPOSE_TOOLS_CMD_BASE=docker compose -f $(COMPOSE_TOOLS_FILE)
-COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --exit-code-from
-COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) pull
+COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --remove-orphans --exit-code-from
+COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) build
 
 TARGET_MAX_CHAR_NUM=20
 
@@ -86,13 +83,12 @@ format-project: fmt imports
 
 ## Installs vendored tools.
 install-tools:
-	echo "Installing ${GOTOOLS_IMAGE_TAG}"
 	$(COMPOSE_TOOLS_CMD_PULL)
 .PHONY: install-tools
 
 ## vet project
 vet:
-	./scripts/linting/run-vet.sh
+	$(COMPOSE_TOOLS_CMD_UP) vet vet
 .PHONY: vet
 
 ## Run full linting
@@ -121,23 +117,22 @@ generate: codegen format-project vet
 
 ## Release
 release:
-	./scripts/release/release.sh
+	$(COMPOSE_TOOLS_CMD_UP) release release
 .PHONY: release
 
 ## Release local snapshot
 release-local-snapshot:
-	./scripts/release/local-snapshot-release.sh
+	$(COMPOSE_TOOLS_CMD_UP) release-local-snapshot release-local-snapshot
 .PHONY: release-local-snapshot
 
 ## Check goreleaser config.
 check-releaser:
-	./scripts/release/check.sh
+	$(COMPOSE_TOOLS_CMD_UP) release-check-config release-check-config
 .PHONY: check-releaser
 
 ## Issue new release.
-new-version: vet test-regression
+new-version: vet test-regression build
 	./scripts/release/new-version.sh
 .PHONY: new-release
 
 .DEFAULT_GOAL := help
-

@@ -9,9 +9,7 @@ import (
 	"github.com/sirupsen/logrus" //nolint:depguard // this is the only place where logrus should be imported.
 )
 
-var (
-	logInstance *logrus.Logger
-)
+var logInstance *logrus.Logger
 
 func init() {
 	logInstance = logrus.New()
