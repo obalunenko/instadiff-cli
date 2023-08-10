@@ -7,7 +7,7 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/obalunenko/getenv v1.11.0
+	github.com/obalunenko/getenv v1.12.0
 	github.com/obalunenko/logger v0.7.1
 	github.com/obalunenko/version v1.1.0
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
@@ -83,7 +83,7 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
+	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819 // indirect
 	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
