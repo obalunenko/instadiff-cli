@@ -77,10 +77,6 @@ func Env[T internal.EnvParsable](key string, options ...option.Option) (T, error
 			return t, fmt.Errorf("failed to get environment variable[%s]: %w", key, ErrNotSet)
 		}
 
-		if errors.Is(err, internal.ErrInvalidValue) {
-			return t, fmt.Errorf("failed to parse environment variable[%s]: %w", key, ErrInvalidValue)
-		}
-
 		return t, fmt.Errorf("failed to parse environment variable[%s]: %w", key, err)
 	}
 
