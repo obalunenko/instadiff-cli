@@ -235,8 +235,8 @@ github.com/moby/term v0.0.0-20201216013528-df9cb8a40635/go.mod h1:FBS0z0QWA44HXy
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6fbMZ9s0scYfZQ84/6SPL6zC8ACM2oIL0=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/mrunalp/fileutils v0.5.0/go.mod h1:M1WthSahJixYnrXQl/DFQuteStB1weuxD2QJNHXfbSQ=
-github.com/obalunenko/getenv v1.12.0 h1:u8xWmCw2Lg2hCdjzgv88wWasWTf/iZVRsfoJj8W6Tfk=
-github.com/obalunenko/getenv v1.12.0/go.mod h1:GtEy59H7644JXfVjxDFo1jEUe1yJ4asSyPwN8D19Pvs=
+github.com/obalunenko/getenv v1.12.1 h1:16dfwnXa5AhZuScaT4qAxUapwpRBxTAdKmsHwc/aDvQ=
+github.com/obalunenko/getenv v1.12.1/go.mod h1:GtEy59H7644JXfVjxDFo1jEUe1yJ4asSyPwN8D19Pvs=
 github.com/obalunenko/logger v0.7.1 h1:mhKjyScCj8ppBtdggxzcusIiod4w+GAJrEtsePjGahI=
 github.com/obalunenko/logger v0.7.1/go.mod h1:YDhNeUCMxbCkZ6Kb84OjG4cgkegkHQFSVP5SXuVa4fM=
 github.com/obalunenko/version v1.1.0 h1:yVua7OHnK3+MJpendeMmAlfzVmq7R1h8MO3Ufz7HEec=
