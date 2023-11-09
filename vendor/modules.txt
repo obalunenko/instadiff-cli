@@ -288,7 +288,7 @@ github.com/sagikazarmark/locafero
 # github.com/sagikazarmark/slog-shim v0.1.0
 ## explicit; go 1.20
 github.com/sagikazarmark/slog-shim
-# github.com/schollz/progressbar/v3 v3.14.0
+# github.com/schollz/progressbar/v3 v3.14.1
 ## explicit; go 1.13
 github.com/schollz/progressbar/v3
 # github.com/sirupsen/logrus v1.9.3
@@ -445,8 +445,8 @@ golang.org/x/sys/execabs
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.13.0
-## explicit; go 1.17
+# golang.org/x/term v0.14.0
+## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.13.0
 ## explicit; go 1.17

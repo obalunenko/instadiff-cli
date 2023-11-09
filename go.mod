@@ -12,7 +12,7 @@ require (
 	github.com/obalunenko/version v1.1.0
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 	github.com/ory/dockertest/v3 v3.10.0
-	github.com/schollz/progressbar/v3 v3.14.0
+	github.com/schollz/progressbar/v3 v3.14.1
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
@@ -91,7 +91,7 @@ require (
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/term v0.14.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
