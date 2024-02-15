@@ -179,11 +179,11 @@ func (sc *StructCodec) EncodeValue(ec EncodeContext, vw bsonrw.ValueWriter, val 
 
 		desc.encoder, rv, err = defaultValueEncoders.lookupElementEncoder(ec, desc.encoder, rv)
 
-		if err != nil && err != errInvalidValue {
+		if err != nil && !errors.Is(err, errInvalidValue) {
 			return err
 		}
 
-		if err == errInvalidValue {
+		if errors.Is(err, errInvalidValue) {
 			if desc.omitEmpty {
 				continue
 			}
@@ -254,8 +254,8 @@ func (sc *StructCodec) EncodeValue(ec EncodeContext, vw bsonrw.ValueWriter, val 
 }
 
 func newDecodeError(key string, original error) error {
-	de, ok := original.(*DecodeError)
-	if !ok {
+	var de *DecodeError
+	if !errors.As(original, &de) {
 		return &DecodeError{
 			keys:    []string{key},
 			wrapped: original,
@@ -323,7 +323,7 @@ func (sc *StructCodec) DecodeValue(dc DecodeContext, vr bsonrw.ValueReader, val 
 
 	for {
 		name, vr, err := dr.ReadElement()
-		if err == bsonrw.ErrEOD {
+		if errors.Is(err, bsonrw.ErrEOD) {
 			break
 		}
 		if err != nil {
