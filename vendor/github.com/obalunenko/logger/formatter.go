@@ -1,9 +1,8 @@
 package logger
 
 import (
-	"time"
-
-	"github.com/sirupsen/logrus" //nolint:depguard // this is the only place where logrus should be imported.
+	"io"
+	"log/slog"
 )
 
 const (
@@ -11,38 +10,54 @@ const (
 	textFmt = "text"
 )
 
-func makeFormatter(format string) logrus.Formatter {
-	var f logrus.Formatter
-
+func makeFormatter(w io.Writer, format string, lvl Level, source bool, fn ...replaceFn) slog.Handler {
+	var builder handlerBuildFn
 	switch format {
 	case jsonFmt:
-		f = jsonFormatter()
+		builder = jsonFormatter()
 	case textFmt:
-		f = textFormatter()
+		builder = textFormatter()
 	default:
-		f = textFormatter()
+		builder = textFormatter()
 	}
 
-	return f
+	return buildFormatter(builder, w, lvl, source, fn)
 }
 
-func jsonFormatter() logrus.Formatter {
-	f := new(logrus.JSONFormatter)
-	f.TimestampFormat = time.RFC3339Nano
+type replaceFn func(groups []string, a slog.Attr) slog.Attr
 
-	f.DataKey = "metadata"
+func buildFormatter(builder handlerBuildFn, w io.Writer, level Level, withSource bool, replaceFns []replaceFn) slog.Handler {
+	replaceAttrs := func(replacenFns []replaceFn) replaceFn {
+		return func(groups []string, a slog.Attr) slog.Attr {
+			for _, fn := range replacenFns {
+				a = fn(groups, a)
+			}
 
-	return f
+			return a
+		}
+	}
+
+	opts := slog.HandlerOptions{
+		AddSource:   withSource,
+		Level:       level,
+		ReplaceAttr: replaceAttrs(replaceFns),
+	}
+
+	handler := builder(w, &opts)
+
+	return handler
 }
 
-func textFormatter() logrus.Formatter {
-	f := new(logrus.TextFormatter)
-
-	f.ForceColors = true
-	f.DisableColors = false
-	f.FullTimestamp = true
-	f.TimestampFormat = "02-01-2006 15:04:05"
-	f.QuoteEmptyFields = true
-
-	return f
+func jsonFormatter() handlerBuildFn {
+	return func(w io.Writer, opts *slog.HandlerOptions) slog.Handler {
+		return slog.NewJSONHandler(w, opts)
+	}
 }
+
+func textFormatter() handlerBuildFn {
+	return func(w io.Writer, opts *slog.HandlerOptions) slog.Handler {
+		return slog.NewTextHandler(w, opts)
+	}
+}
+
+type handlerBuildFn func(w io.Writer, opts *slog.HandlerOptions) slog.Handler

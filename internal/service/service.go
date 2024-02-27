@@ -322,12 +322,8 @@ func (svc *Service) Follow(ctx context.Context, user models.User) error {
 	return svc.actUser(ctx, user, actions.UserActionFollow, false)
 }
 
-func getBarType(ctx context.Context) bar.BType {
+func getBarType(_ context.Context) bar.BType {
 	bType := bar.BTypeRendered
-
-	if log.FromContext(ctx).LogLevel().IsDebug() {
-		bType = bar.BTypeVoid
-	}
 
 	return bType
 }
