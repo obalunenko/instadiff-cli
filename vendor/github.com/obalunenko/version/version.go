@@ -40,26 +40,32 @@ var ( // build info
 	goversion   = unset
 )
 
+// GetGoVersion returns the go version
 func GetGoVersion() string {
 	return goversion
 }
 
+// GetVersion returns the app version
 func GetVersion() string {
 	return version
 }
 
+// GetBuildDate returns the build date
 func GetBuildDate() string {
 	return builddate
 }
 
+// GetCommit returns the git commit
 func GetCommit() string {
 	return commit
 }
 
+// GetAppName returns the app name
 func GetAppName() string {
 	return appname
 }
 
+// GetShortCommit returns the short git commit
 func GetShortCommit() string {
 	return shortcommit
 }

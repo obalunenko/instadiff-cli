@@ -213,8 +213,8 @@ github.com/obalunenko/getenv/option
 # github.com/obalunenko/logger v1.1.0
 ## explicit; go 1.22
 github.com/obalunenko/logger
-# github.com/obalunenko/version v1.1.0
-## explicit; go 1.17
+# github.com/obalunenko/version v1.2.0
+## explicit; go 1.22
 github.com/obalunenko/version
 # github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 ## explicit

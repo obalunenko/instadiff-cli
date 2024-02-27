@@ -104,8 +104,8 @@ github.com/obalunenko/getenv v1.13.0 h1:KE6Kky3OMLkvOgzfZkaOjodnnMawhEEuju4Hbs7D
 github.com/obalunenko/getenv v1.13.0/go.mod h1:z/14VQJlEBeaa/JI/RNufa/EQOSDVA2RRUz56ukYOM0=
 github.com/obalunenko/logger v1.1.0 h1:Q5drJuCuwz16mm96tcrl5e20uoGSOI4O+VWSauR/mQg=
 github.com/obalunenko/logger v1.1.0/go.mod h1:rS66dO9P2j/lybFrDB0Sce1DEVaOi6ag6WDIzljTg8c=
-github.com/obalunenko/version v1.1.0 h1:yVua7OHnK3+MJpendeMmAlfzVmq7R1h8MO3Ufz7HEec=
-github.com/obalunenko/version v1.1.0/go.mod h1:Or267aCQxNcAtgOeWA7yOe/RqJS4XDaMfcFwk3ohbOg=
+github.com/obalunenko/version v1.2.0 h1:eUYme2w38fjzcvToInTGM85xAJycZHo65GvynbH8jCo=
+github.com/obalunenko/version v1.2.0/go.mod h1:kXnCfV2LUe+UHRrzjwPC/5lpnPbypwmLZh7BJx7wG1A=
 github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6 h1:a/kynVgbdXJQDq3WWTgwL0bHyg4hu4/oIK9UB+Ugvfo=
 github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6/go.mod h1:OgMVaRcJ1TgmPHB/MF2YaHOzRxmw6vVG/DquoMhkCiY=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
