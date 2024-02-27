@@ -182,6 +182,9 @@ new-version: test build
 	./scripts/release/new-version.sh
 .PHONY: new-release
 
+build-go-tools: install-tools
+.PHONY: build-go-tools
+
 bump-go-version:
 	./scripts/bump-go.sh $(GOVERSION)
 .PHONY: bump-go-version
