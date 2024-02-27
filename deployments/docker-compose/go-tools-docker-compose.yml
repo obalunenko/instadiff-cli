@@ -2,48 +2,53 @@ version: '3'
 
 services:
   tools:
-    image: ghcr.io/obalunenko/go-tools:${GOTOOLS_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: ../../build/docker/go-tools/Dockerfile
     working_dir: /app/
     volumes:
       - ../../:/app/
+    command: /bin/sh -c ''
+
+  vet:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/linting/run-vet.sh'
 
   fix-imports:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/style/fix-imports.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/style/fix-imports.sh'
 
   fix-fmt:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/style/fmt.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/style/fmt.sh'
 
   run-tests:
     extends:
       service: tools
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    entrypoint: /bin/sh -c './scripts/tests/run.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/tests/run.sh'
 
   run-tests-coverage:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/tests/coverage.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/tests/coverage.sh'
 
   prepare-cover-report:
     extends:
       service: tools
     entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/tests/prepare-cover-report.sh'
 
-
   update-readme-coverage:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/update-readme-coverage.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/update-readme-coverage.sh'
 
   lint-full:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/linting/run-linters.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/linting/run-linters.sh'
 
   lint-pipeline:
     extends:
@@ -58,4 +63,39 @@ services:
   go-generate:
     extends:
       service: tools
-    entrypoint: /bin/sh -c './scripts/codegen/generate.sh'
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/codegen/go-generate.sh'
+
+  build:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app &&  ./scripts/build/app.sh'
+    environment:
+      APP_NAME: ${APP_NAME}
+      GOOS: ${GOOS}
+      GOARCH: ${GOARCH}
+
+  release-local-snapshot:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app && ./scripts/release/local-snapshot-release.sh'
+    environment:
+      APP_NAME: ${APP_NAME}
+      GOOS: ${GOOS}
+      GOARCH: ${GOARCH}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+
+  release-check-config:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app &&  ./scripts/release/check.sh'
+    environment:
+      APP_NAME: ${APP_NAME}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+
+  release:
+    extends:
+      service: tools
+    entrypoint: /bin/sh -c 'git config --global --add safe.directory /app &&  ./scripts/release/release.sh'
+    environment:
+      APP_NAME: ${APP_NAME}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}

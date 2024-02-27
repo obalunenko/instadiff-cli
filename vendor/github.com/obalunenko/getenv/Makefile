@@ -15,6 +15,8 @@ COMPOSE_TOOLS_CMD_BASE=docker compose -f $(COMPOSE_TOOLS_FILE)
 COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --exit-code-from
 COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) pull
 
+GOVERSION:=1.22
+
 TARGET_MAX_CHAR_NUM=20
 
 ## Show help
@@ -116,6 +118,10 @@ check-releaser:
 ## Issue new release.
 new-version: vet test-regression
 	./scripts/release/new-version.sh
+
+bump-go-version:
+	./scripts/bump-go.sh $(GOVERSION)
+.PHONY: bump-go-version
 
 
 .DEFAULT_GOAL := help

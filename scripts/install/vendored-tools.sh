@@ -5,44 +5,17 @@ set -eu
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(dirname "$0")"
 REPO_ROOT="$(cd "${SCRIPT_DIR}" && git rev-parse --show-toplevel)"
-TOOLS_DIR="${REPO_ROOT}/tools"
+SCRIPTS_DIR="${REPO_ROOT}/scripts"
+source "${SCRIPTS_DIR}/helpers-source.sh"
 
 echo "${SCRIPT_NAME} is running... "
 
-cd "${TOOLS_DIR}" || exit 1
+export DOCKERFILE_PATH="${REPO_ROOT}/build/docker/go-tools/Dockerfile"
 
-function check_status() {
-  # first param is error message to print in case of error
-  if [ $? -ne 0 ]; then
-    if [ -n "$1" ]; then
-      echo "$1"
-    fi
+export IMAGE_NAME="${GOTOOLS_IMAGE:-${DOCKER_REPO}go-tools:${VERSION}}"
 
-    # Exit 255 to pass signal to xargs to abort process with code 1, in other cases xargs will complete with 0.
-    exit 255
-  fi
-}
+APP_NAME="go-tools"
 
-function install_dep() {
-  dep=$1
+echo "Building ${IMAGE_NAME} of ${APP_NAME} ..."
 
-  echo "[INFO]: Going to build ${dep}"
-
-  go install -mod=vendor "${dep}"
-
-  check_status "[FAIL]: build [${dep}] failed!"
-
-  echo "[SUCCESS]: build [${dep}] finished."
-}
-
-export -f install_dep
-export -f check_status
-
-function install_deps() {
-  tools_module="$(go list -m)"
-  
-  go list -f '{{ join .Imports "\n" }}' -tags="tools" "${tools_module}" |
-   xargs -n 1 -P 0 -I {} bash -c 'install_dep "$@"' _ {}
-}
-
-install_deps
+docker buildx bake -f "${REPO_ROOT}/build/docker/bake.hcl" "${APP_NAME}"

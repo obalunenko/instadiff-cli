@@ -1,0 +1,70 @@
+name: build-lint-docker-images
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - "*"
+    paths:
+      - "!**"
+      - "build/docker/**"
+      - "!build/docker/**.sh"
+      - ".github/workflows/dockerfiles.yml"
+
+jobs:
+  lint-dockerfiles:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        dockerfile:
+          [
+            "./build/docker/go-tools/Dockerfile",
+          ]
+    runs-on: "ubuntu-22.04"
+    name: Lint ${{ matrix.dockerfile }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Lint
+        uses: jbergstroem/hadolint-gh-action@v1
+        with:
+          dockerfile: ${{ matrix.dockerfile }}
+          annotate: true
+          error_level: 2
+
+  build-targets:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        target:
+          [
+            "go-tools",
+          ]
+    runs-on: "ubuntu-22.04"
+    name: Build ${{ matrix.target }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64,linux/amd64'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        run: |
+          make build-${{ matrix.target }}
+    

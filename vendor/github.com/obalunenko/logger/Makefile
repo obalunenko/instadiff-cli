@@ -3,6 +3,8 @@ BIN_DIR=./bin
 SHELL := env VERSION=$(VERSION) $(SHELL)
 VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
 
+GOVERSION:=1.22
+
 APP_NAME?=logger
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
 
@@ -134,5 +136,10 @@ check-releaser:
 new-version: vet test-regression build
 	./scripts/release/new-version.sh
 .PHONY: new-release
+
+bump-go-version:
+	./scripts/bump-go.sh $(GOVERSION)
+.PHONY: bump-go-version
+
 
 .DEFAULT_GOAL := help

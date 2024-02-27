@@ -27,7 +27,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ "ubuntu-22.04" ]
-        go: [ "1.20" ]
+        go-version: [1.22.x]
     runs-on: ${{ matrix.os }}
     name: Build
     steps:
@@ -36,10 +36,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64,linux/amd64'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Set up go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.go-version }}
 
       - run: |
           go version
@@ -68,11 +76,6 @@ jobs:
           make build
         shell: bash
 
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          install-only: true
-
       - name: Check release
         run: |
           make check-releaser
@@ -84,7 +87,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ "ubuntu-22.04" ]
-        go: [ "1.20" ]
+        go-version: [1.22.x]
     runs-on: ${{ matrix.os }}
     name: Run Tests
     steps:
@@ -93,10 +96,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64,linux/amd64'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Set up go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.go-version }}
 
       - run: |
           go version
@@ -131,7 +142,7 @@ jobs:
       max-parallel: 2
       matrix:
         os: [ "ubuntu-22.04" ]
-        go: [ "1.20" ]
+        go-version: [1.22.x]
     runs-on: ${{ matrix.os }}
     name: Run linters
     steps:
@@ -140,10 +151,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64,linux/amd64'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Set up go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.go-version }}
       - run: |
           go version
         shell: bash
@@ -183,7 +202,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ "ubuntu-22.04" ]
-        go: [ "1.20" ]
+        go-version: [1.22.x]
     runs-on: ${{ matrix.os }}
     name: Quality reports
     steps:
@@ -192,10 +211,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64,linux/amd64'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Set up go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ${{ matrix.go-version }}
       - run: |
           go version
         shell: bash

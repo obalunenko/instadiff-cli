@@ -90,8 +90,9 @@ func serviceSetUp(c *cli.Context) (*service.Service, error) {
 
 func setLogger(c *cli.Context) {
 	log.Init(c.Context, log.Params{
-		Level:        c.String(logLevel),
-		Format:       "text",
-		SentryParams: log.SentryParams{},
+		Writer:     os.Stdout,
+		Level:      c.String(logLevel),
+		Format:     "text",
+		WithSource: false,
 	})
 }
