@@ -47,7 +47,6 @@ jobs:
         target:
           [
             "go-tools",
-            "rideannouncer",
           ]
     runs-on: "ubuntu-22.04"
     name: Build ${{ matrix.target }}
