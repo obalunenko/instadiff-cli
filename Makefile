@@ -164,17 +164,17 @@ update-readme-cover: test-cover
 
 ## Release
 release:
-	./scripts/release/release.sh
+	$(COMPOSE_TOOLS_CMD_UP) release release
 .PHONY: release
 
 ## Release local snapshot
 release-local-snapshot:
-	./scripts/release/local-snapshot-release.sh
+	$(COMPOSE_TOOLS_CMD_UP) release-local-snapshot release-local-snapshot
 .PHONY: release-local-snapshot
 
 ## Check goreleaser config.
 check-releaser:
-	./scripts/release/check.sh
+	$(COMPOSE_TOOLS_CMD_UP) release-check-config release-check-config
 .PHONY: check-releaser
 
 ## Issue new release.
