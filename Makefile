@@ -6,14 +6,17 @@ VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
 APP_NAME?=instadiff-cli
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
 
-
-GOTOOLS_IMAGE_TAG?=v0.12.3
-SHELL := env GOTOOLS_IMAGE_TAG=$(GOTOOLS_IMAGE_TAG) $(SHELL)
+GOVERSION:=1.22
 
 COMPOSE_TOOLS_FILE=deployments/docker-compose/go-tools-docker-compose.yml
 COMPOSE_TOOLS_CMD_BASE=docker compose -f $(COMPOSE_TOOLS_FILE)
-COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --exit-code-from
-COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) pull
+COMPOSE_TOOLS_CMD_UP=$(COMPOSE_TOOLS_CMD_BASE) up --remove-orphans --exit-code-from
+COMPOSE_TOOLS_CMD_PULL=$(COMPOSE_TOOLS_CMD_BASE) build
+
+TARGET_MAX_CHAR_NUM=20
+
+GOTOOLS_IMAGE?=go-tools-local
+SHELL := env GOTOOLS_IMAGE=$(GOTOOLS_IMAGE) $(SHELL)
 
 # COLORS
 GREEN  := $(shell tput -Txterm setaf 2)
@@ -51,11 +54,11 @@ help:
 
 ## Compile app
 compile-instadiff-cli: vet
-	./scripts/build/compile.sh
+	./scripts/build/app.sh
 .PHONY: compile-instadiff-cli
 
 ## Build the app.
-build: compile-instadiff-cli
+build: sync-vendor compile-instadiff-cli
 .PHONY: build
 
 ## recreate all generated code and documentation.
@@ -109,10 +112,9 @@ test-sonar-report:
 	./scripts/tests/sonar-report.sh
 .PHONY: test-sonar-report
 
-## Installs tools from vendor.
+## Installs vendored tools.
 install-tools:
-	echo "Installing ${GOTOOLS_IMAGE_TAG}"
-	$(COMPOSE_TOOLS_CMD_PULL)
+	./scripts/install/vendored-tools.sh
 .PHONY: install-tools
 
 ## Sync vendor of root project and tools.
@@ -179,5 +181,9 @@ check-releaser:
 new-version: test build
 	./scripts/release/new-version.sh
 .PHONY: new-release
+
+bump-go-version:
+	./scripts/bump-go.sh $(GOVERSION)
+.PHONY: bump-go-version
 
 .DEFAULT_GOAL := test
