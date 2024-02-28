@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/obalunenko/getenv v1.13.0
 	github.com/obalunenko/logger v1.1.0
-	github.com/obalunenko/version v1.1.0
+	github.com/obalunenko/version v1.2.0
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/schollz/progressbar/v3 v3.14.2
