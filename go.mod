@@ -16,7 +16,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/schollz/progressbar/v3 v3.14.2
 	github.com/spf13/viper v1.18.2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 	github.com/urfave/cli/v2 v2.27.1
 	go.mongodb.org/mongo-driver v1.14.0
