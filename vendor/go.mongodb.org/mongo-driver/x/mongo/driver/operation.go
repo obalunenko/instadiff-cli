@@ -622,7 +622,7 @@ func (op Operation) Execute(ctx context.Context) error {
 		}
 	}()
 	for {
-		// If we're starting a retry and the the error from the previous try was
+		// If we're starting a retry and the error from the previous try was
 		// a context canceled or deadline exceeded error, stop retrying and
 		// return that error.
 		if errors.Is(prevErr, context.Canceled) || errors.Is(prevErr, context.DeadlineExceeded) {
@@ -1899,7 +1899,6 @@ func (op Operation) decodeResult(ctx context.Context, opcode wiremessage.OpCode,
 					return nil, errors.New("malformed wire message: insufficient bytes to read single document")
 				}
 			case wiremessage.DocumentSequence:
-				// TODO(GODRIVER-617): Implement document sequence returns.
 				_, _, wm, ok = wiremessage.ReadMsgSectionDocumentSequence(wm)
 				if !ok {
 					return nil, errors.New("malformed wire message: insufficient bytes to read document sequence")
@@ -1995,7 +1994,7 @@ func (op Operation) publishStartedEvent(ctx context.Context, info startedInforma
 	}
 }
 
-// canPublishSucceededEvent returns true if a CommandSucceededEvent can be
+// canPublishFinishedEvent returns true if a CommandSucceededEvent can be
 // published for the given command. This is true if the command is not an
 // unacknowledged write and the command monitor is monitoring succeeded events.
 func (op Operation) canPublishFinishedEvent(info finishedInformation) bool {
