@@ -324,7 +324,7 @@ github.com/subosito/gotenv
 # github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 ## explicit
 github.com/tcnksm/go-input
-# github.com/urfave/cli/v2 v2.27.2
+# github.com/urfave/cli/v2 v2.27.3
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xdg-go/pbkdf2 v1.0.0
@@ -345,8 +345,8 @@ github.com/xeipuuv/gojsonreference
 # github.com/xeipuuv/gojsonschema v1.2.0
 ## explicit
 github.com/xeipuuv/gojsonschema
-# github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913
-## explicit; go 1.15.0
+# github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1
+## explicit; go 1.15
 github.com/xrash/smetrics
 # github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d
 ## explicit
