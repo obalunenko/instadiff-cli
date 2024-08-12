@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package dockertest
@@ -275,7 +275,7 @@ func NewPool(endpoint string) (*Pool, error) {
 				endpoint = "http://localhost:2375"
 			}
 		} else {
-			endpoint = "unix:///var/run/docker.sock"
+			endpoint = options.DefaultHost
 		}
 	}
 
