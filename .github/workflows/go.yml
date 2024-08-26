@@ -267,7 +267,7 @@ jobs:
         shell: bash
 
       - name: SonarCloud report upload
-        uses: sonarsource/sonarcloud-github-action@v2.3
+        uses: sonarsource/sonarcloud-github-action@v3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
