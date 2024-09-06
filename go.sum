@@ -105,8 +105,8 @@ github.com/montanaflynn/stats v0.7.1 h1:etflOAAHORrCC44V+aR6Ftzort912ZU+YLiSTuV8
 github.com/montanaflynn/stats v0.7.1/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt6R8Bnaayow=
 github.com/obalunenko/getenv v1.13.0 h1:KE6Kky3OMLkvOgzfZkaOjodnnMawhEEuju4Hbs7DCt0=
 github.com/obalunenko/getenv v1.13.0/go.mod h1:z/14VQJlEBeaa/JI/RNufa/EQOSDVA2RRUz56ukYOM0=
-github.com/obalunenko/logger v1.1.0 h1:Q5drJuCuwz16mm96tcrl5e20uoGSOI4O+VWSauR/mQg=
-github.com/obalunenko/logger v1.1.0/go.mod h1:rS66dO9P2j/lybFrDB0Sce1DEVaOi6ag6WDIzljTg8c=
+github.com/obalunenko/logger v1.2.0 h1:MwsqJWtaxaHFQK7Cjkqk1NnlNPHH+tR1ergdnpST7Kg=
+github.com/obalunenko/logger v1.2.0/go.mod h1:XaU3GhUJWda3ow3hhRjlItpIVgQRKa2KDsEeprSzBvg=
 github.com/obalunenko/version v1.2.0 h1:eUYme2w38fjzcvToInTGM85xAJycZHo65GvynbH8jCo=
 github.com/obalunenko/version v1.2.0/go.mod h1:kXnCfV2LUe+UHRrzjwPC/5lpnPbypwmLZh7BJx7wG1A=
 github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6 h1:a/kynVgbdXJQDq3WWTgwL0bHyg4hu4/oIK9UB+Ugvfo=
