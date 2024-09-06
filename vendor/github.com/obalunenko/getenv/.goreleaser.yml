@@ -1,3 +1,5 @@
+version: 2
+
 release:
   github:
     owner: obalunenko
@@ -10,7 +12,7 @@ checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 
 snapshot:
-  name_template: SNAPSHOT-{{ .Commit }}
+  version_template: SNAPSHOT-{{ .Commit }}
 
 changelog:
   sort: asc
