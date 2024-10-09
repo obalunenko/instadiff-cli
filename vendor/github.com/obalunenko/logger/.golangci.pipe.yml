@@ -5,6 +5,7 @@ linters:
     - gofmt
     - revive
     - goimports
+    - govet
 
 linters-settings:
   errcheck:
@@ -33,13 +34,13 @@ linters-settings:
 run:
   issues-exit-code: 1
   tests: true
-  skip-dirs:
-    - vendor/
-  skip-files:
-    - \.pb\.go$
 
 issues:
   exclude-use-default: false
+  exclude-files:
+    - \.pb\.go$
+  exclude-dirs:
+    - vendor
   exclude:
     # for "public interface + private struct implementation" cases only!
     - exported func * returns unexported type *, which can be annoying to use
