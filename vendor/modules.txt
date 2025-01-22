@@ -208,8 +208,8 @@ github.com/moby/term/windows
 # github.com/montanaflynn/stats v0.7.1
 ## explicit; go 1.13
 github.com/montanaflynn/stats
-# github.com/obalunenko/getenv v1.13.0
-## explicit; go 1.22
+# github.com/obalunenko/getenv v1.14.0
+## explicit; go 1.23
 github.com/obalunenko/getenv
 github.com/obalunenko/getenv/internal
 github.com/obalunenko/getenv/option

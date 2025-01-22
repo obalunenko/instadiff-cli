@@ -1,15 +1,14 @@
 module github.com/obalunenko/instadiff-cli
 
 go 1.22
-
-toolchain go1.22.0
+toolchain go1.23.1
 
 require (
 	github.com/Davincible/goinsta/v3 v3.2.6
 	github.com/briandowns/spinner v1.23.2
 	github.com/disintegration/imaging v1.6.2
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/obalunenko/getenv v1.13.0
+	github.com/obalunenko/getenv v1.14.0
 	github.com/obalunenko/logger v1.1.0
 	github.com/obalunenko/version v1.2.0
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6
