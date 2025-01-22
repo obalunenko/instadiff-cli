@@ -3,7 +3,7 @@ BIN_DIR=./bin
 SHELL := env VERSION=$(VERSION) $(SHELL)
 VERSION ?= $(shell git describe --tags $(git rev-list --tags --max-count=1))
 
-GOVERSION:=1.22
+GOVERSION:=1.23
 
 APP_NAME?=logger
 SHELL := env APP_NAME=$(APP_NAME) $(SHELL)
